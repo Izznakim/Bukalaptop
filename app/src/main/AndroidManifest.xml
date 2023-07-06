@@ -16,7 +16,7 @@
             android:name=".PelangganActivity"
             android:exported="false" />
         <activity
-            android:name=".PegawaiActivity"
+            android:name=".pegawai.PegawaiActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
