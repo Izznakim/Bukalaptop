@@ -1,8 +1,9 @@
 package com.example.bukalaptop.pegawai
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.annotation.StringRes
+import android.window.OnBackInvokedDispatcher
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.FragmentManager
 import androidx.viewpager2.widget.ViewPager2
 import com.example.bukalaptop.R
 import com.google.android.material.tabs.TabLayout
@@ -23,9 +24,9 @@ class PegawaiActivity : AppCompatActivity() {
         viewPager.adapter = sectionPagerAdapter
         val tabs: TabLayout = findViewById(R.id.tabs)
         TabLayoutMediator(tabs, viewPager) { tab, position ->
-            tab.text=TAB_TITLES[position]
+            tab.text = TAB_TITLES[position]
         }.attach()
 
-        supportActionBar?.elevation=0f
+        supportActionBar?.elevation = 0f
     }
 }

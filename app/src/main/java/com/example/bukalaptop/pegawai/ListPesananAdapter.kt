@@ -1,9 +1,11 @@
 package com.example.bukalaptop.pegawai
 
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
 
@@ -25,14 +27,30 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
         viewType: Int
     ): ListViewHolder {
         val view: View =
-            LayoutInflater.from(parent.context).inflate(R.layout.item_barang, parent, false)
+            LayoutInflater.from(parent.context).inflate(R.layout.item_pesanan, parent, false)
         return ListViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ListViewHolder, position: Int) {
         val (_,nama, _, telepon) = listPesanan[position]
-        holder.tvNama.text = nama
-        holder.tvTelepon.text = telepon
+        holder.apply {
+            tvNama.text = nama
+            tvTelepon.text = telepon
+            itemView.setOnClickListener {
+                val detailPesananFragment = DetailPesananFragment()
+                val mFragmentManager =
+                    (holder.itemView.context as AppCompatActivity).supportFragmentManager
+                val bundle = Bundle()
+
+                bundle.putParcelable(DetailPesananFragment.EXTRA_PESANAN, listPesanan[position])
+                detailPesananFragment.arguments = bundle
+                mFragmentManager.beginTransaction().apply {
+                    replace(R.id.fragment_container,detailPesananFragment,DetailPesananFragment::class.java.simpleName)
+                    addToBackStack(null)
+                    commit()
+                }
+            }
+        }
     }
 
     override fun getItemCount(): Int = listPesanan.size

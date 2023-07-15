@@ -12,6 +12,7 @@ import com.example.bukalaptop.R
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
+
 class PesananFragment : Fragment() {
 
     private lateinit var rvPesanan: RecyclerView
@@ -40,7 +41,15 @@ class PesananFragment : Fragment() {
             listPesanan.clear()
             if (value != null) {
                 for (document in value){
-                    val pesanan=document.toObject(Pesanan::class.java)
+                    val pesanan=Pesanan()
+                    pesanan.id=document.id
+                    pesanan.namaLengkap= document.getString("namaLengkap").toString()
+                    pesanan.nomorTelepon=document.getString("nomorTelepon").toString()
+                    pesanan.email=document.getString("alamatEmail").toString()
+                    pesanan.alamatLengkap=document.getString("alamatLengkap").toString()
+                    pesanan.buktiBayar=document.getString("buktiBayar").toString()
+                    pesanan.latitude= document.getGeoPoint("alamat")?.latitude ?: 0.0
+                    pesanan.longitude= document.getGeoPoint("alamat")?.longitude ?: 0.0
                     listPesanan.add(pesanan)
                 }
             }else if (error!=null){

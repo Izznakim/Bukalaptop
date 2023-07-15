@@ -1,0 +1,51 @@
+package com.example.bukalaptop.pegawai
+
+import android.os.Bundle
+import android.view.KeyEvent
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentTransaction
+import com.example.bukalaptop.R
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
+
+
+class MapsFragment : Fragment() {
+
+    companion object {
+        const val EXTRA_PESANAN = "extra_pesanan"
+    }
+
+    private val callback = OnMapReadyCallback { googleMap ->
+        if (arguments != null) {
+            val pesanan = arguments?.getParcelable<Pesanan>(EXTRA_PESANAN)
+            if (pesanan != null) {
+                val alamat = LatLng(pesanan.latitude, pesanan.longitude)
+                googleMap.addMarker(
+                    MarkerOptions().position(alamat).title(pesanan.namaLengkap)
+                        .snippet(pesanan.alamatLengkap)
+                )
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(alamat, 15f))
+            }
+        }
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_maps, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
+        mapFragment?.getMapAsync(callback)
+    }
+}
