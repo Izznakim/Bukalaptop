@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="?android:attr/windowBackground"
     android:padding="8dp"
-    tools:context=".pegawai.DetailPesananFragment">
+    tools:context=".pegawai.pesanan.DetailPesananFragment">
 
     <!-- TODO: Update blank fragment layout -->
     <TextView
@@ -47,7 +47,7 @@
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/maps_container"
-        android:name="com.example.bukalaptop.pegawai.MapsFragment"
+        android:name="com.example.bukalaptop.pegawai.pesanan.MapsFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
@@ -75,7 +75,7 @@
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/keranjangFragmentContainer"
-            android:name="com.example.bukalaptop.pegawai.KeranjangFragment"
+            android:name="com.example.bukalaptop.pegawai.pesanan.KeranjangFragment"
             android:layout_width="match_parent"
             android:layout_height="100dp"
             android:isScrollContainer="true" />

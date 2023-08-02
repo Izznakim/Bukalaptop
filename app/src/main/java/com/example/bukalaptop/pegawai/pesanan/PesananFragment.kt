@@ -1,4 +1,4 @@
-package com.example.bukalaptop.pegawai
+package com.example.bukalaptop.pegawai.pesanan
 
 import android.os.Bundle
 import android.util.Log
@@ -30,7 +30,7 @@ class PesananFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        rvPesanan = view.findViewById(R.id.rv_barang)
+        rvPesanan = view.findViewById(R.id.rv_pesanan)
         rvPesanan.setHasFixedSize(true)
 
         initAdapter()
@@ -41,7 +41,7 @@ class PesananFragment : Fragment() {
             listPesanan.clear()
             if (value != null) {
                 for (document in value){
-                    val pesanan=Pesanan()
+                    val pesanan= Pesanan()
                     pesanan.id=document.id
                     pesanan.namaLengkap= document.getString("namaLengkap").toString()
                     pesanan.nomorTelepon=document.getString("nomorTelepon").toString()

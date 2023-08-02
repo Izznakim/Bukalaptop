@@ -1,4 +1,4 @@
-package com.example.bukalaptop.pegawai
+package com.example.bukalaptop.pegawai.pesanan
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -45,7 +45,7 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
                 bundle.putParcelable(DetailPesananFragment.EXTRA_PESANAN, listPesanan[position])
                 detailPesananFragment.arguments = bundle
                 mFragmentManager.beginTransaction().apply {
-                    replace(R.id.fragment_container,detailPesananFragment,DetailPesananFragment::class.java.simpleName)
+                    replace(R.id.fragment_container,detailPesananFragment, DetailPesananFragment::class.java.simpleName)
                     addToBackStack(null)
                     commit()
                 }

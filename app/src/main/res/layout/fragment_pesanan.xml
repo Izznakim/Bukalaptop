@@ -5,10 +5,10 @@
     android:paddingTop="8dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".pegawai.PesananFragment">
+    tools:context=".pegawai.pesanan.PesananFragment">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_barang"
+        android:id="@+id/rv_pesanan"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
