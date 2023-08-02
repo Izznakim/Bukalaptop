@@ -1,21 +1,15 @@
 package com.example.bukalaptop.pegawai.barang
 
-import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
-import com.example.bukalaptop.pegawai.pesanan.DetailPesananFragment
-import com.example.bukalaptop.pegawai.pesanan.ListPesananAdapter
-import com.example.bukalaptop.pegawai.pesanan.Pesanan
-import java.awt.font.TextAttribute
 
 class ListBarangAdapter(private val listBarang: ArrayList<Barang>) :
     RecyclerView.Adapter<ListBarangAdapter.ListViewHolder>() {
@@ -27,8 +21,8 @@ class ListBarangAdapter(private val listBarang: ArrayList<Barang>) :
 
     class ListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val ivBarang: ImageView = itemView.findViewById(R.id.iv_barang)
-        val tvMerek: TextView = itemView.findViewById(R.id.tv_merek)
-        val tvModel: TextView = itemView.findViewById(R.id.tv_model)
+        val tvMerek: TextView = itemView.findViewById(R.id.tv_merekModel)
+        val tvModel: TextView = itemView.findViewById(R.id.tv_biayaSewa)
         val tvPeyimpanan: TextView = itemView.findViewById(R.id.tv_penyimpanan)
         val tvProsesor: TextView = itemView.findViewById(R.id.tv_prosesor)
         val tvRam: TextView = itemView.findViewById(R.id.tv_ram)

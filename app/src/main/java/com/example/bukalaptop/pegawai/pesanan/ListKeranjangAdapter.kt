@@ -16,8 +16,8 @@ class ListKeranjangAdapter(private val listKeranjang: ArrayList<Keranjang>) :
     }
 
     class ListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvMerek:TextView=itemView.findViewById(R.id.tv_merek)
-        val tvModel:TextView=itemView.findViewById(R.id.tv_model)
+        val tvMerek:TextView=itemView.findViewById(R.id.tv_merekModel)
+        val tvModel:TextView=itemView.findViewById(R.id.tv_biayaSewa)
         val tvJumlah:TextView=itemView.findViewById(R.id.tv_jumlah)
         val tvSubtotal:TextView=itemView.findViewById(R.id.tv_subtotal)
     }

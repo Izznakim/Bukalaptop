@@ -5,14 +5,14 @@
     android:layout_height="wrap_content">
 
     <TextView
-        android:id="@+id/tv_merek"
+        android:id="@+id/tv_merekModel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="HP" />
 
     <TextView
-        android:id="@+id/tv_model"
+        android:id="@+id/tv_biayaSewa"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"

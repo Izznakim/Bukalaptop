@@ -22,7 +22,7 @@
             tools:srcCompat="@tools:sample/avatars" />
 
         <TextView
-            android:id="@+id/tv_merek"
+            android:id="@+id/tv_merekModel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -31,13 +31,13 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/tv_model"
+            android:id="@+id/tv_biayaSewa"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text="14s-fq0591AU"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/tv_merek"
+            app:layout_constraintStart_toEndOf="@+id/tv_merekModel"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
@@ -46,8 +46,8 @@
             android:layout_height="wrap_content"
             android:text="256 GB PCIe® NVMe™ M.2 SSD"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@+id/tv_merek"
-            app:layout_constraintTop_toBottomOf="@+id/tv_model" />
+            app:layout_constraintStart_toStartOf="@+id/tv_merekModel"
+            app:layout_constraintTop_toBottomOf="@+id/tv_biayaSewa" />
 
         <TextView
             android:id="@+id/tv_prosesor"
