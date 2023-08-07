@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import com.example.bukalaptop.pegawai.PegawaiActivity
+import com.example.bukalaptop.pelanggan.PelangganActivity
 
 class MainActivity : AppCompatActivity() {
 

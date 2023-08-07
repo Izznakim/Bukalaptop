@@ -1,8 +1,9 @@
-package com.example.bukalaptop
+package com.example.bukalaptop.pelanggan
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
+import com.example.bukalaptop.R
 
 class PelangganActivity : AppCompatActivity() {
 

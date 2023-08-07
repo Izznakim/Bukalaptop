@@ -10,17 +10,18 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Bukalaptop"
+        android:theme="@style/Theme.BukalaptopActionBar"
         tools:targetApi="31">
         <activity
-            android:name=".PelangganActivity"
+            android:name=".pelanggan.PelangganActivity"
             android:exported="false" />
         <activity
-            android:name=".PegawaiActivity"
+            android:name=".pegawai.PegawaiActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.Bukalaptop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
