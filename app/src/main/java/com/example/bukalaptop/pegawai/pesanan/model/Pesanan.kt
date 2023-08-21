@@ -1,4 +1,4 @@
-package com.example.bukalaptop.pegawai
+package com.example.bukalaptop.pegawai.pesanan.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

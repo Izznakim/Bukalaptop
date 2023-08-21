@@ -1,4 +1,4 @@
-package com.example.bukalaptop.pegawai
+package com.example.bukalaptop.pegawai.pesanan
 
 import android.os.Bundle
 import android.text.SpannableString
@@ -11,6 +11,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,6 +19,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
+import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
+import com.example.bukalaptop.pegawai.pesanan.model.Keranjang
+import com.example.bukalaptop.pegawai.pesanan.model.Pesanan
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.text.NumberFormat
@@ -153,6 +157,14 @@ class DetailPesananFragment : Fragment() {
                 ).show()
             }
         }
+
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                parentFragmentManager.popBackStack()
+            }
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
     }
 
     private fun initAdapter() {

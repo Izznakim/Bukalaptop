@@ -1,4 +1,4 @@
-package com.example.bukalaptop.pegawai
+package com.example.bukalaptop.pegawai.pesanan.adapter
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,6 +8,8 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
+import com.example.bukalaptop.pegawai.pesanan.DetailPesananFragment
+import com.example.bukalaptop.pegawai.pesanan.model.Pesanan
 
 class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
     RecyclerView.Adapter<ListPesananAdapter.ListViewHolder>() {
@@ -45,7 +47,7 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
                 bundle.putParcelable(DetailPesananFragment.EXTRA_PESANAN, listPesanan[position])
                 detailPesananFragment.arguments = bundle
                 mFragmentManager.beginTransaction().apply {
-                    replace(R.id.fragment_container,detailPesananFragment,DetailPesananFragment::class.java.simpleName)
+                    replace(R.id.fragment_container,detailPesananFragment, DetailPesananFragment::class.java.simpleName)
                     addToBackStack(null)
                     commit()
                 }
