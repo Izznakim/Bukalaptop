@@ -12,6 +12,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BukalaptopActionBar"
         tools:targetApi="31">
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyA0cbPdFWN-bEGnfu4F9z5EPX1LmG2PHuc" />
+
         <activity
             android:name=".pelanggan.PelangganActivity"
             android:exported="false" />

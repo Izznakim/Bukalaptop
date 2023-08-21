@@ -1,10 +1,11 @@
 package com.example.bukalaptop.pegawai
 
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
 
@@ -17,8 +18,8 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
     }
 
     class ListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvNama: TextView = itemView.findViewById(R.id.tv_nama)
-        val tvTelepon: TextView = itemView.findViewById(R.id.tv_nomor)
+        val tvNama: TextView = itemView.findViewById(R.id.tv_merek)
+        val tvTelepon: TextView = itemView.findViewById(R.id.tv_model)
     }
 
     override fun onCreateViewHolder(
@@ -36,7 +37,18 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
             tvNama.text = nama
             tvTelepon.text = telepon
             itemView.setOnClickListener {
-                Toast.makeText(holder.itemView.context, "Coming soon", Toast.LENGTH_SHORT).show()
+                val detailPesananFragment = DetailPesananFragment()
+                val mFragmentManager =
+                    (holder.itemView.context as AppCompatActivity).supportFragmentManager
+                val bundle = Bundle()
+
+                bundle.putParcelable(DetailPesananFragment.EXTRA_PESANAN, listPesanan[position])
+                detailPesananFragment.arguments = bundle
+                mFragmentManager.beginTransaction().apply {
+                    replace(R.id.fragment_container,detailPesananFragment,DetailPesananFragment::class.java.simpleName)
+                    addToBackStack(null)
+                    commit()
+                }
             }
         }
     }
