@@ -13,7 +13,7 @@
         android:padding="8dp">
 
         <TextView
-            android:id="@+id/tv_merek"
+            android:id="@+id/tv_merek_model"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textStyle="bold"
@@ -29,7 +29,7 @@
             android:layout_marginTop="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_merek"
+            app:layout_constraintTop_toBottomOf="@+id/tv_merek_model"
             tools:text="08563610682" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 

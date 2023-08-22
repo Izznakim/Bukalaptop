@@ -20,7 +20,7 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
     }
 
     class ListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvNama: TextView = itemView.findViewById(R.id.tv_merek)
+        val tvNama: TextView = itemView.findViewById(R.id.tv_merek_model)
         val tvTelepon: TextView = itemView.findViewById(R.id.tv_model)
     }
 
