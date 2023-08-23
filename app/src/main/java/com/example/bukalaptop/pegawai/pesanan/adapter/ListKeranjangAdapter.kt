@@ -27,7 +27,7 @@ class ListKeranjangAdapter(private val listKeranjang: ArrayList<Keranjang>) :
         val tvMerek: TextView = itemView.findViewById(R.id.tv_merek_model)
         val tvModel: TextView = itemView.findViewById(R.id.tv_model)
         val tvProsesor: TextView = itemView.findViewById(R.id.tv_prosesor)
-        val tvBiayaSewa: TextView = itemView.findViewById(R.id.tv_biayaSewa)
+        val tvBiayaSewa: TextView = itemView.findViewById(R.id.tv_biaya_sewa)
         val tvJumlah: TextView = itemView.findViewById(R.id.tv_jumlah)
         val tvSubtotal: TextView = itemView.findViewById(R.id.tv_subtotal)
     }

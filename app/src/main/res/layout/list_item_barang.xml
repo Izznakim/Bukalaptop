@@ -60,7 +60,7 @@
                 android:text="4 GB DDR4-2666 SDRAM (1 x 4 GB)" />
 
             <TextView
-                android:id="@+id/tv_biayaSewa"
+                android:id="@+id/tv_biaya_sewa"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
