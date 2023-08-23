@@ -1,9 +1,16 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Base application theme. -->
-    <style name="Base.Theme.Bukalaptop" parent="Theme.Material3.DayNight">
+    <style name="Base.Theme.Bukalaptop" parent="Theme.Material3.Light.NoActionBar">
         <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+<!--         <item name="colorPrimary">@color/my_light_primary</item> -->
+    </style>
+
+    <style name="Base.Theme.BukalaptopActionBar" parent="Theme.Material3.Light">
+        <!-- Customize your light theme here. -->
+        <!--         <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/black</item>
     </style>
 
     <style name="Theme.Bukalaptop" parent="Base.Theme.Bukalaptop" />
+    <style name="Theme.BukalaptopActionBar" parent="Base.Theme.BukalaptopActionBar" />
 </resources>

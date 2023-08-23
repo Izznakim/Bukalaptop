@@ -5,97 +5,59 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/windowBackground"
-    android:padding="8dp"
     tools:context=".pegawai.pesanan.DetailPesananFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:id="@+id/tv_nama"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cv_pelanggan_profil"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Nama Lengkap"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <TextView
-        android:id="@+id/tv_email"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="AlamatEmail@gmail.com"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_nama" />
-
-    <TextView
-        android:id="@+id/tv_nomorTelepon"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="nomortelepon"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_email" />
-
-    <TextView
-        android:id="@+id/tv_alamat"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Alamat"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_nomorTelepon" />
-
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/maps_container"
-        android:name="com.example.bukalaptop.pegawai.pesanan.MapsFragment"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_alamat" />
-
-    <LinearLayout
-        android:id="@+id/linearLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/iv_bukti"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <TextView
-            android:id="@+id/textView"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:text="Barang yang dipesan" />
+            android:orientation="vertical"
+            android:padding="8dp">
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/keranjangFragmentContainer"
-            android:name="com.example.bukalaptop.pegawai.pesanan.KeranjangFragment"
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:isScrollContainer="true" />
+            <TextView
+                android:id="@+id/tv_namaLengkap"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Nama Lengkap"
+                android:textSize="24sp"
+                android:textStyle="bold" />
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/tv_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="AlamatEmail@gmail.com"
+                android:textSize="24sp" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
-    <ImageView
-        android:id="@+id/iv_bukti"
-        android:layout_width="0dp"
-        android:layout_height="334dp"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/btn_tolak"
+    <include
+        android:id="@+id/include"
+        layout="@layout/layout_detail_pesanan"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_terima"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:src="@tools:sample/backgrounds/scenic" />
+        app:layout_constraintTop_toBottomOf="@id/cv_pelanggan_profil" />
 
     <Button
         android:id="@+id/btn_tolak"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="#F1453A"
         android:text="TOLAK"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/guideline"
@@ -105,7 +67,10 @@
         android:id="@+id/btn_terima"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="#00FF0A"
         android:text="TERIMA"
+        android:textColor="@color/black"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/guideline" />
