@@ -1,15 +1,18 @@
 package com.example.bukalaptop.pegawai.pesanan.adapter
 
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
+import com.example.bukalaptop.pegawai.barang.DetailBarangFragment
 import com.example.bukalaptop.pegawai.pesanan.model.Keranjang
 import java.text.NumberFormat
 import java.util.Currency
@@ -45,25 +48,32 @@ class ListKeranjangAdapter(private val listKeranjang: ArrayList<Keranjang>) :
         val currencyFormat = NumberFormat.getCurrencyInstance()
         currencyFormat.maximumFractionDigits = 2
         currencyFormat.currency = Currency.getInstance("IDR")
-        val (fotoBarang, merek, model, prosesor, biayaSewa, jumlah) = listKeranjang[position]
+        val (barang, jumlah) = listKeranjang[position]
 
         holder.apply {
             Glide.with(itemView.context)
-                .load(fotoBarang)
+                .load(barang.fotoBarang)
                 .apply(RequestOptions())
                 .into(ivBarang)
-            tvMerek.text = merek
-            tvModel.text = model
-            tvProsesor.text = prosesor
-            tvBiayaSewa.text = "${currencyFormat.format(biayaSewa)}/Unit"
+            tvMerek.text = barang.merek
+            tvModel.text = barang.model
+            tvProsesor.text = barang.prosesor
+            tvBiayaSewa.text = "${currencyFormat.format(barang.biayaSewa)}/Unit"
             tvJumlah.text = "$jumlah Unit"
-            tvSubtotal.text = currencyFormat.format(biayaSewa * jumlah)
+            tvSubtotal.text = currencyFormat.format(barang.biayaSewa * jumlah)
             itemView.setOnClickListener {
-                Toast.makeText(
-                    itemView.context,
-                    "Coming Soon ke halaman detail barang",
-                    Toast.LENGTH_SHORT
-                ).show()
+                val detailBarangFragment = DetailBarangFragment()
+                val mFragmentManager =
+                    (holder.itemView.context as AppCompatActivity).supportFragmentManager
+                val bundle = Bundle()
+
+                bundle.putParcelable(DetailBarangFragment.EXTRA_BARANG, listKeranjang[position].barang)
+                detailBarangFragment.arguments = bundle
+                mFragmentManager.beginTransaction().apply {
+                    replace(R.id.fragment_container,detailBarangFragment, DetailBarangFragment::class.java.simpleName)
+                    addToBackStack(null)
+                    commit()
+                }
             }
         }
     }

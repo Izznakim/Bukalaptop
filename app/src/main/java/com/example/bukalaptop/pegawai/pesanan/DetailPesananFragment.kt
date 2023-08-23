@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
+import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
 import com.example.bukalaptop.pegawai.pesanan.model.Keranjang
 import com.example.bukalaptop.pegawai.pesanan.model.Pesanan
@@ -119,10 +120,32 @@ class DetailPesananFragment : Fragment() {
                         listKeranjang.clear()
                         if (value != null) {
                             for (document in value) {
-                                val biayaSewa = document.get("biayaSewa").toString().toInt()
+                                val barang = Barang()
+                                barang.id = document.id
+                                barang.fotoBarang = document.getString("fotoBarang").toString()
+                                barang.merek = document.getString("merek").toString()
+                                barang.model = document.getString("model").toString()
+                                barang.prosesor = document.getString("prosesor").toString()
+                                barang.kartuGrafis = document.getString("kartuGrafis").toString()
+                                barang.ram = document.getString("ram").toString()
+                                barang.penyimpanan = document.getString("penyimpanan").toString()
+                                barang.sistemOperasi =
+                                    document.getString("sistemOperasi").toString()
+                                barang.perangkatLunak =
+                                    document.get("perangkatLunak") as? ArrayList<String>
+                                barang.ukuranLayar = document.getString("ukuranLayar").toString()
+                                barang.aksesoris = document.get("aksesoris") as? ArrayList<String>
+                                barang.kondisi = document.getString("kondisi").toString()
+                                barang.biayaSewa = document.getLong("biayaSewa")?.toInt() ?: 0
+                                barang.stok = document.getLong("stok")?.toInt() ?: 0
+
                                 val jumlah = document.get("jumlah").toString().toInt()
-                                total += (biayaSewa * jumlah)
-                                val keranjang = document.toObject(Keranjang::class.java)
+                                total += (barang.biayaSewa * jumlah)
+
+                                val keranjang = Keranjang(barang, jumlah)
+                                keranjang.barang = document.toObject(Barang::class.java)
+                                keranjang.jumlah = jumlah
+
                                 listKeranjang.add(keranjang)
                             }
                         } else if (error != null) {
@@ -131,6 +154,7 @@ class DetailPesananFragment : Fragment() {
                         listKeranjangAdapter.setData(listKeranjang)
                         tvTotal.text =
                             currencyFormat.format(total * masaSewa)
+                        total=0
                     }
             }
 
