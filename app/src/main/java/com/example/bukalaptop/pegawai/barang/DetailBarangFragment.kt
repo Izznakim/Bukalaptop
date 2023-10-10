@@ -9,6 +9,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
@@ -25,7 +26,7 @@ class DetailBarangFragment : Fragment() {
     private lateinit var tvProsesor: TextView
     private lateinit var tvRam: TextView
     private lateinit var tvOs: TextView
-    private lateinit var tvGrafik: TextView
+    private lateinit var tvGrafis: TextView
     private lateinit var tvPenyimpanan: TextView
     private lateinit var tvUkuranLayar: TextView
     private lateinit var tvPerangkatLunak: TextView
@@ -54,13 +55,13 @@ class DetailBarangFragment : Fragment() {
         currencyFormat.maximumFractionDigits = 2
         currencyFormat.currency = Currency.getInstance("IDR")
 
-        ivBarang = view.findViewById(R.id.iv_barang)
-        tvMerekModel = view.findViewById(R.id.tv_merek_model)
+        ivBarang = view.findViewById(R.id.iv_tambah_barang)
+        tvMerekModel = view.findViewById(R.id.et_merek)
         tvBiayaSewa = view.findViewById(R.id.tv_biaya_sewa)
         tvProsesor = view.findViewById(R.id.tv_prosesor)
         tvRam = view.findViewById(R.id.tv_ram)
         tvOs = view.findViewById(R.id.tv_os)
-        tvGrafik = view.findViewById(R.id.tv_grafik)
+        tvGrafis = view.findViewById(R.id.tv_grafis)
         tvUkuranLayar = view.findViewById(R.id.tv_ukuran_layar)
         tvPerangkatLunak = view.findViewById(R.id.tv_perangkat_lunak)
         tvAksesoris = view.findViewById(R.id.tv_aksesoris)
@@ -80,11 +81,11 @@ class DetailBarangFragment : Fragment() {
             tvProsesor.text = barang?.prosesor
             tvRam.text = barang?.ram
             tvOs.text = barang?.sistemOperasi
-            tvGrafik.text = barang?.kartuGrafis
+            tvGrafis.text = barang?.kartuGrafis
             tvPenyimpanan.text = barang?.penyimpanan
             tvUkuranLayar.text = barang?.ukuranLayar
-            tvPerangkatLunak.text = barang?.perangkatLunak?.joinToString(", ")
-            tvAksesoris.text = barang?.aksesoris?.joinToString(", ")
+            tvPerangkatLunak.text = barang?.perangkatLunak
+            tvAksesoris.text = barang?.aksesoris
             tvKondisi.text = barang?.kondisi
             tvBiayaSewa.text = "${currencyFormat.format(barang?.biayaSewa)} /Hari"
             tvStok.text = barang?.stok.toString()

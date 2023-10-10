@@ -76,14 +76,14 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Grafik"
+            android:text="Grafis"
             android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@id/guideline3"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_os" />
 
         <TextView
-            android:id="@+id/tv_grafik"
+            android:id="@+id/tv_grafis"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -101,7 +101,7 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@id/guideline3"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_grafik" />
+            app:layout_constraintTop_toBottomOf="@+id/tv_grafis" />
 
         <TextView
             android:id="@+id/tv_penyimpanan"

@@ -88,7 +88,6 @@ class DetailPesananFragment : Fragment() {
 
         if (arguments != null) {
             val pesanan = arguments?.getParcelable<Pesanan>(EXTRA_PESANAN)
-            var total = 0
 
             val alamat = SpannableString(pesanan?.alamatLengkap)
             alamat.setSpan(UnderlineSpan(), 0, pesanan?.alamatLengkap?.length ?: 0, 0)
@@ -117,27 +116,28 @@ class DetailPesananFragment : Fragment() {
             if (pesanan != null) {
                 db.collection("pesanan").document(pesanan.id).collection("keranjang")
                     .addSnapshotListener { value, error ->
+                        var total = 0
                         listKeranjang.clear()
                         if (value != null) {
                             for (document in value) {
-                                val barang = Barang()
-                                barang.id = document.id
-                                barang.fotoBarang = document.getString("fotoBarang").toString()
-                                barang.merek = document.getString("merek").toString()
-                                barang.model = document.getString("model").toString()
-                                barang.prosesor = document.getString("prosesor").toString()
-                                barang.kartuGrafis = document.getString("kartuGrafis").toString()
-                                barang.ram = document.getString("ram").toString()
-                                barang.penyimpanan = document.getString("penyimpanan").toString()
-                                barang.sistemOperasi =
-                                    document.getString("sistemOperasi").toString()
-                                barang.perangkatLunak =
-                                    document.get("perangkatLunak") as? ArrayList<String>
-                                barang.ukuranLayar = document.getString("ukuranLayar").toString()
-                                barang.aksesoris = document.get("aksesoris") as? ArrayList<String>
-                                barang.kondisi = document.getString("kondisi").toString()
-                                barang.biayaSewa = document.getLong("biayaSewa")?.toInt() ?: 0
-                                barang.stok = document.getLong("stok")?.toInt() ?: 0
+                                val barang = document.toObject(Barang::class.java)
+//                                barang.id = document.id
+//                                barang.fotoBarang = document.getString("fotoBarang").toString()
+//                                barang.merek = document.getString("merek").toString()
+//                                barang.model = document.getString("model").toString()
+//                                barang.prosesor = document.getString("prosesor").toString()
+//                                barang.kartuGrafis = document.getString("kartuGrafis").toString()
+//                                barang.ram = document.getString("ram").toString()
+//                                barang.penyimpanan = document.getString("penyimpanan").toString()
+//                                barang.sistemOperasi =
+//                                    document.getString("sistemOperasi").toString()
+//                                barang.perangkatLunak =
+//                                    document.get("perangkatLunak") as? ArrayList<String>
+//                                barang.ukuranLayar = document.getString("ukuranLayar").toString()
+//                                barang.aksesoris = document.get("aksesoris") as? ArrayList<String>
+//                                barang.kondisi = document.getString("kondisi").toString()
+//                                barang.biayaSewa = document.getLong("biayaSewa")?.toInt() ?: 0
+//                                barang.stok = document.getLong("stok")?.toInt() ?: 0
 
                                 val jumlah = document.get("jumlah").toString().toInt()
                                 total += (barang.biayaSewa * jumlah)
@@ -154,7 +154,6 @@ class DetailPesananFragment : Fragment() {
                         listKeranjangAdapter.setData(listKeranjang)
                         tvTotal.text =
                             currencyFormat.format(total * masaSewa)
-                        total=0
                     }
             }
 

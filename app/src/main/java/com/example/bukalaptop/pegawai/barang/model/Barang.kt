@@ -14,9 +14,9 @@ data class Barang(
     var ram: String = "",
     var penyimpanan: String = "",
     var sistemOperasi: String = "",
-    var perangkatLunak: ArrayList<String>? = arrayListOf(),
+    var perangkatLunak: String = "",
     var ukuranLayar: String = "",
-    var aksesoris: ArrayList<String>? = arrayListOf(),
+    var aksesoris: String = "",
     var kondisi: String = "",
     var biayaSewa: Int = 0,
     var stok: Int = 0

@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -26,8 +25,8 @@ class ListKeranjangAdapter(private val listKeranjang: ArrayList<Keranjang>) :
     }
 
     class ListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val ivBarang: ImageView = itemView.findViewById(R.id.iv_barang)
-        val tvMerek: TextView = itemView.findViewById(R.id.tv_merek_model)
+        val ivBarang: ImageView = itemView.findViewById(R.id.iv_tambah_barang)
+        val tvMerek: TextView = itemView.findViewById(R.id.et_merek)
         val tvModel: TextView = itemView.findViewById(R.id.tv_model)
         val tvProsesor: TextView = itemView.findViewById(R.id.tv_prosesor)
         val tvBiayaSewa: TextView = itemView.findViewById(R.id.tv_biaya_sewa)

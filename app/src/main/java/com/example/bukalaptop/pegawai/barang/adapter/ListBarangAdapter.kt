@@ -25,8 +25,8 @@ class ListBarangAdapter(private val listBarang: ArrayList<Barang>) :
     }
 
     class ListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val ivBarang: ImageView = itemView.findViewById(R.id.iv_barang)
-        val tvMerek: TextView = itemView.findViewById(R.id.tv_merek_model)
+        val ivBarang: ImageView = itemView.findViewById(R.id.iv_tambah_barang)
+        val tvMerek: TextView = itemView.findViewById(R.id.tv_merek)
         val tvStok: TextView = itemView.findViewById(R.id.tv_stok)
         val tvProsesor: TextView = itemView.findViewById(R.id.tv_prosesor)
         val tvRam: TextView = itemView.findViewById(R.id.tv_ram)

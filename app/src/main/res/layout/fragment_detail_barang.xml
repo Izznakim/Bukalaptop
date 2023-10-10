@@ -22,13 +22,13 @@
             android:padding="8dp">
 
             <ImageView
-                android:id="@+id/iv_barang"
+                android:id="@+id/iv_tambah_barang"
                 android:layout_width="match_parent"
                 android:layout_height="270dp"
                 tools:src="@tools:sample/backgrounds/scenic" />
 
             <TextView
-                android:id="@+id/tv_merek_model"
+                android:id="@+id/et_merek"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"

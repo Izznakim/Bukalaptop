@@ -8,6 +8,4 @@ import kotlinx.parcelize.Parcelize
 data class Keranjang(
     var barang: Barang,
     var jumlah: Int = 0
-) : Parcelable {
-    constructor(barang: Barang) : this(barang, 0)
-}
+) : Parcelable
