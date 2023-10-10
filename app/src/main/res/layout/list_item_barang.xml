@@ -13,7 +13,7 @@
 
         <ImageView
             android:id="@+id/iv_tambah_barang"
-            android:layout_width="wrap_content"
+            android:layout_width="130dp"
             android:layout_height="130dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"

@@ -55,8 +55,8 @@ class TambahBarangFragment : Fragment() {
     private var perangkatLunak: String = ""
     private var aksesoris: String = ""
     private var kondisi: String = ""
-    private var biayaSewa: String = ""
-    private var stok: String = ""
+    private var biayaSewa: Int = 0
+    private var stok: Int = 0
 
 
     override fun onCreateView(
@@ -107,8 +107,8 @@ class TambahBarangFragment : Fragment() {
             perangkatLunak = etPerangkatLunak.text.toString()
             aksesoris = etAksesoris.text.toString()
             kondisi = etKondisi.text.toString()
-            biayaSewa = etBiayaSewa.text.toString()
-            stok = etStok.text.toString()
+            biayaSewa = etBiayaSewa.text.toString().toInt()
+            stok = etStok.text.toString().toInt()
 
 
             if (imageBitmap == null) {
@@ -183,21 +183,21 @@ class TambahBarangFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            if (biayaSewa.isEmpty()) {
+            if (biayaSewa == 0) {
                 etBiayaSewa.requestFocus()
-                etBiayaSewa.error = "Biaya Sewa harus diisi"
+                etBiayaSewa.error = "Biaya Sewa harus diberi biaya"
                 return@setOnClickListener
             }
 
-            if (stok.isEmpty()) {
+            if (stok == 0) {
                 etStok.requestFocus()
-                etStok.error = "Stok harus diisi"
+                etStok.error = "Stok harus diberi biaya"
                 return@setOnClickListener
             }
 
             Toast.makeText(context, "Tambahkan ke firebase dan firestore", Toast.LENGTH_SHORT)
                 .show()
-            uploadImageAndAddData(
+            addDataToFirestore(
                 imageBitmap,
                 merek,
                 model,
@@ -231,8 +231,7 @@ class TambahBarangFragment : Fragment() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
     }
 
-
-    private fun uploadImageAndAddData(
+    private fun addDataToFirestore(
         imageBitmap: Bitmap?,
         merek: String,
         model: String,
@@ -245,59 +244,10 @@ class TambahBarangFragment : Fragment() {
         perangkatLunak: String,
         aksesoris: String,
         kondisi: String,
-        biayaSewa: String,
-        stok: String
-    ) {
-        val baos = ByteArrayOutputStream()
-        imageBitmap?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-        val imageData = baos.toByteArray()
-
-        val newImageRef = storageRef.child("barang/${System.currentTimeMillis()}.jpg")
-
-        val uploadTask = newImageRef.putBytes(imageData)
-        uploadTask.addOnSuccessListener {
-            newImageRef.downloadUrl.addOnSuccessListener { uri ->
-                val imageUrl = uri.toString()
-                addDataToFirestore(
-                    imageUrl,
-                    merek,
-                    model,
-                    prosesor,
-                    ram,
-                    os,
-                    grafis,
-                    penyimpanan,
-                    ukuranLayar,
-                    perangkatLunak,
-                    aksesoris,
-                    kondisi,
-                    biayaSewa,
-                    stok
-                )
-            }
-        }.addOnFailureListener {
-            Toast.makeText(context, "$it", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun addDataToFirestore(
-        imageUrl: String,
-        merek: String,
-        model: String,
-        prosesor: String,
-        ram: String,
-        os: String,
-        grafis: String,
-        penyimpanan: String,
-        ukuranLayar: String,
-        perangkatLunak: String,
-        aksesoris: String,
-        kondisi: String,
-        biayaSewa: String,
-        stok: String
+        biayaSewa: Int,
+        stok: Int
     ) {
         val data = hashMapOf(
-            "fotoBarang" to imageUrl,
             "merek" to merek,
             "model" to model,
             "prosesor" to prosesor,
@@ -309,34 +259,27 @@ class TambahBarangFragment : Fragment() {
             "perangkatLunak" to perangkatLunak,
             "aksesoris" to aksesoris,
             "kondisi" to kondisi,
-            "biayaSewa" to biayaSewa.toInt(),
-            "stok" to stok.toInt(),
+            "biayaSewa" to biayaSewa,
+            "stok" to stok,
         )
 
         databaseRef.collection("barang")
             .add(data)
             .addOnSuccessListener { document ->
-                val newImageRef = storageRef.child("barang/${document.id}.jpg")
-                newImageRef.downloadUrl.addOnSuccessListener { uri ->
-                    val newImageUrl = uri.toString()
-                    addDataToFirestore(
-                        newImageUrl,
-                        merek,
-                        model,
-                        prosesor,
-                        ram,
-                        os,
-                        grafis,
-                        penyimpanan,
-                        ukuranLayar,
-                        perangkatLunak,
-                        aksesoris,
-                        kondisi,
-                        biayaSewa,
-                        stok
-                    )
+                val baos = ByteArrayOutputStream()
+                imageBitmap?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+                val imageData = baos.toByteArray()
+
+                val imageRef = storageRef.child("barang/${document.id}.jpg")
+
+                val uploadTask = imageRef.putBytes(imageData)
+                uploadTask.addOnSuccessListener {
+                    imageRef.downloadUrl.addOnSuccessListener { uri ->
+                        val imageUrl = uri.toString()
+                        databaseRef.collection("barang").document(document.id)
+                            .update("fotoBarang", imageUrl)
+                    }
                 }
-                // Sekarang, Anda dapat menggabungkan ID dokumen dengan nama file gambar di Firebase Storage
 
                 parentFragmentManager.popBackStack()
             }
