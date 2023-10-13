@@ -5,7 +5,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class Barang(
-    var id: String = "",
+    var barangId: String = "",
     var fotoBarang: String = "",
     var merek: String = "",
     var model: String = "",

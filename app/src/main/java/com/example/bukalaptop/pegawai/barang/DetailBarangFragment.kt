@@ -1,6 +1,7 @@
 package com.example.bukalaptop.pegawai.barang
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,12 +10,14 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.barang.model.Barang
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import java.text.NumberFormat
 import java.util.Currency
 
@@ -35,6 +38,8 @@ class DetailBarangFragment : Fragment() {
     private lateinit var tvStok: TextView
     private lateinit var btnUpdate: Button
     private lateinit var btnHapus: Button
+
+    private var barang: Barang? = null
 
     companion object {
         var EXTRA_BARANG = "extra_barang"
@@ -72,7 +77,7 @@ class DetailBarangFragment : Fragment() {
         btnHapus = view.findViewById(R.id.btn_hapus)
 
         if (arguments != null) {
-            val barang = arguments?.getParcelable<Barang>(EXTRA_BARANG)
+            barang = arguments?.getParcelable(EXTRA_BARANG)
             Glide.with(requireContext())
                 .load(barang?.fotoBarang)
                 .apply(RequestOptions())
@@ -95,7 +100,26 @@ class DetailBarangFragment : Fragment() {
             Toast.makeText(requireContext(), "Coming soon", Toast.LENGTH_SHORT).show()
         }
         btnHapus.setOnClickListener {
-            Toast.makeText(requireContext(), "Coming soon", Toast.LENGTH_SHORT).show()
+            val db = Firebase.firestore
+            val storageRef = FirebaseStorage.getInstance().reference
+            val barangIdRef = storageRef.child("barang/${barang?.barangId}.jpg")
+
+            barang?.let { mBarang ->
+                db.collection("barang").document(mBarang.barangId)
+                    .delete()
+                    .addOnSuccessListener {
+                        Toast.makeText(
+                            activity,
+                            "${mBarang.merek} ${mBarang.model} berhasil dihapus",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        parentFragmentManager.popBackStack()
+                    }
+                    .addOnFailureListener { e -> Log.w("Error", "Error deleting document", e) }
+
+                barangIdRef.delete().addOnSuccessListener {
+                }.addOnFailureListener { e -> Log.w("Error", "Error deleting image", e) }
+            }
         }
 
         val callback = object : OnBackPressedCallback(true) {

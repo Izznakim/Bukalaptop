@@ -277,7 +277,10 @@ class TambahBarangFragment : Fragment() {
                     imageRef.downloadUrl.addOnSuccessListener { uri ->
                         val imageUrl = uri.toString()
                         databaseRef.collection("barang").document(document.id)
-                            .update("fotoBarang", imageUrl)
+                            .update(
+                                "fotoBarang", imageUrl,
+                                "barangId", document.id
+                            )
                     }
                 }
 
