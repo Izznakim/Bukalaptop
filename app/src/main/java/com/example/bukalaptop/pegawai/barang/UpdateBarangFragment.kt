@@ -1,30 +1,40 @@
 package com.example.bukalaptop.pegawai.barang
 
-import android.app.Activity.RESULT_OK
+import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.fragment.app.Fragment
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
+import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.UploadTask
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 
-class TambahBarangFragment : Fragment() {
+class UpdateBarangFragment : Fragment() {
 
-    private lateinit var ivTambahBarang: ImageView
+    private lateinit var ivEditBarang: ImageView
     private lateinit var etMerek: EditText
     private lateinit var etModel: EditText
     private lateinit var etProsesor: EditText
@@ -39,10 +49,11 @@ class TambahBarangFragment : Fragment() {
     private lateinit var etBiayaSewa: EditText
     private lateinit var etStok: EditText
     private lateinit var btnBatal: Button
-    private lateinit var btnTambah: Button
+    private lateinit var btnTerapkan: Button
     private lateinit var storageRef: StorageReference
     private lateinit var databaseRef: FirebaseFirestore
 
+    private var barang: Barang? = null
     private var imageBitmap: Bitmap? = null
     private var merek: String = ""
     private var model: String = ""
@@ -58,15 +69,15 @@ class TambahBarangFragment : Fragment() {
     private var biayaSewa: Int = 0
     private var stok: Int = 0
 
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_tambah_barang, container, false)
+        return inflater.inflate(R.layout.fragment_update_barang, container, false)
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -74,7 +85,7 @@ class TambahBarangFragment : Fragment() {
 
         databaseRef = FirebaseFirestore.getInstance()
 
-        ivTambahBarang = view.findViewById(R.id.iv_barang)
+        ivEditBarang = view.findViewById(R.id.iv_barang)
         etMerek = view.findViewById(R.id.et_merek)
         etModel = view.findViewById(R.id.et_model)
         etProsesor = view.findViewById(R.id.et_prosesor)
@@ -88,14 +99,48 @@ class TambahBarangFragment : Fragment() {
         etKondisi = view.findViewById(R.id.et_kondisi)
         etBiayaSewa = view.findViewById(R.id.et_biaya_sewa)
         etStok = view.findViewById(R.id.et_stok)
-        btnTambah = view.findViewById(R.id.btn_tambah)
+        btnTerapkan = view.findViewById(R.id.btn_terapkan)
         btnBatal = view.findViewById(R.id.btn_batal)
 
-        ivTambahBarang.setOnClickListener {
+        var barangId=""
+        var barangImageUrl=""
+
+        if (arguments != null) {
+            barang = arguments?.getParcelable(DetailBarangFragment.EXTRA_BARANG)
+            barangImageUrl= barang?.fotoBarang.toString()
+            Glide.with(requireContext())
+                .load(barang?.fotoBarang)
+                .apply(RequestOptions())
+                .into(ivEditBarang)
+            etMerek.setText(barang?.merek ?: "")
+            etModel.setText(barang?.model ?: "")
+            etProsesor.setText(barang?.prosesor ?: "")
+            etRam.setText(barang?.ram ?: "")
+            etOs.setText(barang?.sistemOperasi ?: "")
+            etGrafis.setText(barang?.kartuGrafis ?: "")
+            etPenyimpanan.setText(barang?.penyimpanan ?: "")
+            etUkuranLayar.setText(barang?.ukuranLayar ?: "")
+            etPerangkatLunak.setText(barang?.perangkatLunak ?: "")
+            etAksesoris.setText(barang?.aksesoris ?: "")
+            etKondisi.setText(barang?.kondisi ?: "")
+            etBiayaSewa.setText(barang?.biayaSewa.toString())
+            etStok.setText(barang?.stok.toString())
+            barangId=barang?.barangId.toString()
+        }
+
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                parentFragmentManager.popBackStack()
+            }
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+
+        ivEditBarang.setOnClickListener {
             onPickImageClick()
         }
 
-        btnTambah.setOnClickListener {
+        btnTerapkan.setOnClickListener {
             merek = etMerek.text.toString()
             model = etModel.text.toString()
             prosesor = etProsesor.text.toString()
@@ -109,13 +154,6 @@ class TambahBarangFragment : Fragment() {
             kondisi = etKondisi.text.toString()
             biayaSewa = etBiayaSewa.text.toString().toInt()
             stok = etStok.text.toString().toInt()
-
-
-            if (imageBitmap == null) {
-                ivTambahBarang.requestFocus()
-                Toast.makeText(context, "Gambar masih kosong!", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
 
             if (merek.isEmpty()) {
                 etMerek.requestFocus()
@@ -195,24 +233,59 @@ class TambahBarangFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            Toast.makeText(context, "Tambahkan ke firebase dan firestore", Toast.LENGTH_SHORT)
+            GlobalScope.launch(Dispatchers.IO) {
+                try {
+                    val baos = ByteArrayOutputStream()
+                    val bitmap:Bitmap?=Glide
+                        .with(requireContext())
+                        .asBitmap()
+                        .load(barangImageUrl)
+                        .submit()
+                        .get()
+                    imageBitmap?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+                        ?: bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+                    val imageData = baos.toByteArray()
+
+                    val imageRef = storageRef.child("barang/${barangId}.jpg")
+
+                    val uploadTask = imageRef.putBytes(imageData)
+
+                    uploadTask.addOnSuccessListener {
+                        imageRef.downloadUrl.addOnSuccessListener { uri ->
+                            val imageUrl = if (imageBitmap==null){
+                                barangImageUrl
+                            }else {
+                                uri.toString()
+                            }
+                            databaseRef.collection("barang").document(barangId)
+                                .update(
+                                    "fotoBarang", imageUrl,
+                                    "barangId", barangId,
+                                    "merek", merek,
+                                    "model", model,
+                                    "prosesor", prosesor,
+                                    "ram", ram,
+                                    "sistemOperasi", os,
+                                    "kartuGrafis", grafis,
+                                    "penyimpanan", penyimpanan,
+                                    "ukuranLayar", ukuranLayar,
+                                    "perangkatLunak", perangkatLunak,
+                                    "aksesoris", aksesoris,
+                                    "kondisi", kondisi,
+                                    "biayaSewa", biayaSewa,
+                                    "stok", stok,
+                                )
+                        }
+                    }
+                }catch (e:IOException){
+                    e.printStackTrace()
+                }
+            }
+
+
+            Toast.makeText(context, "Barang sudah terupdate", Toast.LENGTH_SHORT)
                 .show()
-            addDataToFirestore(
-                imageBitmap,
-                merek,
-                model,
-                prosesor,
-                ram,
-                os,
-                grafis,
-                penyimpanan,
-                ukuranLayar,
-                perangkatLunak,
-                aksesoris,
-                kondisi,
-                biayaSewa,
-                stok
-            )
+            parentFragmentManager.popBackStack()
         }
         btnBatal.setOnClickListener {
             parentFragmentManager.popBackStack()
@@ -229,66 +302,6 @@ class TambahBarangFragment : Fragment() {
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
-    }
-
-    private fun addDataToFirestore(
-        imageBitmap: Bitmap?,
-        merek: String,
-        model: String,
-        prosesor: String,
-        ram: String,
-        os: String,
-        grafis: String,
-        penyimpanan: String,
-        ukuranLayar: String,
-        perangkatLunak: String,
-        aksesoris: String,
-        kondisi: String,
-        biayaSewa: Int,
-        stok: Int
-    ) {
-        val data = hashMapOf(
-            "merek" to merek,
-            "model" to model,
-            "prosesor" to prosesor,
-            "ram" to ram,
-            "sistemOperasi" to os,
-            "kartuGrafis" to grafis,
-            "penyimpanan" to penyimpanan,
-            "ukuranLayar" to ukuranLayar,
-            "perangkatLunak" to perangkatLunak,
-            "aksesoris" to aksesoris,
-            "kondisi" to kondisi,
-            "biayaSewa" to biayaSewa,
-            "stok" to stok,
-        )
-
-        databaseRef.collection("barang")
-            .add(data)
-            .addOnSuccessListener { document ->
-                val baos = ByteArrayOutputStream()
-                imageBitmap?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-                val imageData = baos.toByteArray()
-
-                val imageRef = storageRef.child("barang/${document.id}.jpg")
-
-                val uploadTask = imageRef.putBytes(imageData)
-                uploadTask.addOnSuccessListener {
-                    imageRef.downloadUrl.addOnSuccessListener { uri ->
-                        val imageUrl = uri.toString()
-                        databaseRef.collection("barang").document(document.id)
-                            .update(
-                                "fotoBarang", imageUrl,
-                                "barangId", document.id
-                            )
-                    }
-                }
-
-                parentFragmentManager.popBackStack()
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
-            }
     }
 
     private fun onPickImageClick() {
@@ -321,21 +334,21 @@ class TambahBarangFragment : Fragment() {
 
     private val takePictureLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
+            if (result.resultCode == Activity.RESULT_OK) {
                 val data: Intent? = result.data
                 imageBitmap = data?.extras?.get("data") as Bitmap
-                ivTambahBarang.setImageBitmap(imageBitmap)
+                ivEditBarang.setImageBitmap(imageBitmap)
             }
         }
 
     private val pickImageLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
+            if (result.resultCode == Activity.RESULT_OK) {
                 val data: Intent? = result.data
                 val imageUri = data?.data
                 imageBitmap =
                     MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, imageUri)
-                ivTambahBarang.setImageBitmap(imageBitmap)
+                ivEditBarang.setImageBitmap(imageBitmap)
             }
         }
 }

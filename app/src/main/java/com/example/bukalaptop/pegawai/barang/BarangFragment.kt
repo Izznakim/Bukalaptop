@@ -51,10 +51,6 @@ class BarangFragment : Fragment() {
                 for (document in value) {
                     val barang = document.toObject(Barang::class.java)
                     listBarang.add(barang)
-                    Log.d("ID Barang", barang.barangId)
-                    Log.d("Foto Barang", barang.fotoBarang)
-                    Log.d("Merek Barang", barang.merek)
-                    Log.d("Ukuran Barang", barang.ukuranLayar)
                 }
             } else if (error != null) {
                 Log.d("List Barang", error.toString())

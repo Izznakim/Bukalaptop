@@ -10,6 +10,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
@@ -60,8 +61,8 @@ class DetailBarangFragment : Fragment() {
         currencyFormat.maximumFractionDigits = 2
         currencyFormat.currency = Currency.getInstance("IDR")
 
-        ivBarang = view.findViewById(R.id.iv_tambah_barang)
-        tvMerekModel = view.findViewById(R.id.et_merek)
+        ivBarang = view.findViewById(R.id.iv_barang)
+        tvMerekModel = view.findViewById(R.id.tv_merek)
         tvBiayaSewa = view.findViewById(R.id.tv_biaya_sewa)
         tvProsesor = view.findViewById(R.id.tv_prosesor)
         tvRam = view.findViewById(R.id.tv_ram)
@@ -97,7 +98,17 @@ class DetailBarangFragment : Fragment() {
         }
 
         btnUpdate.setOnClickListener {
-            Toast.makeText(requireContext(), "Coming soon", Toast.LENGTH_SHORT).show()
+            val updateBarangFragment = UpdateBarangFragment()
+            val mFragmentManager = activity?.supportFragmentManager
+            val bundle = Bundle()
+
+            bundle.putParcelable(EXTRA_BARANG, barang)
+            updateBarangFragment.arguments = bundle
+            mFragmentManager?.beginTransaction()?.apply {
+                replace(R.id.fragment_container,updateBarangFragment, UpdateBarangFragment::class.java.simpleName)
+                addToBackStack(null)
+                commit()
+            }
         }
         btnHapus.setOnClickListener {
             val db = Firebase.firestore
