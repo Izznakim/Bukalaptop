@@ -10,7 +10,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
@@ -39,11 +38,11 @@ class DetailBarangFragment : Fragment() {
     private lateinit var tvStok: TextView
     private lateinit var btnUpdate: Button
     private lateinit var btnHapus: Button
-
-    private var barang: Barang? = null
+    private lateinit var barang: Barang
 
     companion object {
         var EXTRA_BARANG = "extra_barang"
+        var EXTRA_IDBARANG = "extra_idbarang"
     }
 
     override fun onCreateView(
@@ -77,24 +76,39 @@ class DetailBarangFragment : Fragment() {
         btnUpdate = view.findViewById(R.id.btn_update)
         btnHapus = view.findViewById(R.id.btn_hapus)
 
+        var barangId = ""
+
         if (arguments != null) {
-            barang = arguments?.getParcelable(EXTRA_BARANG)
-            Glide.with(requireContext())
-                .load(barang?.fotoBarang)
-                .apply(RequestOptions())
-                .into(ivBarang)
-            tvMerekModel.text = "${barang?.merek} ${barang?.model}"
-            tvProsesor.text = barang?.prosesor
-            tvRam.text = barang?.ram
-            tvOs.text = barang?.sistemOperasi
-            tvGrafis.text = barang?.kartuGrafis
-            tvPenyimpanan.text = barang?.penyimpanan
-            tvUkuranLayar.text = barang?.ukuranLayar
-            tvPerangkatLunak.text = barang?.perangkatLunak
-            tvAksesoris.text = barang?.aksesoris
-            tvKondisi.text = barang?.kondisi
-            tvBiayaSewa.text = "${currencyFormat.format(barang?.biayaSewa)} /Hari"
-            tvStok.text = barang?.stok.toString()
+            barangId = arguments?.getString(EXTRA_IDBARANG).toString()
+        }
+
+        val db = Firebase.firestore
+        db.collection("barang").addSnapshotListener { value, error ->
+            if (value != null) {
+                for (document in value) {
+                    if (document.id == barangId) {
+                        barang = document.toObject(Barang::class.java)
+                        Glide.with(requireActivity())
+                            .load(barang.fotoBarang)
+                            .apply(RequestOptions())
+                            .into(ivBarang)
+                        tvMerekModel.text = "${barang.merek} ${barang.model}"
+                        tvProsesor.text = barang.prosesor
+                        tvRam.text = barang.ram
+                        tvOs.text = barang.sistemOperasi
+                        tvGrafis.text = barang.kartuGrafis
+                        tvPenyimpanan.text = barang.penyimpanan
+                        tvUkuranLayar.text = barang.ukuranLayar
+                        tvPerangkatLunak.text = barang.perangkatLunak
+                        tvAksesoris.text = barang.aksesoris
+                        tvKondisi.text = barang.kondisi
+                        tvBiayaSewa.text = "${currencyFormat.format(barang.biayaSewa)} /Hari"
+                        tvStok.text = barang.stok.toString()
+                    }
+                }
+            } else if (error != null) {
+                Log.d("Detail Barang", error.toString())
+            }
         }
 
         btnUpdate.setOnClickListener {
@@ -105,17 +119,20 @@ class DetailBarangFragment : Fragment() {
             bundle.putParcelable(EXTRA_BARANG, barang)
             updateBarangFragment.arguments = bundle
             mFragmentManager?.beginTransaction()?.apply {
-                replace(R.id.fragment_container,updateBarangFragment, UpdateBarangFragment::class.java.simpleName)
+                replace(
+                    R.id.fragment_container,
+                    updateBarangFragment,
+                    UpdateBarangFragment::class.java.simpleName
+                )
                 addToBackStack(null)
                 commit()
             }
         }
         btnHapus.setOnClickListener {
-            val db = Firebase.firestore
             val storageRef = FirebaseStorage.getInstance().reference
-            val barangIdRef = storageRef.child("barang/${barang?.barangId}.jpg")
+            val barangIdRef = storageRef.child("barang/${barang.barangId}.jpg")
 
-            barang?.let { mBarang ->
+            barang.let { mBarang ->
                 db.collection("barang").document(mBarang.barangId)
                     .delete()
                     .addOnSuccessListener {
@@ -132,6 +149,18 @@ class DetailBarangFragment : Fragment() {
                 }.addOnFailureListener { e -> Log.w("Error", "Error deleting image", e) }
             }
         }
+
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                parentFragmentManager.popBackStack()
+            }
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+    }
+
+    override fun onResume() {
+        super.onResume()
 
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {

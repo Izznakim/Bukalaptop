@@ -46,7 +46,7 @@ class ListBarangAdapter(private val listBarang: ArrayList<Barang>) :
         val currencyFormat = NumberFormat.getCurrencyInstance()
         currencyFormat.maximumFractionDigits = 2
         currencyFormat.currency = Currency.getInstance("IDR")
-        val (_, fotoBarang, merek, model, prosesor, _, ram, _, _, _, _, _, _, biayaSewa, stok) = listBarang[position]
+        val (idBarang, fotoBarang, merek, model, prosesor, _, ram, _, _, _, _, _, _, biayaSewa, stok) = listBarang[position]
 
         holder.apply {
             Glide.with(holder.itemView.context)
@@ -64,7 +64,7 @@ class ListBarangAdapter(private val listBarang: ArrayList<Barang>) :
                     (holder.itemView.context as AppCompatActivity).supportFragmentManager
                 val bundle = Bundle()
 
-                bundle.putParcelable(DetailBarangFragment.EXTRA_BARANG, listBarang[position])
+                bundle.putString(DetailBarangFragment.EXTRA_IDBARANG, idBarang)
                 detailBarangFragment.arguments = bundle
                 mFragmentManager.beginTransaction().apply {
                     replace(R.id.fragment_container,detailBarangFragment, DetailBarangFragment::class.java.simpleName)

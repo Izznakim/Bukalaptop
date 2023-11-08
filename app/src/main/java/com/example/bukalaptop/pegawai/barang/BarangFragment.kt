@@ -1,12 +1,10 @@
 package com.example.bukalaptop.pegawai.barang
 
 import android.os.Bundle
-import android.text.TextUtils.replace
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -15,7 +13,6 @@ import com.example.bukalaptop.pegawai.barang.adapter.ListBarangAdapter
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 
 class BarangFragment : Fragment() {
@@ -23,7 +20,7 @@ class BarangFragment : Fragment() {
     private lateinit var rvBarang: RecyclerView
     private lateinit var listBarangAdapter: ListBarangAdapter
     private lateinit var listBarang: ArrayList<Barang>
-    private lateinit var fabDetail: FloatingActionButton
+    private lateinit var fabTambahBarang: FloatingActionButton
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,7 +36,7 @@ class BarangFragment : Fragment() {
         rvBarang = view.findViewById(R.id.rv_barang)
         rvBarang.setHasFixedSize(true)
 
-        fabDetail = view.findViewById(R.id.fab_detail)
+        fabTambahBarang = view.findViewById(R.id.fab_tambah_barang)
 
         initAdapter()
 
@@ -58,7 +55,7 @@ class BarangFragment : Fragment() {
             listBarangAdapter.setData(listBarang)
         }
 
-        fabDetail.setOnClickListener {
+        fabTambahBarang.setOnClickListener {
             parentFragmentManager.beginTransaction().apply {
                 replace(R.id.fragment_container,TambahBarangFragment(), TambahBarangFragment::class.java.simpleName)
                 addToBackStack(null)
