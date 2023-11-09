@@ -34,7 +34,7 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
     }
 
     override fun onBindViewHolder(holder: ListViewHolder, position: Int) {
-        val (_,nama, _, telepon) = listPesanan[position]
+        val (pesananId,nama, _, telepon) = listPesanan[position]
         holder.apply {
             tvNama.text = nama
             tvTelepon.text = telepon
@@ -44,7 +44,7 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
                     (holder.itemView.context as AppCompatActivity).supportFragmentManager
                 val bundle = Bundle()
 
-                bundle.putParcelable(DetailPesananFragment.EXTRA_PESANAN, listPesanan[position])
+                bundle.putString(DetailPesananFragment.EXTRA_IDPESANAN, pesananId)
                 detailPesananFragment.arguments = bundle
                 mFragmentManager.beginTransaction().apply {
                     replace(R.id.fragment_container,detailPesananFragment, DetailPesananFragment::class.java.simpleName)

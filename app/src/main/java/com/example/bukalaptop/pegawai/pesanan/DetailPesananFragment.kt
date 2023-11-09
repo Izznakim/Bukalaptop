@@ -47,9 +47,10 @@ class DetailPesananFragment : Fragment() {
     private lateinit var rvKeranjang: RecyclerView
     private lateinit var listKeranjangAdapter: ListKeranjangAdapter
     private lateinit var listKeranjang: ArrayList<Keranjang>
+    private lateinit var pesanan: Pesanan
 
     companion object {
-        var EXTRA_PESANAN = "extra_pesanan"
+        var EXTRA_IDPESANAN = "extra_idpesanan"
     }
 
     override fun onCreateView(
@@ -83,44 +84,69 @@ class DetailPesananFragment : Fragment() {
 
         initAdapter()
 
+        var pesananId = ""
+
         val db = Firebase.firestore
         listKeranjang = arrayListOf()
 
         if (arguments != null) {
-            val pesanan = arguments?.getParcelable<Pesanan>(EXTRA_PESANAN)
+            pesananId = arguments?.getString(EXTRA_IDPESANAN).toString()
 
-            val alamat = SpannableString(pesanan?.alamatLengkap)
-            alamat.setSpan(UnderlineSpan(), 0, pesanan?.alamatLengkap?.length ?: 0, 0)
+            db.collection("pesanan").addSnapshotListener { value, error ->
+                if (error != null) {
+                    Log.d("List Pesanan Error", error.toString())
+                    return@addSnapshotListener
+                }
+                if (value != null) {
+                    for (document in value) {
+                        if (document.id == pesananId) {
+                            pesanan = Pesanan()
+                            pesanan.id = document.id
+                            pesanan.namaLengkap = document.getString("namaLengkap").toString()
+                            pesanan.nomorTelepon = document.getString("nomorTelepon").toString()
+                            pesanan.email = document.getString("alamatEmail").toString()
+                            pesanan.alamatLengkap = document.getString("alamatLengkap").toString()
+                            pesanan.buktiBayar = document.getString("buktiBayar").toString()
+                            pesanan.latitude = document.getGeoPoint("alamat")?.latitude ?: 0.0
+                            pesanan.longitude = document.getGeoPoint("alamat")?.longitude ?: 0.0
+                            pesanan.tglPengiriman =
+                                document.getTimestamp("tglPengiriman")?.toDate()
+                            pesanan.tglPengambilan =
+                                document.getTimestamp("tglPengambilan")?.toDate()
+                        }
+                    }
 
-            val currencyFormat = NumberFormat.getCurrencyInstance()
-            currencyFormat.maximumFractionDigits = 2
-            currencyFormat.currency = Currency.getInstance("IDR")
+                    val alamat = SpannableString(pesanan.alamatLengkap)
+                    alamat.setSpan(UnderlineSpan(), 0, pesanan.alamatLengkap.length, 0)
 
-            val sdf = SimpleDateFormat("dd/MM/yyy", Locale.getDefault())
-            val diff =
-                (pesanan?.tglPengambilan?.time ?: 0) - (pesanan?.tglPengiriman?.time ?: 0)
-            val masaSewa = (diff / 1000 / 60 / 60 / 24).toInt()
+                    val currencyFormat = NumberFormat.getCurrencyInstance()
+                    currencyFormat.maximumFractionDigits = 2
+                    currencyFormat.currency = Currency.getInstance("IDR")
 
-            tvNama.text = pesanan?.namaLengkap
-            tvEmail.text = pesanan?.email
-            tvTglPengiriman.text = sdf.format(pesanan?.tglPengiriman ?: Date())
-            tvTglPengambilan.text = sdf.format(pesanan?.tglPengambilan ?: Date())
-            tvHari.text = masaSewa.toString()
-            tvAlamat.text = alamat
+                    val sdf = SimpleDateFormat("dd/MM/yyy", Locale.getDefault())
+                    val diff =
+                        (pesanan.tglPengambilan?.time ?: 0) - (pesanan.tglPengiriman?.time ?: 0)
+                    val masaSewa = (diff / 1000 / 60 / 60 / 24).toInt()
 
-            Glide.with(requireContext())
-                .load(pesanan?.buktiBayar)
-                .apply(RequestOptions())
-                .into(ivBukti)
+                    tvNama.text = pesanan.namaLengkap
+                    tvEmail.text = pesanan.email
+                    tvTglPengiriman.text = sdf.format(pesanan.tglPengiriman ?: Date())
+                    tvTglPengambilan.text = sdf.format(pesanan.tglPengambilan ?: Date())
+                    tvHari.text = masaSewa.toString()
+                    tvAlamat.text = alamat
 
-            if (pesanan != null) {
-                db.collection("pesanan").document(pesanan.id).collection("keranjang")
-                    .addSnapshotListener { value, error ->
-                        var total = 0
-                        listKeranjang.clear()
-                        if (value != null) {
-                            for (document in value) {
-                                val barang = document.toObject(Barang::class.java)
+                    Glide.with(requireContext())
+                        .load(pesanan.buktiBayar)
+                        .apply(RequestOptions())
+                        .into(ivBukti)
+
+                    db.collection("pesanan").document(pesananId).collection("keranjang")
+                        .addSnapshotListener { value, error ->
+                            var total = 0
+                            listKeranjang.clear()
+                            if (value != null) {
+                                for (document in value) {
+                                    val barang = document.toObject(Barang::class.java)
 //                                barang.id = document.id
 //                                barang.fotoBarang = document.getString("fotoBarang").toString()
 //                                barang.merek = document.getString("merek").toString()
@@ -139,22 +165,25 @@ class DetailPesananFragment : Fragment() {
 //                                barang.biayaSewa = document.getLong("biayaSewa")?.toInt() ?: 0
 //                                barang.stok = document.getLong("stok")?.toInt() ?: 0
 
-                                val jumlah = document.get("jumlah").toString().toInt()
-                                total += (barang.biayaSewa * jumlah)
+                                    val jumlah = document.get("jumlah").toString().toInt()
+                                    total += (barang.biayaSewa * jumlah)
 
-                                val keranjang = Keranjang(barang, jumlah)
-                                keranjang.barang = document.toObject(Barang::class.java)
-                                keranjang.jumlah = jumlah
+                                    val keranjang = Keranjang(barang, jumlah)
+                                    keranjang.barang = document.toObject(Barang::class.java)
+                                    keranjang.jumlah = jumlah
 
-                                listKeranjang.add(keranjang)
+                                    listKeranjang.add(keranjang)
+                                }
+                            } else if (error != null) {
+                                Log.d("List Keranjang", error.toString())
                             }
-                        } else if (error != null) {
-                            Log.d("List Keranjang", error.toString())
+                            listKeranjangAdapter.setData(listKeranjang)
+                            tvTotal.text =
+                                currencyFormat.format(total * masaSewa)
                         }
-                        listKeranjangAdapter.setData(listKeranjang)
-                        tvTotal.text =
-                            currencyFormat.format(total * masaSewa)
-                    }
+                } else {
+                    Log.d("List Pesanan", "Data Kosong")
+                }
             }
 
             tvAlamat.setOnClickListener {
