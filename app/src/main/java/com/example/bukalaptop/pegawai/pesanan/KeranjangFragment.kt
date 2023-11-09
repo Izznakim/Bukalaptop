@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
+import com.example.bukalaptop.pegawai.pesanan.DetailPesananFragment.Companion.EXTRA_IDPESANAN
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
 import com.example.bukalaptop.pegawai.pesanan.model.Keranjang
 import com.example.bukalaptop.pegawai.pesanan.model.Pesanan
@@ -20,10 +21,6 @@ class KeranjangFragment : Fragment() {
     private lateinit var rvKeranjang: RecyclerView
     private lateinit var listKeranjangAdapter: ListKeranjangAdapter
     private lateinit var listKeranjang:ArrayList<Keranjang>
-
-    companion object {
-        var EXTRA_PESANAN = "extra_pesanan"
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,9 +41,9 @@ class KeranjangFragment : Fragment() {
         val db = Firebase.firestore
         listKeranjang = arrayListOf()
         if (arguments != null) {
-            val pesanan = arguments?.getParcelable<Pesanan>(MapsFragment.EXTRA_PESANAN)
-            if (pesanan!=null){
-                db.collection("pesanan").document(pesanan.id).collection("keranjang").addSnapshotListener { value, error ->
+            val pesananId = arguments?.getString(EXTRA_IDPESANAN)
+            if (pesananId!=null){
+                db.collection("pesanan").document(pesananId).collection("keranjang").addSnapshotListener { value, error ->
                     listKeranjang.clear()
                     if (value != null) {
                         for (document in value){

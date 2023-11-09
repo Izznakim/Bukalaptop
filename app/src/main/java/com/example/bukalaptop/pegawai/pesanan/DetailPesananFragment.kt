@@ -12,6 +12,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -92,13 +93,13 @@ class DetailPesananFragment : Fragment() {
         if (arguments != null) {
             pesananId = arguments?.getString(EXTRA_IDPESANAN).toString()
 
-            db.collection("pesanan").addSnapshotListener { value, error ->
-                if (error != null) {
-                    Log.d("List Pesanan Error", error.toString())
+            db.collection("pesanan").addSnapshotListener { valuePesanan, errorPesanan ->
+                if (errorPesanan != null) {
+                    Log.d("List Pesanan Error", errorPesanan.toString())
                     return@addSnapshotListener
                 }
-                if (value != null) {
-                    for (document in value) {
+                if (valuePesanan != null) {
+                    for (document in valuePesanan) {
                         if (document.id == pesananId) {
                             pesanan = Pesanan()
                             pesanan.id = document.id
@@ -141,11 +142,11 @@ class DetailPesananFragment : Fragment() {
                         .into(ivBukti)
 
                     db.collection("pesanan").document(pesananId).collection("keranjang")
-                        .addSnapshotListener { value, error ->
+                        .addSnapshotListener { valueKeranjang, errorKeranjang ->
                             var total = 0
                             listKeranjang.clear()
-                            if (value != null) {
-                                for (document in value) {
+                            if (valueKeranjang != null) {
+                                for (document in valueKeranjang) {
                                     val barang = document.toObject(Barang::class.java)
 //                                barang.id = document.id
 //                                barang.fotoBarang = document.getString("fotoBarang").toString()
@@ -174,8 +175,8 @@ class DetailPesananFragment : Fragment() {
 
                                     listKeranjang.add(keranjang)
                                 }
-                            } else if (error != null) {
-                                Log.d("List Keranjang", error.toString())
+                            } else if (errorKeranjang != null) {
+                                Log.d("List Keranjang", errorKeranjang.toString())
                             }
                             listKeranjangAdapter.setData(listKeranjang)
                             tvTotal.text =
@@ -187,8 +188,17 @@ class DetailPesananFragment : Fragment() {
             }
 
             tvAlamat.setOnClickListener {
-                Toast.makeText(requireContext(), "Coming Soon ke Maps Fragment", Toast.LENGTH_SHORT)
-                    .show()
+                val mapsFragment = MapsFragment()
+                val mFragmentManager = activity?.supportFragmentManager
+                val bundle = Bundle()
+
+                bundle.putString(EXTRA_IDPESANAN, pesananId)
+                mapsFragment.arguments = bundle
+                mFragmentManager?.beginTransaction()?.apply {
+                    replace(R.id.fragment_container,mapsFragment, MapsFragment::class.java.simpleName)
+                    addToBackStack(null)
+                    commit()
+                }
             }
             ivBukti.setOnClickListener {
                 Toast.makeText(requireContext(), "Coming Soon ke Zoom Image", Toast.LENGTH_SHORT)

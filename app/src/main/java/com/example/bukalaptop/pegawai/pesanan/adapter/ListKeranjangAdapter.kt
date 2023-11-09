@@ -66,7 +66,7 @@ class ListKeranjangAdapter(private val listKeranjang: ArrayList<Keranjang>) :
                     (holder.itemView.context as AppCompatActivity).supportFragmentManager
                 val bundle = Bundle()
 
-                bundle.putParcelable(DetailBarangFragment.EXTRA_BARANG, listKeranjang[position].barang)
+                bundle.putString(DetailBarangFragment.EXTRA_IDBARANG, barang.barangId)
                 detailBarangFragment.arguments = bundle
                 mFragmentManager.beginTransaction().apply {
                     replace(R.id.fragment_container,detailBarangFragment, DetailBarangFragment::class.java.simpleName)
