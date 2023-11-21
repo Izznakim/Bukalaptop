@@ -1,6 +1,7 @@
 package com.example.bukalaptop.pegawai.pesanan.adapter
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,7 +10,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.pesanan.DetailPesananFragment
+import com.example.bukalaptop.pegawai.pesanan.model.Pelanggan
 import com.example.bukalaptop.pegawai.pesanan.model.Pesanan
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
 class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
     RecyclerView.Adapter<ListPesananAdapter.ListViewHolder>() {
@@ -34,10 +38,24 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
     }
 
     override fun onBindViewHolder(holder: ListViewHolder, position: Int) {
-        val (pesananId,nama, _, telepon) = listPesanan[position]
+        val (pesananId,idPelanggan) = listPesanan[position]
         holder.apply {
-            tvNama.text = nama
-            tvTelepon.text = telepon
+            val db = Firebase.firestore
+            db.collection("pelanggan").addSnapshotListener{valuePelanggan,errorPelanggan->
+                if (errorPelanggan != null) {
+                    Log.d("List Pesanan Error", errorPelanggan.toString())
+                    return@addSnapshotListener
+                }
+                if (valuePelanggan != null) {
+                    for (document in valuePelanggan) {
+                        if (document.id == idPelanggan) {
+                            val pelanggan=document.toObject(Pelanggan::class.java)
+                            tvNama.text = pelanggan.namaLengkap
+                            tvTelepon.text = pelanggan.nomorTelepon
+                        }
+                    }
+                }
+            }
             itemView.setOnClickListener {
                 val detailPesananFragment = DetailPesananFragment()
                 val mFragmentManager =

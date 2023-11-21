@@ -2,6 +2,7 @@ package com.example.bukalaptop.pegawai.pesanan
 
 import android.os.Bundle
 import android.text.SpannableString
+import android.text.TextUtils.replace
 import android.text.style.UnderlineSpan
 import android.util.Log
 import android.view.LayoutInflater
@@ -21,8 +22,10 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.barang.model.Barang
+import com.example.bukalaptop.pegawai.pesanan.ProfilPelangganFragment.Companion.EXTRA_IDPELANGGAN
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
 import com.example.bukalaptop.pegawai.pesanan.model.Keranjang
+import com.example.bukalaptop.pegawai.pesanan.model.Pelanggan
 import com.example.bukalaptop.pegawai.pesanan.model.Pesanan
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -77,7 +80,17 @@ class DetailPesananFragment : Fragment() {
         ivBukti = view.findViewById(R.id.iv_bukti)
 
         cvPelangganProfil.setOnClickListener {
-            Toast.makeText(activity, "Coming Soon!", Toast.LENGTH_SHORT).show()
+            val profilPelangganFragment = ProfilPelangganFragment()
+            val mFragmentManager = activity?.supportFragmentManager
+            val bundle = Bundle()
+
+            bundle.putString(EXTRA_IDPELANGGAN, pesanan.idPelanggan)
+            profilPelangganFragment.arguments = bundle
+            mFragmentManager?.beginTransaction()?.apply {
+                replace(R.id.fragment_container,profilPelangganFragment, ProfilPelangganFragment::class.java.simpleName)
+                addToBackStack(null)
+                commit()
+            }
         }
 
         rvKeranjang = view.findViewById(R.id.rv_keranjang)
@@ -103,9 +116,7 @@ class DetailPesananFragment : Fragment() {
                         if (document.id == pesananId) {
                             pesanan = Pesanan()
                             pesanan.id = document.id
-                            pesanan.namaLengkap = document.getString("namaLengkap").toString()
-                            pesanan.nomorTelepon = document.getString("nomorTelepon").toString()
-                            pesanan.email = document.getString("alamatEmail").toString()
+                            pesanan.idPelanggan=document.getString("idPelanggan").toString()
                             pesanan.alamatLengkap = document.getString("alamatLengkap").toString()
                             pesanan.buktiBayar = document.getString("buktiBayar").toString()
                             pesanan.latitude = document.getGeoPoint("alamat")?.latitude ?: 0.0
@@ -129,8 +140,22 @@ class DetailPesananFragment : Fragment() {
                         (pesanan.tglPengambilan?.time ?: 0) - (pesanan.tglPengiriman?.time ?: 0)
                     val masaSewa = (diff / 1000 / 60 / 60 / 24).toInt()
 
-                    tvNama.text = pesanan.namaLengkap
-                    tvEmail.text = pesanan.email
+                    db.collection("pelanggan").addSnapshotListener{valuePelanggan,errorPelanggan->
+                        if (errorPelanggan != null) {
+                            Log.d("List Pesanan Error", errorPelanggan.toString())
+                            return@addSnapshotListener
+                        }
+                        if (valuePelanggan != null) {
+                            for (document in valuePelanggan) {
+                                if (document.id == pesanan.idPelanggan) {
+                                    val pelanggan=document.toObject(Pelanggan::class.java)
+                                    tvNama.text = pelanggan.namaLengkap
+                                    tvEmail.text = pelanggan.email
+                                }
+                            }
+                        }
+                    }
+
                     tvTglPengiriman.text = sdf.format(pesanan.tglPengiriman ?: Date())
                     tvTglPengambilan.text = sdf.format(pesanan.tglPengambilan ?: Date())
                     tvHari.text = masaSewa.toString()

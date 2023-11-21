@@ -7,9 +7,7 @@ import java.util.Date
 @Parcelize
 data class Pesanan(
     var id: String = "",
-    var namaLengkap: String = "",
-    var email: String = "",
-    var nomorTelepon: String = "",
+    var idPelanggan: String = "",
     var alamatLengkap: String = "",
     var buktiBayar: String = "",
     var latitude: Double = 0.0,
