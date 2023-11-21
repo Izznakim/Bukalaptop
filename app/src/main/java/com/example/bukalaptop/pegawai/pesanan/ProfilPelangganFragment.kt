@@ -1,5 +1,6 @@
 package com.example.bukalaptop.pegawai.pesanan
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,6 +13,7 @@ import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
+import com.example.bukalaptop.ZoomImageActivity
 import com.example.bukalaptop.pegawai.pesanan.model.Pelanggan
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -48,6 +50,7 @@ class ProfilPelangganFragment : Fragment() {
         tvAlamatAsal = view.findViewById(R.id.tv_alamat_asal)
 
         val db = Firebase.firestore
+        var pelanggan = Pelanggan()
 
         if (arguments != null) {
             val pelangganId = arguments?.getString(EXTRA_IDPELANGGAN).toString()
@@ -60,7 +63,7 @@ class ProfilPelangganFragment : Fragment() {
                 if (value != null) {
                     for (document in value) {
                         if (document.id == pelangganId) {
-                            val pelanggan = document.toObject(Pelanggan::class.java)
+                            pelanggan = document.toObject(Pelanggan::class.java)
                             Glide.with(requireContext())
                                 .load(pelanggan.fotoKtp)
                                 .apply(RequestOptions())
@@ -75,6 +78,25 @@ class ProfilPelangganFragment : Fragment() {
                 }
             }
         }
+
+        ivKtpPelanggan.setOnClickListener {
+            Intent(activity, ZoomImageActivity::class.java).also {
+                it.putExtra(ZoomImageActivity.EXTRA_IMAGE, pelanggan.fotoKtp)
+                startActivity(it)
+            }
+        }
+
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                parentFragmentManager.popBackStack()
+            }
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+    }
+
+    override fun onResume() {
+        super.onResume()
 
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {

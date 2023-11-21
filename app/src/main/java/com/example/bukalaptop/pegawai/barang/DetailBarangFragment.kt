@@ -1,5 +1,6 @@
 package com.example.bukalaptop.pegawai.barang
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -14,6 +15,7 @@ import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
+import com.example.bukalaptop.ZoomImageActivity
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -108,6 +110,13 @@ class DetailBarangFragment : Fragment() {
                 }
             } else if (error != null) {
                 Log.d("Detail Barang", error.toString())
+            }
+        }
+
+        ivBarang.setOnClickListener {
+            Intent(activity, ZoomImageActivity::class.java).also {
+                it.putExtra(ZoomImageActivity.EXTRA_IMAGE, barang.fotoBarang)
+                startActivity(it)
             }
         }
 

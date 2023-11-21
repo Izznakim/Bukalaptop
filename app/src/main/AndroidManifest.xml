@@ -3,7 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-feature android:name="android.hardware.camera" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
     <application
@@ -16,6 +18,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BukalaptopActionBar"
         tools:targetApi="31">
+        <activity
+            android:name=".ZoomImageActivity"
+            android:exported="false" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"

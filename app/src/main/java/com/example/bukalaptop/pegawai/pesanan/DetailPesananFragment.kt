@@ -1,5 +1,6 @@
 package com.example.bukalaptop.pegawai.pesanan
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.TextUtils.replace
@@ -21,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
+import com.example.bukalaptop.ZoomImageActivity
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pegawai.pesanan.ProfilPelangganFragment.Companion.EXTRA_IDPELANGGAN
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
@@ -226,8 +228,10 @@ class DetailPesananFragment : Fragment() {
                 }
             }
             ivBukti.setOnClickListener {
-                Toast.makeText(requireContext(), "Coming Soon ke Zoom Image", Toast.LENGTH_SHORT)
-                    .show()
+                Intent(activity, ZoomImageActivity::class.java).also {
+                    it.putExtra(ZoomImageActivity.EXTRA_IMAGE, pesanan.buktiBayar)
+                    startActivity(it)
+                }
             }
             btnTerima.setOnClickListener {
                 Toast.makeText(
@@ -258,5 +262,17 @@ class DetailPesananFragment : Fragment() {
         rvKeranjang.layoutManager = LinearLayoutManager(activity)
         listKeranjangAdapter = ListKeranjangAdapter(arrayListOf())
         rvKeranjang.adapter = listKeranjangAdapter
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                parentFragmentManager.popBackStack()
+            }
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
     }
 }
