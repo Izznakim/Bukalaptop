@@ -1,5 +1,6 @@
 package com.example.bukalaptop.pegawai.barang
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -138,25 +139,39 @@ class DetailBarangFragment : Fragment() {
             }
         }
         btnHapus.setOnClickListener {
-            val storageRef = FirebaseStorage.getInstance().reference
-            val barangIdRef = storageRef.child("barang/${barang.barangId}.jpg")
+            val builder = AlertDialog.Builder(requireContext())
 
-            barang.let { mBarang ->
-                db.collection("barang").document(mBarang.barangId)
-                    .delete()
-                    .addOnSuccessListener {
-                        Toast.makeText(
-                            activity,
-                            "${mBarang.merek} ${mBarang.model} berhasil dihapus",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        parentFragmentManager.popBackStack()
-                    }
-                    .addOnFailureListener { e -> Log.w("Error", "Error deleting document", e) }
+            builder.setMessage("Anda yakin ingin menghapus ${barang.merek} ${barang.model}?")
+                .setTitle("Konfirmasi")
 
-                barangIdRef.delete().addOnSuccessListener {
-                }.addOnFailureListener { e -> Log.w("Error", "Error deleting image", e) }
+            builder.setPositiveButton("Ya") { dialog, which ->
+                val storageRef = FirebaseStorage.getInstance().reference
+                val barangIdRef = storageRef.child("barang/${barang.barangId}.jpg")
+
+                barang.let { mBarang ->
+                    db.collection("barang").document(mBarang.barangId)
+                        .delete()
+                        .addOnSuccessListener {
+                            Toast.makeText(
+                                activity,
+                                "${mBarang.merek} ${mBarang.model} berhasil dihapus",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            parentFragmentManager.popBackStack()
+                        }
+                        .addOnFailureListener { e -> Log.w("Error", "Error deleting document", e) }
+
+                    barangIdRef.delete().addOnSuccessListener {
+                    }.addOnFailureListener { e -> Log.w("Error", "Error deleting image", e) }
+                }
             }
+
+            builder.setNegativeButton("Tidak") { dialog, which ->
+                dialog.cancel()
+            }
+
+            val dialog = builder.create()
+            dialog.show()
         }
 
         val callback = object : OnBackPressedCallback(true) {
