@@ -9,6 +9,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.pesanan.DetailPesananFragment.Companion.EXTRA_IDPESANAN
+import com.example.bukalaptop.pegawai.pesanan.DetailPesananFragment.Companion.EXTRA_NAMALENGKAP
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
@@ -22,6 +23,7 @@ class MapsFragment : Fragment() {
     private val callback = OnMapReadyCallback { googleMap ->
         if (arguments != null) {
             val pesananId = arguments?.getString(EXTRA_IDPESANAN).toString()
+            val namaLengkap = arguments?.getString(EXTRA_NAMALENGKAP).toString()
 
             val db = Firebase.firestore
             db.collection("pesanan").addSnapshotListener { valuePesanan, errorPesanan ->
@@ -32,7 +34,6 @@ class MapsFragment : Fragment() {
                 if (valuePesanan != null) {
                     for (document in valuePesanan) {
                         if (document.id == pesananId) {
-                            val namaLengkap = document.getString("namaLengkap").toString()
                             val alamatLengkap = document.getString("alamatLengkap").toString()
                             val latitude = document.getGeoPoint("alamat")?.latitude ?: 0.0
                             val longitude = document.getGeoPoint("alamat")?.longitude ?: 0.0

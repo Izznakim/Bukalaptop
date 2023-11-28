@@ -54,9 +54,11 @@ class DetailPesananFragment : Fragment() {
     private lateinit var listKeranjangAdapter: ListKeranjangAdapter
     private lateinit var listKeranjang: ArrayList<Keranjang>
     private lateinit var pesanan: Pesanan
+    private lateinit var pelanggan: Pelanggan
 
     companion object {
         var EXTRA_IDPESANAN = "extra_idpesanan"
+        var EXTRA_NAMALENGKAP = "extra_namalengkap"
     }
 
     override fun onCreateView(
@@ -150,7 +152,7 @@ class DetailPesananFragment : Fragment() {
                         if (valuePelanggan != null) {
                             for (document in valuePelanggan) {
                                 if (document.id == pesanan.idPelanggan) {
-                                    val pelanggan=document.toObject(Pelanggan::class.java)
+                                    pelanggan=document.toObject(Pelanggan::class.java)
                                     tvNama.text = pelanggan.namaLengkap
                                     tvEmail.text = pelanggan.email
                                 }
@@ -220,6 +222,7 @@ class DetailPesananFragment : Fragment() {
                 val bundle = Bundle()
 
                 bundle.putString(EXTRA_IDPESANAN, pesananId)
+                bundle.putString(EXTRA_NAMALENGKAP, pelanggan.namaLengkap)
                 mapsFragment.arguments = bundle
                 mFragmentManager?.beginTransaction()?.apply {
                     replace(R.id.fragment_container,mapsFragment, MapsFragment::class.java.simpleName)
