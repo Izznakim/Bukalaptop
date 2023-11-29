@@ -33,9 +33,9 @@ class PegawaiActivity : AppCompatActivity() {
 
         onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
 
-        val sectionPagerAdapter = SectionPagerAdapter(this)
+        val sectionPagerPegawaiAdapter = SectionPagerPegawaiAdapter(this)
         val viewPager: ViewPager2 = findViewById(R.id.view_pager)
-        viewPager.adapter = sectionPagerAdapter
+        viewPager.adapter = sectionPagerPegawaiAdapter
         val tabs: TabLayout = findViewById(R.id.tabs)
         TabLayoutMediator(tabs, viewPager) { tab, position ->
             tab.text = TAB_TITLES[position]

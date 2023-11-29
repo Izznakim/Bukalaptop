@@ -6,7 +6,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.example.bukalaptop.pegawai.barang.BarangFragment
 import com.example.bukalaptop.pegawai.pesanan.PesananFragment
 
-class SectionPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activity) {
+class SectionPagerPegawaiAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activity) {
     override fun getItemCount(): Int {
         return 2
     }

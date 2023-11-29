@@ -3,7 +3,6 @@ package com.example.bukalaptop.pegawai.pesanan
 import android.content.Intent
 import android.os.Bundle
 import android.text.SpannableString
-import android.text.TextUtils.replace
 import android.text.style.UnderlineSpan
 import android.util.Log
 import android.view.LayoutInflater
@@ -14,7 +13,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -91,7 +89,7 @@ class DetailPesananFragment : Fragment() {
             bundle.putString(EXTRA_IDPELANGGAN, pesanan.idPelanggan)
             profilPelangganFragment.arguments = bundle
             mFragmentManager?.beginTransaction()?.apply {
-                replace(R.id.fragment_container,profilPelangganFragment, ProfilPelangganFragment::class.java.simpleName)
+                replace(R.id.fragment_pegawai_container,profilPelangganFragment, ProfilPelangganFragment::class.java.simpleName)
                 addToBackStack(null)
                 commit()
             }
@@ -225,7 +223,7 @@ class DetailPesananFragment : Fragment() {
                 bundle.putString(EXTRA_NAMALENGKAP, pelanggan.namaLengkap)
                 mapsFragment.arguments = bundle
                 mFragmentManager?.beginTransaction()?.apply {
-                    replace(R.id.fragment_container,mapsFragment, MapsFragment::class.java.simpleName)
+                    replace(R.id.fragment_pegawai_container,mapsFragment, MapsFragment::class.java.simpleName)
                     addToBackStack(null)
                     commit()
                 }

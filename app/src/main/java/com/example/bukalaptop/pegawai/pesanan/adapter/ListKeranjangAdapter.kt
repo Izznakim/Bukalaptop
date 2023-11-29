@@ -69,7 +69,7 @@ class ListKeranjangAdapter(private val listKeranjang: ArrayList<Keranjang>) :
                 bundle.putString(DetailBarangFragment.EXTRA_IDBARANG, barang.barangId)
                 detailBarangFragment.arguments = bundle
                 mFragmentManager.beginTransaction().apply {
-                    replace(R.id.fragment_container,detailBarangFragment, DetailBarangFragment::class.java.simpleName)
+                    replace(R.id.fragment_pegawai_container,detailBarangFragment, DetailBarangFragment::class.java.simpleName)
                     addToBackStack(null)
                     commit()
                 }

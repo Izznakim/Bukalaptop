@@ -57,7 +57,7 @@ class BarangFragment : Fragment() {
 
         fabTambahBarang.setOnClickListener {
             parentFragmentManager.beginTransaction().apply {
-                replace(R.id.fragment_container,TambahBarangFragment(), TambahBarangFragment::class.java.simpleName)
+                replace(R.id.fragment_pegawai_container,TambahBarangFragment(), TambahBarangFragment::class.java.simpleName)
                 addToBackStack(null)
                 commit()
             }

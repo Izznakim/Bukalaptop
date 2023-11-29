@@ -65,7 +65,7 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
                 bundle.putString(DetailPesananFragment.EXTRA_IDPESANAN, pesananId)
                 detailPesananFragment.arguments = bundle
                 mFragmentManager.beginTransaction().apply {
-                    replace(R.id.fragment_container,detailPesananFragment, DetailPesananFragment::class.java.simpleName)
+                    replace(R.id.fragment_pegawai_container,detailPesananFragment, DetailPesananFragment::class.java.simpleName)
                     addToBackStack(null)
                     commit()
                 }

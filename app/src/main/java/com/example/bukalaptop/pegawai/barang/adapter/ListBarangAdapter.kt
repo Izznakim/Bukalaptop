@@ -67,7 +67,7 @@ class ListBarangAdapter(private val listBarang: ArrayList<Barang>) :
                 bundle.putString(DetailBarangFragment.EXTRA_IDBARANG, idBarang)
                 detailBarangFragment.arguments = bundle
                 mFragmentManager.beginTransaction().apply {
-                    replace(R.id.fragment_container,detailBarangFragment, DetailBarangFragment::class.java.simpleName)
+                    replace(R.id.fragment_pegawai_container,detailBarangFragment, DetailBarangFragment::class.java.simpleName)
                     addToBackStack(null)
                     commit()
                 }

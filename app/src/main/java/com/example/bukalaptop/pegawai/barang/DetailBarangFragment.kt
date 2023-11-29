@@ -3,7 +3,6 @@ package com.example.bukalaptop.pegawai.barang
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
-import android.text.Html
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -132,7 +131,7 @@ class DetailBarangFragment : Fragment() {
             updateBarangFragment.arguments = bundle
             mFragmentManager?.beginTransaction()?.apply {
                 replace(
-                    R.id.fragment_container,
+                    R.id.fragment_pegawai_container,
                     updateBarangFragment,
                     UpdateBarangFragment::class.java.simpleName
                 )
