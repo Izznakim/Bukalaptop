@@ -10,8 +10,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListPesananAdapter
-import com.example.bukalaptop.pegawai.pesanan.model.Pelanggan
-import com.example.bukalaptop.pegawai.pesanan.model.Pesanan
+import com.example.bukalaptop.model.Pelanggan
+import com.example.bukalaptop.model.Pesanan
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 

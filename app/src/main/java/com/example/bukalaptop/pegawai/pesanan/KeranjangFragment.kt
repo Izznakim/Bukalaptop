@@ -11,8 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.pesanan.DetailPesananFragment.Companion.EXTRA_IDPESANAN
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
-import com.example.bukalaptop.pegawai.pesanan.model.Keranjang
-import com.example.bukalaptop.pegawai.pesanan.model.Pesanan
+import com.example.bukalaptop.model.Keranjang
+import com.example.bukalaptop.model.Pesanan
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 

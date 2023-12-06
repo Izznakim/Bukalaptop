@@ -24,9 +24,9 @@ import com.example.bukalaptop.ZoomImageActivity
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pegawai.pesanan.ProfilPelangganFragment.Companion.EXTRA_IDPELANGGAN
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
-import com.example.bukalaptop.pegawai.pesanan.model.Keranjang
-import com.example.bukalaptop.pegawai.pesanan.model.Pelanggan
-import com.example.bukalaptop.pegawai.pesanan.model.Pesanan
+import com.example.bukalaptop.model.Keranjang
+import com.example.bukalaptop.model.Pelanggan
+import com.example.bukalaptop.model.Pesanan
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.text.NumberFormat

@@ -1,4 +1,4 @@
-package com.example.bukalaptop.pegawai.pesanan.adapter
+package com.example.bukalaptop.pegawai.barang.adapter
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -12,26 +12,26 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.barang.DetailBarangFragment
-import com.example.bukalaptop.model.Keranjang
+import com.example.bukalaptop.pegawai.barang.model.Barang
+import com.example.bukalaptop.pelanggan.barang.DetailBarangPelangganFragment
 import java.text.NumberFormat
 import java.util.Currency
 
-class ListKeranjangAdapter(private val listKeranjang: ArrayList<Keranjang>) :
-    RecyclerView.Adapter<ListKeranjangAdapter.ListViewHolder>() {
-    fun setData(data: List<Keranjang>) {
-        listKeranjang.clear()
-        listKeranjang.addAll(data)
+class ListBarangPelangganAdapter(private val listBarang: ArrayList<Barang>) :
+    RecyclerView.Adapter<ListBarangPelangganAdapter.ListViewHolder>() {
+    fun setData(data: List<Barang>) {
+        listBarang.clear()
+        listBarang.addAll(data)
         notifyDataSetChanged()
     }
 
     class ListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val ivBarang: ImageView = itemView.findViewById(R.id.iv_tambah_barang)
-        val tvMerek: TextView = itemView.findViewById(R.id.et_merek)
-        val tvModel: TextView = itemView.findViewById(R.id.tv_model)
+        val tvMerek: TextView = itemView.findViewById(R.id.tv_merek)
+        val tvStok: TextView = itemView.findViewById(R.id.tv_stok)
         val tvProsesor: TextView = itemView.findViewById(R.id.tv_prosesor)
+        val tvRam: TextView = itemView.findViewById(R.id.tv_ram)
         val tvBiayaSewa: TextView = itemView.findViewById(R.id.tv_biaya_sewa)
-        val tvJumlah: TextView = itemView.findViewById(R.id.tv_jumlah)
-        val tvSubtotal: TextView = itemView.findViewById(R.id.tv_subtotal)
     }
 
     override fun onCreateViewHolder(
@@ -39,7 +39,7 @@ class ListKeranjangAdapter(private val listKeranjang: ArrayList<Keranjang>) :
         viewType: Int
     ): ListViewHolder {
         val view: View =
-            LayoutInflater.from(parent.context).inflate(R.layout.list_item_keranjang, parent, false)
+            LayoutInflater.from(parent.context).inflate(R.layout.list_item_barang, parent, false)
         return ListViewHolder(view)
     }
 
@@ -47,29 +47,28 @@ class ListKeranjangAdapter(private val listKeranjang: ArrayList<Keranjang>) :
         val currencyFormat = NumberFormat.getCurrencyInstance()
         currencyFormat.maximumFractionDigits = 2
         currencyFormat.currency = Currency.getInstance("IDR")
-        val (barang, jumlah) = listKeranjang[position]
+        val (idBarang, fotoBarang, merek, model, prosesor, _, ram, _, _, _, _, _, _, biayaSewa, stok) = listBarang[position]
 
         holder.apply {
-            Glide.with(itemView.context)
-                .load(barang.fotoBarang)
+            Glide.with(holder.itemView.context)
+                .load(fotoBarang)
                 .apply(RequestOptions())
                 .into(ivBarang)
-            tvMerek.text = barang.merek
-            tvModel.text = barang.model
-            tvProsesor.text = barang.prosesor
-            tvBiayaSewa.text = "${currencyFormat.format(barang.biayaSewa)}/Unit"
-            tvJumlah.text = "$jumlah Unit"
-            tvSubtotal.text = currencyFormat.format(barang.biayaSewa * jumlah)
+            tvMerek.text = "$merek $model"
+            tvStok.text = "Stok: $stok"
+            tvProsesor.text = prosesor
+            tvRam.text = ram
+            tvBiayaSewa.text = "${currencyFormat.format(biayaSewa)} /Hari"
             itemView.setOnClickListener {
-                val detailBarangFragment = DetailBarangFragment()
+                val detailBarangPelangganFragment = DetailBarangPelangganFragment()
                 val mFragmentManager =
                     (holder.itemView.context as AppCompatActivity).supportFragmentManager
                 val bundle = Bundle()
 
-                bundle.putString(DetailBarangFragment.EXTRA_IDBARANG, barang.barangId)
-                detailBarangFragment.arguments = bundle
+                bundle.putString(DetailBarangPelangganFragment.EXTRA_IDBARANG, idBarang)
+                detailBarangPelangganFragment.arguments = bundle
                 mFragmentManager.beginTransaction().apply {
-                    replace(R.id.fragment_pegawai_container,detailBarangFragment, DetailBarangFragment::class.java.simpleName)
+                    replace(R.id.fragment_pelanggan_container,detailBarangPelangganFragment, DetailBarangPelangganFragment::class.java.simpleName)
                     addToBackStack(null)
                     commit()
                 }
@@ -77,5 +76,5 @@ class ListKeranjangAdapter(private val listKeranjang: ArrayList<Keranjang>) :
         }
     }
 
-    override fun getItemCount(): Int = listKeranjang.size
+    override fun getItemCount(): Int = listBarang.size
 }

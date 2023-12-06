@@ -1,4 +1,4 @@
-package com.example.bukalaptop.pegawai.pesanan.model
+package com.example.bukalaptop.model
 
 import android.os.Parcelable
 import com.example.bukalaptop.pegawai.barang.model.Barang

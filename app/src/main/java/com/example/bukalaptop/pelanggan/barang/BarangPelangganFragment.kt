@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
-import com.example.bukalaptop.pegawai.barang.adapter.ListBarangAdapter
+import com.example.bukalaptop.pegawai.barang.adapter.ListBarangPelangganAdapter
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -17,7 +17,7 @@ import com.google.firebase.ktx.Firebase
 class BarangPelangganFragment : Fragment() {
 
     private lateinit var rvBarang: RecyclerView
-    private lateinit var listBarangAdapter: ListBarangAdapter
+    private lateinit var listBarangPelangganAdapter: ListBarangPelangganAdapter
     private lateinit var listBarang: ArrayList<Barang>
 
     override fun onCreateView(
@@ -48,13 +48,13 @@ class BarangPelangganFragment : Fragment() {
             } else if (error != null) {
                 Log.d("List Barang", error.toString())
             }
-            listBarangAdapter.setData(listBarang)
+            listBarangPelangganAdapter.setData(listBarang)
         }
     }
 
     private fun initAdapter() {
         rvBarang.layoutManager = LinearLayoutManager(activity)
-        listBarangAdapter = ListBarangAdapter(arrayListOf())
-        rvBarang.adapter = listBarangAdapter
+        listBarangPelangganAdapter = ListBarangPelangganAdapter(arrayListOf())
+        rvBarang.adapter = listBarangPelangganAdapter
     }
 }

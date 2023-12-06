@@ -9,6 +9,7 @@
         <!-- Customize your light theme here. -->
         <!--         <item name="colorPrimary">@color/my_light_primary</item> -->
         <item name="colorPrimary">@color/black</item>
+        <item name="android:textColorSecondary">@color/black</item>
     </style>
 
     <style name="Theme.Bukalaptop" parent="Base.Theme.Bukalaptop" />
