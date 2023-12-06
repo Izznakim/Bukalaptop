@@ -127,42 +127,42 @@ class DetailBarangPelangganFragment : Fragment() {
             }
         }
 
-            etJumlah.doOnTextChanged { text, _, _, _ ->
-                try {
-                    when {
-                        text.isNullOrEmpty() -> jumlah = 0
-                        text.toString().toInt() > barang.stok -> {
-                            jumlah = barang.stok
-                            etJumlah.setText(jumlah.toString())
-                        }
-
-                        else -> jumlah = text.toString().toInt()
+        etJumlah.doOnTextChanged { text, _, _, _ ->
+            try {
+                when {
+                    text.isNullOrEmpty() -> jumlah = 0
+                    text.toString().toInt() > barang.stok -> {
+                        jumlah = barang.stok
+                        etJumlah.setText(jumlah.toString())
                     }
-                    if (jumlah == 0) {
-                        btnTambahKeranjang.isEnabled = false
-                        btnTambahKeranjang.setBackgroundColor(Color.GRAY)
-                    } else {
-                        btnTambahKeranjang.isEnabled = true
-                        btnTambahKeranjang.setBackgroundColor(Color.GREEN)
-                    }
-                } catch (_: NumberFormatException) {
-                }
-            }
 
-            btnDecrease.setOnClickListener {
-                jumlah--
-                if (jumlah < 1) {
-                    jumlah = 0
+                    else -> jumlah = text.toString().toInt()
                 }
-                etJumlah.setText(jumlah.toString())
-            }
-            btnIncrease.setOnClickListener {
-                jumlah++
-                if (jumlah > barang.stok) {
-                    jumlah = barang.stok
+                if (jumlah == 0) {
+                    btnTambahKeranjang.isEnabled = false
+                    btnTambahKeranjang.setBackgroundColor(Color.GRAY)
+                } else {
+                    btnTambahKeranjang.isEnabled = true
+                    btnTambahKeranjang.setBackgroundColor(Color.GREEN)
                 }
-                etJumlah.setText(jumlah.toString())
+            } catch (_: NumberFormatException) {
             }
+        }
+
+        btnDecrease.setOnClickListener {
+            jumlah--
+            if (jumlah < 1) {
+                jumlah = 0
+            }
+            etJumlah.setText(jumlah.toString())
+        }
+        btnIncrease.setOnClickListener {
+            jumlah++
+            if (jumlah > barang.stok) {
+                jumlah = barang.stok
+            }
+            etJumlah.setText(jumlah.toString())
+        }
 
         if (jumlah == 0) {
             btnTambahKeranjang.isEnabled = false
@@ -173,23 +173,26 @@ class DetailBarangPelangganFragment : Fragment() {
         }
 
         btnTambahKeranjang.setOnClickListener {
-            Toast.makeText(requireContext(), "Coming soon", Toast.LENGTH_SHORT).show()
-//            if (jumlah > 0) {
-//                val model = barang.let { barang ->
-//                    Keranjang(
-//                        barang,
-//                        jumlah
-//                    )
-//                }
-////                barang.let { barang -> keranjangRef.child(barang.id).setValue(model) }
-////
-////                Toast.makeText(
-////                    requireContext(),
-////                    "${barang?.nama} telah ditambahkan ke keranjang",
-////                    Toast.LENGTH_SHORT
-////                ).show()
-////                dialog?.dismiss()
-//            }
+            if (jumlah > 0) {
+                val keranjang = hashMapOf(
+                    "jumlah" to jumlah
+                )
+
+                db.collection("pelanggan").document("ug58i2Mfv60PPjuzhjKr").collection("keranjang").document(barangId)
+                    .set(keranjang)
+                    .addOnSuccessListener { documentReference ->
+                        Toast.makeText(
+                            activity,
+                            "${barang.merek} ${barang.model} telah ditambahkan ke keranjang.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        parentFragmentManager.popBackStack()
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_SHORT).show()
+                    }
+            }
         }
 
         val callback = object : OnBackPressedCallback(true) {
