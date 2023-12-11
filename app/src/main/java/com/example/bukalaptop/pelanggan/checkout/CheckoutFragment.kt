@@ -1,34 +1,29 @@
 package com.example.bukalaptop.pelanggan.checkout
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
+import com.example.bukalaptop.model.Keranjang
+import com.example.bukalaptop.pegawai.barang.model.Barang
+import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import java.text.NumberFormat
+import java.util.Currency
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [CheckoutFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class CheckoutFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private lateinit var rvKeranjang: RecyclerView
+    private lateinit var listKeranjangAdapter: ListKeranjangAdapter
+    private lateinit var listKeranjang: ArrayList<Keranjang>
+    private lateinit var tvTotal: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,23 +33,60 @@ class CheckoutFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_checkout, container, false)
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment CheckoutFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            CheckoutFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        rvKeranjang = view.findViewById(R.id.rv_keranjang)
+        tvTotal = view.findViewById(R.id.tv_total)
+        rvKeranjang.setHasFixedSize(true)
+
+        initAdapter()
+
+        val db = Firebase.firestore
+        listKeranjang = arrayListOf()
+        db.collection("pelanggan").document("ug58i2Mfv60PPjuzhjKr").collection("keranjang")
+            .addSnapshotListener { keranjang, error ->
+                listKeranjang.clear()
+                var total=0
+                if (keranjang != null) {
+                    for (krnjng in keranjang) {
+                        db.collection("barang")
+                            .addSnapshotListener { barang, error1 ->
+                                val currencyFormat = NumberFormat.getCurrencyInstance()
+                                currencyFormat.maximumFractionDigits = 2
+                                currencyFormat.currency = Currency.getInstance("IDR")
+
+                                if (barang != null) {
+                                    for (brng in barang) {
+                                        if (brng.id == krnjng.id) {
+                                            val mBarang = brng.toObject(Barang::class.java)
+                                            val jumlah = krnjng.get("jumlah").toString().toInt()
+                                            total += (mBarang.biayaSewa * jumlah)
+
+                                            val keranjang = Keranjang(mBarang, jumlah)
+                                            keranjang.barang = brng.toObject(Barang::class.java)
+                                            keranjang.jumlah = jumlah
+
+                                            listKeranjang.add(keranjang)
+                                        }
+                                    }
+                                } else if (error1 != null) {
+                                    Log.d("List Keranjang", error.toString())
+                                }
+                                listKeranjangAdapter.setData(listKeranjang)
+                                tvTotal.text =
+                                    currencyFormat.format(total)
+                            }
+                    }
+                } else if (error != null) {
+                    Log.d("List Keranjang", error.toString())
                 }
             }
+    }
+
+    private fun initAdapter() {
+        rvKeranjang.layoutManager = LinearLayoutManager(activity)
+        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf())
+        rvKeranjang.adapter = listKeranjangAdapter
     }
 }

@@ -175,24 +175,6 @@ class DetailPesananFragment : Fragment() {
                             if (valueKeranjang != null) {
                                 for (document in valueKeranjang) {
                                     val barang = document.toObject(Barang::class.java)
-//                                barang.id = document.id
-//                                barang.fotoBarang = document.getString("fotoBarang").toString()
-//                                barang.merek = document.getString("merek").toString()
-//                                barang.model = document.getString("model").toString()
-//                                barang.prosesor = document.getString("prosesor").toString()
-//                                barang.kartuGrafis = document.getString("kartuGrafis").toString()
-//                                barang.ram = document.getString("ram").toString()
-//                                barang.penyimpanan = document.getString("penyimpanan").toString()
-//                                barang.sistemOperasi =
-//                                    document.getString("sistemOperasi").toString()
-//                                barang.perangkatLunak =
-//                                    document.get("perangkatLunak") as? ArrayList<String>
-//                                barang.ukuranLayar = document.getString("ukuranLayar").toString()
-//                                barang.aksesoris = document.get("aksesoris") as? ArrayList<String>
-//                                barang.kondisi = document.getString("kondisi").toString()
-//                                barang.biayaSewa = document.getLong("biayaSewa")?.toInt() ?: 0
-//                                barang.stok = document.getLong("stok")?.toInt() ?: 0
-
                                     val jumlah = document.get("jumlah").toString().toInt()
                                     total += (barang.biayaSewa * jumlah)
 
