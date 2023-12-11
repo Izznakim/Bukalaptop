@@ -1,11 +1,14 @@
 package com.example.bukalaptop.pelanggan.checkout
 
 import android.os.Bundle
+import android.text.TextUtils.replace
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -13,6 +16,7 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
+import com.example.bukalaptop.pelanggan.barang.DetailBarangPelangganFragment
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.text.NumberFormat
@@ -24,6 +28,7 @@ class CheckoutFragment : Fragment() {
     private lateinit var listKeranjangAdapter: ListKeranjangAdapter
     private lateinit var listKeranjang: ArrayList<Keranjang>
     private lateinit var tvTotal: TextView
+    private lateinit var btnCheckout: Button
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,6 +43,7 @@ class CheckoutFragment : Fragment() {
 
         rvKeranjang = view.findViewById(R.id.rv_keranjang)
         tvTotal = view.findViewById(R.id.tv_total)
+        btnCheckout = view.findViewById(R.id.btn_checkout)
         rvKeranjang.setHasFixedSize(true)
 
         initAdapter()
@@ -82,11 +88,22 @@ class CheckoutFragment : Fragment() {
                     Log.d("List Keranjang", error.toString())
                 }
             }
+
+        btnCheckout.setOnClickListener {
+            val paymentFragment = PaymentFragment()
+            val mFragmentManager = activity?.supportFragmentManager
+
+            mFragmentManager?.beginTransaction()?.apply {
+                replace(R.id.fragment_pelanggan_container,paymentFragment, PaymentFragment::class.java.simpleName)
+                addToBackStack(null)
+                commit()
+            }
+        }
     }
 
     private fun initAdapter() {
         rvKeranjang.layoutManager = LinearLayoutManager(activity)
-        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf())
+        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(),false)
         rvKeranjang.adapter = listKeranjangAdapter
     }
 }

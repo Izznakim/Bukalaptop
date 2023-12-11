@@ -5,7 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="8dp"
-    tools:context=".pelanggan.checkout.CheckoutFragment">
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?android:attr/windowBackground"
+    tools:context=".pelanggan.checkout.PaymentFragment">
 
     <TextView
         android:id="@+id/tv_total_harga_barang"
