@@ -1,33 +1,51 @@
 package com.example.bukalaptop.pelanggan.checkout
 
+import android.app.Activity
+import android.app.DatePickerDialog
+import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.Fragment
 import com.example.bukalaptop.R
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Currency
+import java.util.Locale
+import kotlin.math.abs
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [PaymentFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class PaymentFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
+    private lateinit var tvNamaLengkap: TextView
+    private lateinit var tvEmail: TextView
+    private lateinit var btnPengiriman: Button
+    private lateinit var tvHari: TextView
+    private lateinit var btnPengambilan: Button
+    private lateinit var tvTotal: TextView
+    private lateinit var ivBuktiPembayaran: ImageView
+    private lateinit var btnSewa: Button
+    private var imageBitmap: Bitmap? = null
+
+    var selectedPengirimanDate: Calendar = Calendar.getInstance()
+    var selectedPengambilanDate: Calendar = Calendar.getInstance()
+
+    companion object {
+        var EXTRA_PELANGGANID = "extra_pelangganId"
+        var EXTRA_TOTAL = "extra_total"
     }
 
     override fun onCreateView(
@@ -38,23 +56,185 @@ class PaymentFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_payment, container, false)
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment PaymentFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            PaymentFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        tvNamaLengkap = view.findViewById(R.id.tv_nama_lengkap)
+        tvEmail = view.findViewById(R.id.tv_email)
+        tvHari = view.findViewById(R.id.tv_hari)
+        btnPengiriman = view.findViewById(R.id.btn_pengiriman)
+        btnPengambilan = view.findViewById(R.id.btn_pengambilan)
+        tvTotal = view.findViewById(R.id.tv_total)
+        ivBuktiPembayaran = view.findViewById(R.id.iv_bukti_pembayaran)
+        btnSewa = view.findViewById(R.id.btn_sewa)
+
+        var pelangganId = ""
+        val db = Firebase.firestore
+
+        selectedPengirimanDate.add(Calendar.DAY_OF_MONTH, 1)
+        selectedPengambilanDate.add(Calendar.DAY_OF_MONTH, 1)
+
+        updateButtonLabel(0)
+
+        if (arguments != null) {
+            pelangganId = arguments?.getString(EXTRA_PELANGGANID).toString()
+            val total = arguments?.getInt(EXTRA_TOTAL)
+
+            db.collection("pelanggan").document(pelangganId).addSnapshotListener { value, error ->
+                if (error != null) {
+                    Log.d("List Pesanan Error", error.toString())
+                    return@addSnapshotListener
+                }
+                if (value != null) {
+                    tvNamaLengkap.text = value.getString("namaLengkap")
+                    tvEmail.text = value.getString("email")
                 }
             }
+
+            btnPengiriman.setOnClickListener {
+                showDatePickerDialog(selectedPengirimanDate, false) { updatedDate ->
+                    selectedPengirimanDate = updatedDate
+
+                    selectedPengambilanDate.timeInMillis = selectedPengirimanDate.timeInMillis
+                    updateButtonLabel(total)
+                }
+            }
+
+            btnPengambilan.setOnClickListener {
+                showDatePickerDialog(selectedPengambilanDate, true) { updatedDate ->
+                    selectedPengambilanDate = updatedDate
+
+                    updateButtonLabel(total)
+                }
+
+            }
+
+            ivBuktiPembayaran.setOnClickListener {
+                onPickImageClick()
+            }
+
+            btnSewa.setOnClickListener {
+                Toast.makeText(requireContext(), "Coming Soon", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
+
+    override fun onResume() {
+        super.onResume()
+
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                parentFragmentManager.popBackStack()
+            }
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+    }
+
+    fun hitungSelisihHari(tanggal1: Calendar, tanggal2: Calendar): Long {
+        val waktu1 = tanggal1.timeInMillis
+        val waktu2 = tanggal2.timeInMillis
+
+        val selisihHari = abs((waktu2 - waktu1) / (1000 * 60 * 60 * 24))
+
+        return selisihHari
+    }
+
+    private fun showDatePickerDialog(
+        selectedDate: Calendar, pengambilan: Boolean,
+        onDateSetListener: (Calendar) -> Unit
+    ) {
+        val datePickerDialog = DatePickerDialog(
+            requireContext(),
+            { _, year, month, dayOfMonth ->
+                selectedDate.set(year, month, dayOfMonth)
+
+                onDateSetListener(selectedDate)
+            },
+            selectedDate.get(Calendar.YEAR),
+            selectedDate.get(Calendar.MONTH),
+            selectedDate.get(Calendar.DAY_OF_MONTH)
+        )
+
+        if (pengambilan) {
+            datePickerDialog.datePicker.minDate = selectedDate.timeInMillis
+        } else {
+            datePickerDialog.datePicker.minDate = System.currentTimeMillis()
+        }
+
+        datePickerDialog.show()
+    }
+
+    private fun updateButtonLabel(total: Int? = 0) {
+        val currencyFormat = NumberFormat.getCurrencyInstance()
+        currencyFormat.maximumFractionDigits = 2
+        currencyFormat.currency = Currency.getInstance("IDR")
+
+        val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+        val pengirimanDateString = dateFormat.format(selectedPengirimanDate.time)
+        val pengambilanDateString = dateFormat.format(selectedPengambilanDate.time)
+        btnPengiriman.text = pengirimanDateString
+        btnPengambilan.text = pengambilanDateString
+
+        var tanggal1 = Calendar.getInstance().apply {
+            time = dateFormat.parse(btnPengiriman.text.toString())
+        }
+
+        var tanggal2 = Calendar.getInstance().apply {
+            time = dateFormat.parse(btnPengambilan.text.toString())
+        }
+
+        val selisihHari = hitungSelisihHari(tanggal1, tanggal2)
+
+        tvHari.text = "$selisihHari Hari"
+        tvTotal.text = currencyFormat.format(selisihHari * (total ?: 0))
+    }
+
+    private fun onPickImageClick() {
+        val options = arrayOf("Kamera", "Galeri")
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Pilih Sumber Gambar")
+        builder.setItems(options) { _, which ->
+            when (which) {
+                0 -> dispatchTakePictureIntent()
+                1 -> dispatchPickImageIntent()
+            }
+        }
+        builder.show()
+    }
+
+    private fun dispatchTakePictureIntent() {
+        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        if (takePictureIntent.resolveActivity(requireContext().packageManager) != null) {
+            takePictureLauncher.launch(takePictureIntent)
+        }
+    }
+
+    private fun dispatchPickImageIntent() {
+        val pickPhotoIntent = Intent(
+            Intent.ACTION_PICK,
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        )
+        pickImageLauncher.launch(pickPhotoIntent)
+    }
+
+    private val takePictureLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data: Intent? = result.data
+                imageBitmap = data?.extras?.get("data") as Bitmap
+                ivBuktiPembayaran.setImageBitmap(imageBitmap)
+            }
+        }
+
+    private val pickImageLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data: Intent? = result.data
+                val imageUri = data?.data
+                imageBitmap =
+                    MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, imageUri)
+                ivBuktiPembayaran.setImageBitmap(imageBitmap)
+            }
+        }
 }

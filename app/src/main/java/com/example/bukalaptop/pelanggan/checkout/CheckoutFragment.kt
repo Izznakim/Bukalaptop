@@ -1,14 +1,12 @@
 package com.example.bukalaptop.pelanggan.checkout
 
 import android.os.Bundle
-import android.text.TextUtils.replace
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -16,7 +14,6 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
-import com.example.bukalaptop.pelanggan.barang.DetailBarangPelangganFragment
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.text.NumberFormat
@@ -48,12 +45,14 @@ class CheckoutFragment : Fragment() {
 
         initAdapter()
 
+        val pelangganId = "ug58i2Mfv60PPjuzhjKr"
+        var total = 0
+
         val db = Firebase.firestore
         listKeranjang = arrayListOf()
-        db.collection("pelanggan").document("ug58i2Mfv60PPjuzhjKr").collection("keranjang")
+        db.collection("pelanggan").document(pelangganId).collection("keranjang")
             .addSnapshotListener { keranjang, error ->
                 listKeranjang.clear()
-                var total=0
                 if (keranjang != null) {
                     for (krnjng in keranjang) {
                         db.collection("barang")
@@ -92,9 +91,17 @@ class CheckoutFragment : Fragment() {
         btnCheckout.setOnClickListener {
             val paymentFragment = PaymentFragment()
             val mFragmentManager = activity?.supportFragmentManager
+            val bundle = Bundle()
 
+            bundle.putString(PaymentFragment.EXTRA_PELANGGANID, pelangganId)
+            bundle.putInt(PaymentFragment.EXTRA_TOTAL, total)
+            paymentFragment.arguments = bundle
             mFragmentManager?.beginTransaction()?.apply {
-                replace(R.id.fragment_pelanggan_container,paymentFragment, PaymentFragment::class.java.simpleName)
+                replace(
+                    R.id.fragment_pelanggan_container,
+                    paymentFragment,
+                    PaymentFragment::class.java.simpleName
+                )
                 addToBackStack(null)
                 commit()
             }
@@ -103,7 +110,7 @@ class CheckoutFragment : Fragment() {
 
     private fun initAdapter() {
         rvKeranjang.layoutManager = LinearLayoutManager(activity)
-        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(),false)
+        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(), false)
         rvKeranjang.adapter = listKeranjangAdapter
     }
 }

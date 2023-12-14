@@ -11,7 +11,7 @@
     tools:context=".pelanggan.checkout.PaymentFragment">
 
     <TextView
-        android:id="@+id/tv_total_harga_barang"
+        android:id="@+id/tv_nama_lengkap"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -33,7 +33,7 @@
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_total_harga_barang" />
+        app:layout_constraintTop_toBottomOf="@+id/tv_nama_lengkap" />
 
     <TextView
         android:id="@+id/textView16"
@@ -96,7 +96,7 @@
         app:layout_constraintTop_toBottomOf="@+id/textView19" />
 
     <TextView
-        android:id="@+id/textView24"
+        android:id="@+id/tv_total"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
@@ -111,10 +111,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Untuk pembayarannya di mohon untuk mengirim ke nomor rekening ___________ dan mengupload bukti transfernya."
+        android:text="Untuk pembayarannya di mohon untuk mengirim ke nomor rekening ___________ atas nama _____________ dan mengupload bukti transfernya."
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView24" />
+        app:layout_constraintTop_toBottomOf="@+id/tv_total" />
 
     <TextView
         android:id="@+id/textView25"
@@ -146,5 +146,15 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/iv_bukti_pembayaran" />
+
+    <TextView
+        android:id="@+id/tv_hari"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@+id/btn_pengiriman"
+        app:layout_constraintEnd_toStartOf="@+id/btn_pengambilan"
+        app:layout_constraintStart_toEndOf="@+id/btn_pengiriman"
+        app:layout_constraintTop_toTopOf="@+id/btn_pengambilan"
+        tools:text="999 Hari" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
