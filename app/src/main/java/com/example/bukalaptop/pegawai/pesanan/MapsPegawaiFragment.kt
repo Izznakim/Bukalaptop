@@ -18,7 +18,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
-class MapsFragment : Fragment() {
+class MapsPegawaiFragment : Fragment() {
 
     private val callback = OnMapReadyCallback { googleMap ->
         if (arguments != null) {
@@ -56,7 +56,7 @@ class MapsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_maps, container, false)
+        return inflater.inflate(R.layout.fragment_maps_pegawai, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

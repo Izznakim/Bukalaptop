@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -19,6 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.example.bukalaptop.R
+import com.example.bukalaptop.pegawai.pesanan.ProfilPelangganFragment
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.text.NumberFormat
@@ -32,6 +34,11 @@ class PaymentFragment : Fragment() {
 
     private lateinit var tvNamaLengkap: TextView
     private lateinit var tvEmail: TextView
+    private lateinit var llAlamat: LinearLayout
+    private lateinit var tvAtasNama: TextView
+    private lateinit var tvNomorPengirim: TextView
+    private lateinit var tvAlamatLengkap: TextView
+    private lateinit var tvAlamatSingkat: TextView
     private lateinit var btnPengiriman: Button
     private lateinit var tvHari: TextView
     private lateinit var btnPengambilan: Button
@@ -61,6 +68,11 @@ class PaymentFragment : Fragment() {
 
         tvNamaLengkap = view.findViewById(R.id.tv_nama_lengkap)
         tvEmail = view.findViewById(R.id.tv_email)
+        llAlamat = view.findViewById(R.id.ll_alamat)
+        tvAtasNama = view.findViewById(R.id.tv_atas_nama)
+        tvNomorPengirim = view.findViewById(R.id.tv_nomor_pengiriman)
+        tvAlamatLengkap = view.findViewById(R.id.tv_alamat_lengkap_pengiriman)
+        tvAlamatSingkat = view.findViewById(R.id.tv_alamat_singkat_pengiriman)
         tvHari = view.findViewById(R.id.tv_hari)
         btnPengiriman = view.findViewById(R.id.btn_pengiriman)
         btnPengambilan = view.findViewById(R.id.btn_pengambilan)
@@ -70,9 +82,6 @@ class PaymentFragment : Fragment() {
 
         var pelangganId = ""
         val db = Firebase.firestore
-
-        selectedPengirimanDate.add(Calendar.DAY_OF_MONTH, 1)
-        selectedPengambilanDate.add(Calendar.DAY_OF_MONTH, 1)
 
         updateButtonLabel(0)
 
@@ -88,6 +97,17 @@ class PaymentFragment : Fragment() {
                 if (value != null) {
                     tvNamaLengkap.text = value.getString("namaLengkap")
                     tvEmail.text = value.getString("email")
+                }
+            }
+
+            llAlamat.setOnClickListener {
+                val listAlamatFragment = ListAlamatFragment()
+                val mFragmentManager = activity?.supportFragmentManager
+
+                mFragmentManager?.beginTransaction()?.apply {
+                    replace(R.id.fragment_pelanggan_container,listAlamatFragment, ListAlamatFragment::class.java.simpleName)
+                    addToBackStack(null)
+                    commit()
                 }
             }
 

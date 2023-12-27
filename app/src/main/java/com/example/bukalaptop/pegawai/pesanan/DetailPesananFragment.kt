@@ -197,7 +197,7 @@ class DetailPesananFragment : Fragment() {
             }
 
             tvAlamat.setOnClickListener {
-                val mapsFragment = MapsFragment()
+                val mapsFragment = MapsPegawaiFragment()
                 val mFragmentManager = activity?.supportFragmentManager
                 val bundle = Bundle()
 
@@ -205,7 +205,7 @@ class DetailPesananFragment : Fragment() {
                 bundle.putString(EXTRA_NAMALENGKAP, pelanggan.namaLengkap)
                 mapsFragment.arguments = bundle
                 mFragmentManager?.beginTransaction()?.apply {
-                    replace(R.id.fragment_pegawai_container,mapsFragment, MapsFragment::class.java.simpleName)
+                    replace(R.id.fragment_pegawai_container,mapsFragment, MapsPegawaiFragment::class.java.simpleName)
                     addToBackStack(null)
                     commit()
                 }
