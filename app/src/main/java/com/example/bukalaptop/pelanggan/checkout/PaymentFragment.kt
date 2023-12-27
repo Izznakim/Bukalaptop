@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -20,9 +19,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.example.bukalaptop.R
-import com.example.bukalaptop.pegawai.pesanan.ProfilPelangganFragment
+import com.example.bukalaptop.model.Keranjang
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import java.io.ByteArrayOutputStream
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -34,18 +37,18 @@ class PaymentFragment : Fragment() {
 
     private lateinit var tvNamaLengkap: TextView
     private lateinit var tvEmail: TextView
-    private lateinit var llAlamat: LinearLayout
-    private lateinit var tvAtasNama: TextView
-    private lateinit var tvNomorPengirim: TextView
-    private lateinit var tvAlamatLengkap: TextView
-    private lateinit var tvAlamatSingkat: TextView
     private lateinit var btnPengiriman: Button
     private lateinit var tvHari: TextView
     private lateinit var btnPengambilan: Button
     private lateinit var tvTotal: TextView
     private lateinit var ivBuktiPembayaran: ImageView
     private lateinit var btnSewa: Button
+    private lateinit var storageRef: StorageReference
+
     private var imageBitmap: Bitmap? = null
+    private var mSelisihHari: Long? = 0
+    private var pengirimanDateString: String = ""
+    private var pengambilanDateString: String = ""
 
     var selectedPengirimanDate: Calendar = Calendar.getInstance()
     var selectedPengambilanDate: Calendar = Calendar.getInstance()
@@ -53,6 +56,7 @@ class PaymentFragment : Fragment() {
     companion object {
         var EXTRA_PELANGGANID = "extra_pelangganId"
         var EXTRA_TOTAL = "extra_total"
+        var EXTRA_KERANJANG = "extra_keranjang"
     }
 
     override fun onCreateView(
@@ -68,11 +72,6 @@ class PaymentFragment : Fragment() {
 
         tvNamaLengkap = view.findViewById(R.id.tv_nama_lengkap)
         tvEmail = view.findViewById(R.id.tv_email)
-        llAlamat = view.findViewById(R.id.ll_alamat)
-        tvAtasNama = view.findViewById(R.id.tv_atas_nama)
-        tvNomorPengirim = view.findViewById(R.id.tv_nomor_pengiriman)
-        tvAlamatLengkap = view.findViewById(R.id.tv_alamat_lengkap_pengiriman)
-        tvAlamatSingkat = view.findViewById(R.id.tv_alamat_singkat_pengiriman)
         tvHari = view.findViewById(R.id.tv_hari)
         btnPengiriman = view.findViewById(R.id.btn_pengiriman)
         btnPengambilan = view.findViewById(R.id.btn_pengambilan)
@@ -82,12 +81,17 @@ class PaymentFragment : Fragment() {
 
         var pelangganId = ""
         val db = Firebase.firestore
+        storageRef = FirebaseStorage.getInstance().reference
+
+        selectedPengirimanDate.add(Calendar.DAY_OF_MONTH, 1)
+        selectedPengambilanDate.add(Calendar.DAY_OF_MONTH, 1)
 
         updateButtonLabel(0)
 
         if (arguments != null) {
             pelangganId = arguments?.getString(EXTRA_PELANGGANID).toString()
             val total = arguments?.getInt(EXTRA_TOTAL)
+            val listKeranjang = arguments?.getParcelableArrayList<Keranjang>(EXTRA_KERANJANG)
 
             db.collection("pelanggan").document(pelangganId).addSnapshotListener { value, error ->
                 if (error != null) {
@@ -97,17 +101,6 @@ class PaymentFragment : Fragment() {
                 if (value != null) {
                     tvNamaLengkap.text = value.getString("namaLengkap")
                     tvEmail.text = value.getString("email")
-                }
-            }
-
-            llAlamat.setOnClickListener {
-                val listAlamatFragment = ListAlamatFragment()
-                val mFragmentManager = activity?.supportFragmentManager
-
-                mFragmentManager?.beginTransaction()?.apply {
-                    replace(R.id.fragment_pelanggan_container,listAlamatFragment, ListAlamatFragment::class.java.simpleName)
-                    addToBackStack(null)
-                    commit()
                 }
             }
 
@@ -134,7 +127,72 @@ class PaymentFragment : Fragment() {
             }
 
             btnSewa.setOnClickListener {
-                Toast.makeText(requireContext(), "Coming Soon", Toast.LENGTH_SHORT).show()
+                if (mSelisihHari?.toInt() == 0) {
+                    Toast.makeText(requireContext(), "Tanggal belum dipilih", Toast.LENGTH_SHORT)
+                        .show()
+                } else if (imageBitmap == null) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Bukti pembayaran belum dipilih",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+                    val formattedTglPengiriman = dateFormat.parse(pengirimanDateString)
+                    val formattedTglPengambilan = dateFormat.parse(pengambilanDateString)
+
+                    val pesanan = hashMapOf(
+                        "idPelanggan" to pelangganId,
+                        "tglPengiriman" to formattedTglPengiriman?.let { tgl -> Timestamp(tgl) },
+                        "tglPengambilan" to formattedTglPengambilan?.let { tgl -> Timestamp(tgl) }
+                    )
+
+                    db.collection("pesanan").add(pesanan).addOnSuccessListener { doc ->
+                        val baos = ByteArrayOutputStream()
+                        imageBitmap?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+                        val imageData = baos.toByteArray()
+
+                        val imageRef = storageRef.child("bukti/${doc.id}.jpg")
+
+                        val uploadTask = imageRef.putBytes(imageData)
+                        uploadTask.addOnSuccessListener {
+                            imageRef.downloadUrl.addOnSuccessListener { uri ->
+                                val imageUrl = uri.toString()
+                                db.collection("pesanan").document(doc.id)
+                                    .update(
+                                        "buktiBayar", imageUrl
+                                    )
+                            }
+                        }
+
+                        listKeranjang?.forEach {
+                            val keranjang = hashMapOf(
+                                "aksesoris" to it.barang.aksesoris,
+                                "biayaSewa" to it.barang.biayaSewa,
+                                "fotoBarang" to it.barang.fotoBarang,
+                                "jumlah" to it.jumlah,
+                                "kartuGrafis" to it.barang.kartuGrafis,
+                                "kondisi" to it.barang.kondisi,
+                                "merek" to it.barang.merek,
+                                "model" to it.barang.model,
+                                "penyimpanan" to it.barang.penyimpanan,
+                                "perangkatLunak" to it.barang.perangkatLunak,
+                                "prosesor" to it.barang.prosesor,
+                                "ram" to it.barang.ram,
+                                "sistemOperasi" to it.barang.sistemOperasi,
+                                "stok" to it.barang.stok,
+                                "ukuranLayar" to it.barang.ukuranLayar
+                            )
+
+                            db.collection("pesanan").document(doc.id).collection("keranjang")
+                                .document(it.barang.barangId).set(keranjang)
+                        }
+
+                        parentFragmentManager.popBackStack()
+                    }.addOnFailureListener { e ->
+                        Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
     }
@@ -191,23 +249,23 @@ class PaymentFragment : Fragment() {
         currencyFormat.currency = Currency.getInstance("IDR")
 
         val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-        val pengirimanDateString = dateFormat.format(selectedPengirimanDate.time)
-        val pengambilanDateString = dateFormat.format(selectedPengambilanDate.time)
+        pengirimanDateString = dateFormat.format(selectedPengirimanDate.time)
+        pengambilanDateString = dateFormat.format(selectedPengambilanDate.time)
         btnPengiriman.text = pengirimanDateString
         btnPengambilan.text = pengambilanDateString
 
-        var tanggal1 = Calendar.getInstance().apply {
+        val tanggal1 = Calendar.getInstance().apply {
             time = dateFormat.parse(btnPengiriman.text.toString())
         }
 
-        var tanggal2 = Calendar.getInstance().apply {
+        val tanggal2 = Calendar.getInstance().apply {
             time = dateFormat.parse(btnPengambilan.text.toString())
         }
 
-        val selisihHari = hitungSelisihHari(tanggal1, tanggal2)
+        mSelisihHari = hitungSelisihHari(tanggal1, tanggal2)
 
-        tvHari.text = "$selisihHari Hari"
-        tvTotal.text = currencyFormat.format(selisihHari * (total ?: 0))
+        tvHari.text = "$mSelisihHari Hari"
+        tvTotal.text = currencyFormat.format((mSelisihHari ?: 0) * (total ?: 0))
     }
 
     private fun onPickImageClick() {

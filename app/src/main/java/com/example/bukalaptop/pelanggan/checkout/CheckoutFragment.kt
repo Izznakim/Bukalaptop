@@ -95,6 +95,7 @@ class CheckoutFragment : Fragment() {
 
             bundle.putString(PaymentFragment.EXTRA_PELANGGANID, pelangganId)
             bundle.putInt(PaymentFragment.EXTRA_TOTAL, total)
+            bundle.putParcelableArrayList(PaymentFragment.EXTRA_KERANJANG, listKeranjang)
             paymentFragment.arguments = bundle
             mFragmentManager?.beginTransaction()?.apply {
                 replace(

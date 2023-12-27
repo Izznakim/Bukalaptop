@@ -44,7 +44,6 @@ class DetailPesananFragment : Fragment() {
     private lateinit var tvTglPengambilan: TextView
     private lateinit var tvHari: TextView
     private lateinit var tvTotal: TextView
-    private lateinit var tvAlamat: TextView
     private lateinit var ivBukti: ImageView
     private lateinit var btnTerima: Button
     private lateinit var btnTolak: Button
@@ -56,7 +55,6 @@ class DetailPesananFragment : Fragment() {
 
     companion object {
         var EXTRA_IDPESANAN = "extra_idpesanan"
-        var EXTRA_NAMALENGKAP = "extra_namalengkap"
     }
 
     override fun onCreateView(
@@ -76,7 +74,6 @@ class DetailPesananFragment : Fragment() {
         tvTglPengambilan = view.findViewById(R.id.tv_tglpengambilan)
         tvHari = view.findViewById(R.id.tv_hari)
         tvTotal = view.findViewById(R.id.tv_total)
-        tvAlamat = view.findViewById(R.id.tv_alamat)
         btnTolak = view.findViewById(R.id.btn_tolak)
         btnTerima = view.findViewById(R.id.btn_terima)
         ivBukti = view.findViewById(R.id.iv_bukti)
@@ -119,19 +116,13 @@ class DetailPesananFragment : Fragment() {
                             pesanan = Pesanan()
                             pesanan.id = document.id
                             pesanan.idPelanggan=document.getString("idPelanggan").toString()
-                            pesanan.alamatLengkap = document.getString("alamatLengkap").toString()
                             pesanan.buktiBayar = document.getString("buktiBayar").toString()
-                            pesanan.latitude = document.getGeoPoint("alamat")?.latitude ?: 0.0
-                            pesanan.longitude = document.getGeoPoint("alamat")?.longitude ?: 0.0
                             pesanan.tglPengiriman =
                                 document.getTimestamp("tglPengiriman")?.toDate()
                             pesanan.tglPengambilan =
                                 document.getTimestamp("tglPengambilan")?.toDate()
                         }
                     }
-
-                    val alamat = SpannableString(pesanan.alamatLengkap)
-                    alamat.setSpan(UnderlineSpan(), 0, pesanan.alamatLengkap.length, 0)
 
                     val currencyFormat = NumberFormat.getCurrencyInstance()
                     currencyFormat.maximumFractionDigits = 2
@@ -161,7 +152,6 @@ class DetailPesananFragment : Fragment() {
                     tvTglPengiriman.text = sdf.format(pesanan.tglPengiriman ?: Date())
                     tvTglPengambilan.text = sdf.format(pesanan.tglPengambilan ?: Date())
                     tvHari.text = masaSewa.toString()
-                    tvAlamat.text = alamat
 
                     Glide.with(requireContext())
                         .load(pesanan.buktiBayar)
@@ -196,20 +186,6 @@ class DetailPesananFragment : Fragment() {
                 }
             }
 
-            tvAlamat.setOnClickListener {
-                val mapsFragment = MapsPegawaiFragment()
-                val mFragmentManager = activity?.supportFragmentManager
-                val bundle = Bundle()
-
-                bundle.putString(EXTRA_IDPESANAN, pesananId)
-                bundle.putString(EXTRA_NAMALENGKAP, pelanggan.namaLengkap)
-                mapsFragment.arguments = bundle
-                mFragmentManager?.beginTransaction()?.apply {
-                    replace(R.id.fragment_pegawai_container,mapsFragment, MapsPegawaiFragment::class.java.simpleName)
-                    addToBackStack(null)
-                    commit()
-                }
-            }
             ivBukti.setOnClickListener {
                 Intent(activity, ZoomImageActivity::class.java).also {
                     it.putExtra(ZoomImageActivity.EXTRA_IMAGE, pesanan.buktiBayar)
@@ -231,14 +207,6 @@ class DetailPesananFragment : Fragment() {
                 ).show()
             }
         }
-
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                parentFragmentManager.popBackStack()
-            }
-        }
-
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
     }
 
     private fun initAdapter() {
