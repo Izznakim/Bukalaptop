@@ -13,7 +13,7 @@
         android:padding="8dp">
 
         <TextView
-            android:id="@+id/et_merek"
+            android:id="@+id/et_nama_lengkap"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textStyle="bold"
@@ -23,13 +23,13 @@
             tools:text="Nama Lengkap" />
 
         <TextView
-            android:id="@+id/tv_model"
+            android:id="@+id/tv_nomor_telepon"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/et_merek"
+            app:layout_constraintTop_toBottomOf="@+id/et_nama_lengkap"
             tools:text="08563610682" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 

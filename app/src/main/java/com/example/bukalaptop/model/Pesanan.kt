@@ -8,10 +8,8 @@ import java.util.Date
 data class Pesanan(
     var id: String = "",
     var idPelanggan: String = "",
-    var alamatLengkap: String = "",
     var buktiBayar: String = "",
-    var latitude: Double = 0.0,
-    var longitude: Double = 0.0,
     var tglPengiriman: Date? = Date(),
-    var tglPengambilan: Date? = Date()
+    var tglPengambilan: Date? = Date(),
+    var status:String?=""
 ) : Parcelable

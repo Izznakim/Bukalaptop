@@ -1,4 +1,4 @@
-package com.example.bukalaptop.pegawai.pesanan.adapter
+package com.example.bukalaptop.pelanggan.riwayat.adapter
 
 import android.os.Bundle
 import android.util.Log
@@ -9,23 +9,25 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
-import com.example.bukalaptop.pegawai.pesanan.DetailPesananFragment
 import com.example.bukalaptop.model.Pelanggan
 import com.example.bukalaptop.model.Pesanan
+import com.example.bukalaptop.pegawai.pesanan.DetailPesananFragment
+import com.example.bukalaptop.pegawai.pesanan.adapter.ListPesananAdapter
+import com.example.bukalaptop.pelanggan.riwayat.DetailRiwayatFragment
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
-class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
-    RecyclerView.Adapter<ListPesananAdapter.ListViewHolder>() {
-    fun setData(data:List<Pesanan>){
-        listPesanan.clear()
-        listPesanan.addAll(data)
+class ListRiwayatAdapter(private val listRiwayat: ArrayList<Pesanan>) :
+    RecyclerView.Adapter<ListRiwayatAdapter.ListViewHolder>() {
+    fun setData(data: List<Pesanan>) {
+        listRiwayat.clear()
+        listRiwayat.addAll(data)
         notifyDataSetChanged()
     }
 
     class ListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvNama: TextView = itemView.findViewById(R.id.et_nama_lengkap)
-        val tvTelepon: TextView = itemView.findViewById(R.id.tv_nomor_telepon)
+        val tvNama: TextView =itemView.findViewById(R.id.et_nama_lengkap)
+        val tvTelepon:TextView=itemView.findViewById(R.id.tv_nomor_telepon)
     }
 
     override fun onCreateViewHolder(
@@ -38,7 +40,7 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
     }
 
     override fun onBindViewHolder(holder: ListViewHolder, position: Int) {
-        val (pesananId,idPelanggan) = listPesanan[position]
+        val (pesananId,idPelanggan) = listRiwayat[position]
         holder.apply {
             val db = Firebase.firestore
             db.collection("pelanggan").addSnapshotListener{valuePelanggan,errorPelanggan->
@@ -57,15 +59,16 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
                 }
             }
             itemView.setOnClickListener {
-                val detailPesananFragment = DetailPesananFragment()
+                val detailRiwayatFragment = DetailRiwayatFragment()
                 val mFragmentManager =
                     (holder.itemView.context as AppCompatActivity).supportFragmentManager
                 val bundle = Bundle()
 
-                bundle.putString(DetailPesananFragment.EXTRA_IDPESANAN, pesananId)
-                detailPesananFragment.arguments = bundle
+                bundle.putString(DetailRiwayatFragment.EXTRA_IDPELANGGAN, idPelanggan)
+                bundle.putString(DetailRiwayatFragment.EXTRA_IDPESANAN, pesananId)
+                detailRiwayatFragment.arguments = bundle
                 mFragmentManager.beginTransaction().apply {
-                    replace(R.id.fragment_pegawai_container,detailPesananFragment, DetailPesananFragment::class.java.simpleName)
+                    replace(R.id.fragment_pelanggan_container,detailRiwayatFragment, DetailRiwayatFragment::class.java.simpleName)
                     addToBackStack(null)
                     commit()
                 }
@@ -73,5 +76,5 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
         }
     }
 
-    override fun getItemCount(): Int = listPesanan.size
+    override fun getItemCount(): Int =listRiwayat.size
 }

@@ -51,14 +51,6 @@ class PesananFragment : Fragment() {
                     pesanan = Pesanan()
                     pesanan.id = document.id
                     pesanan.idPelanggan=document.getString("idPelanggan").toString()
-//                    pesanan.email = document.getString("alamatEmail").toString()
-//                    pesanan.alamatLengkap = document.getString("alamatLengkap").toString()
-//                    pesanan.buktiBayar = document.getString("buktiBayar").toString()
-//                    pesanan.latitude = document.getGeoPoint("alamat")?.latitude ?: 0.0
-//                    pesanan.longitude = document.getGeoPoint("alamat")?.longitude ?: 0.0
-//                    pesanan.tglPengiriman =
-//                        document.getTimestamp("tglPengiriman")?.toDate()
-//                    pesanan.tglPengambilan = document.getTimestamp("tglPengambilan")?.toDate()
                     listPesanan.add(pesanan)
                 }
             } else {

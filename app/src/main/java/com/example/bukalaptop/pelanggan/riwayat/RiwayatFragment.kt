@@ -1,34 +1,26 @@
 package com.example.bukalaptop.pelanggan.riwayat
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
+import com.example.bukalaptop.model.Pesanan
+import com.example.bukalaptop.pegawai.pesanan.adapter.ListPesananAdapter
+import com.example.bukalaptop.pelanggan.riwayat.adapter.ListRiwayatAdapter
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [RiwayatFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class RiwayatFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private lateinit var rvRiwayat:RecyclerView
+    private lateinit var listRiwayatAdapter: ListRiwayatAdapter
+    private lateinit var listRiwayat:ArrayList<Pesanan>
+    private lateinit var riwayat: Pesanan
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,23 +30,41 @@ class RiwayatFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_riwayat, container, false)
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment RiwayatFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            RiwayatFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        rvRiwayat=view.findViewById(R.id.rv_riwayat)
+        rvRiwayat.setHasFixedSize(true)
+
+        initAdapter()
+
+        val db=Firebase.firestore
+        listRiwayat= arrayListOf()
+        db.collection("pesanan").addSnapshotListener { value, error ->
+            listRiwayat.clear()
+            if (error != null) {
+                Log.d("List Pesanan Error", error.toString())
+                return@addSnapshotListener
             }
+            if (value != null) {
+                for (document in value) {
+                    riwayat = Pesanan()
+                    riwayat.id = document.id
+                    riwayat.idPelanggan=document.getString("idPelanggan").toString()
+                    if ((riwayat.idPelanggan=="ug58i2Mfv60PPjuzhjKr")) {
+                        listRiwayat.add(riwayat)
+                    }
+                }
+            } else {
+                Log.d("List Pesanan", "Data Kosong")
+            }
+            listRiwayatAdapter.setData(listRiwayat)
+        }
+    }
+
+    private fun initAdapter() {
+        rvRiwayat.layoutManager = LinearLayoutManager(activity)
+        listRiwayatAdapter = ListRiwayatAdapter(arrayListOf())
+        rvRiwayat.adapter = listRiwayatAdapter
     }
 }
