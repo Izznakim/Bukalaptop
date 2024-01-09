@@ -16,6 +16,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -26,8 +27,11 @@ import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.model.Pesanan
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Currency
@@ -48,6 +52,7 @@ class DetailRiwayatFragment : Fragment() {
     private lateinit var listKeranjangAdapter: ListKeranjangAdapter
     private lateinit var listKeranjang: ArrayList<Keranjang>
     private lateinit var pesanan: Pesanan
+    private lateinit var storageBuktiRef: StorageReference
 
     companion object {
         var EXTRA_IDPELANGGAN = "extra_idpelanggan"
@@ -82,6 +87,7 @@ class DetailRiwayatFragment : Fragment() {
         var pesananId = ""
 
         val db = Firebase.firestore
+        storageBuktiRef = FirebaseStorage.getInstance().getReference("bukti/")
         listKeranjang = arrayListOf()
 
         if (arguments != null) {
@@ -105,90 +111,123 @@ class DetailRiwayatFragment : Fragment() {
                             pesanan.tglPengambilan =
                                 document.getTimestamp("tglPengambilan")?.toDate()
                             pesanan.status = document.getString("status")
-                        }
-                    }
 
-                    val currencyFormat = NumberFormat.getCurrencyInstance()
-                    currencyFormat.maximumFractionDigits = 2
-                    currencyFormat.currency = Currency.getInstance("IDR")
+                            val currencyFormat = NumberFormat.getCurrencyInstance()
+                            currencyFormat.maximumFractionDigits = 2
+                            currencyFormat.currency = Currency.getInstance("IDR")
 
-                    val sdf = SimpleDateFormat("dd/MM/yyy", Locale.getDefault())
-                    val diff =
-                        (pesanan.tglPengambilan?.time ?: 0) - (pesanan.tglPengiriman?.time ?: 0)
-                    val masaSewa = (diff / 1000 / 60 / 60 / 24).toInt()
+                            val sdf = SimpleDateFormat("dd/MM/yyy", Locale.getDefault())
+                            val diff =
+                                (pesanan.tglPengambilan?.time ?: 0) - (pesanan.tglPengiriman?.time ?: 0)
+                            val masaSewa = (diff / 1000 / 60 / 60 / 24).toInt()
 
-                    tvTglPengiriman.text = sdf.format(pesanan.tglPengiriman ?: Date())
-                    tvTglPengambilan.text = sdf.format(pesanan.tglPengambilan ?: Date())
-                    tvHari.text = masaSewa.toString()
+                            tvTglPengiriman.text = sdf.format(pesanan.tglPengiriman ?: Date())
+                            tvTglPengambilan.text = sdf.format(pesanan.tglPengambilan ?: Date())
+                            tvHari.text = masaSewa.toString()
 
-                    Glide.with(requireContext())
-                        .load(pesanan.buktiBayar)
-                        .apply(RequestOptions())
-                        .into(ivBukti)
+                            Glide.with(requireContext())
+                                .load(pesanan.buktiBayar)
+                                .apply(RequestOptions())
+                                .into(ivBukti)
 
-                    if (pesanan.status!=null){
-                        when(pesanan.status){
-                            "diterima"->{
-                                tvValidasi.text =
-                                    "Pesanan anda di terima. Kami akan mengirim barang yang sesuai.\nHubungi nomor di bawah ini untuk informasi lebih lanjut."
-                                tvValidasi.setTextColor(Color.parseColor("#43a047"))
-                                tvValidasi.typeface = Typeface.DEFAULT_BOLD
-                                etNomorWa.setOnClickListener {
-                                    val phone = etNomorWa.text
-                                    intentToWhatsApp(phone)
-                                }
-                                btnHapus.text = "Hapus pesanan"
-                            }
-                            "ditolak" -> {
-                                tvValidasi.text =
-                                    "MAAF, PESANAN ANDA TIDAK BISA KAMI PROSES KARENA TIDAK VALID.\nHubungi nomor di bawah ini untuk informasi lebih lanjut."
-                                tvValidasi.setTextColor(Color.parseColor("#FF0A0A"))
-                                tvValidasi.typeface = Typeface.DEFAULT_BOLD
-                                etNomorWa.setOnClickListener {
-                                    val phone = etNomorWa.text
-                                    intentToWhatsApp(phone)
-                                }
-                                btnHapus.text = "Hapus pesanan"
-                            }
-                            "netral" -> {
-                                tvValidasi.text =
-                                    "MAAF, PESANAN ANDA BELUM KAMI KONFIRMASI. DIMOHON UNTUK MENUNGGU BEBERAPA SAAT LAGI.\nHubungi nomor di bawah ini untuk informasi lebih lanjut."
-                                etNomorWa.setOnClickListener {
-                                    val phone = etNomorWa.text
-                                    intentToWhatsApp(phone)
-                                }
-                                btnHapus.text = "Batalkan pemesanan"
-                            }
-                        }
-                    }
+                            if (pesanan.status != null) {
+                                when (pesanan.status) {
+                                    "diterima" -> {
+                                        tvValidasi.text =
+                                            "Pesanan anda di terima. Kami akan mengirim barang yang sesuai.\nHubungi nomor di bawah ini untuk informasi lebih lanjut."
+                                        tvValidasi.setTextColor(Color.parseColor("#43a047"))
+                                        tvValidasi.typeface = Typeface.DEFAULT_BOLD
+                                        etNomorWa.setOnClickListener {
+                                            val phone = etNomorWa.text
+                                            intentToWhatsApp(phone)
+                                        }
+                                        btnHapus.text = "Hapus pesanan"
+                                    }
 
-                    if (pesanan.idPelanggan == pelangganId) {
-                        db.collection("pesanan").document(pesananId).collection("keranjang")
-                            .addSnapshotListener { valueKeranjang, errorKeranjang ->
-                                var total = 0
-                                listKeranjang.clear()
-                                if (errorKeranjang != null) {
-                                    Log.d("List Keranjang", errorKeranjang.toString())
-                                    return@addSnapshotListener
-                                }
-                                if (valueKeranjang != null) {
-                                    for (docKeranjang in valueKeranjang) {
-                                        val barang = docKeranjang.toObject(Barang::class.java)
-                                        val jumlah = docKeranjang.get("jumlah").toString().toInt()
-                                        total += (barang.biayaSewa * jumlah)
+                                    "ditolak" -> {
+                                        tvValidasi.text =
+                                            "MAAF, PESANAN ANDA TIDAK BISA KAMI PROSES KARENA TIDAK VALID.\nHubungi nomor di bawah ini untuk informasi lebih lanjut."
+                                        tvValidasi.setTextColor(Color.parseColor("#FF0A0A"))
+                                        tvValidasi.typeface = Typeface.DEFAULT_BOLD
+                                        etNomorWa.setOnClickListener {
+                                            val phone = etNomorWa.text
+                                            intentToWhatsApp(phone)
+                                        }
+                                        btnHapus.text = "Hapus pesanan"
+                                    }
 
-                                        val keranjang = Keranjang(barang, jumlah)
-                                        keranjang.barang = docKeranjang.toObject(Barang::class.java)
-                                        keranjang.jumlah = jumlah
-
-                                        listKeranjang.add(keranjang)
+                                    "netral" -> {
+                                        tvValidasi.text =
+                                            "MAAF, PESANAN ANDA BELUM KAMI KONFIRMASI. DIMOHON UNTUK MENUNGGU BEBERAPA SAAT LAGI.\nHubungi nomor di bawah ini untuk informasi lebih lanjut."
+                                        etNomorWa.setOnClickListener {
+                                            val phone = etNomorWa.text
+                                            intentToWhatsApp(phone)
+                                        }
+                                        btnHapus.text = "Batalkan pemesanan"
                                     }
                                 }
-                                listKeranjangAdapter.setData(listKeranjang)
-                                tvTotal.text =
-                                    currencyFormat.format(total * masaSewa)
                             }
+
+                            btnHapus.setOnClickListener {
+                                db.collection("pesanan").document(pesananId).delete().addOnSuccessListener {
+                                    db.collection("pesanan").document(pesananId).collection("keranjang")
+                                        .get()
+                                        .addOnCompleteListener{ task ->
+                                            if (task.isSuccessful) {
+                                                for (doc in task.result) {
+                                                    doc.reference.delete()
+                                                }
+                                            } else {
+                                                Toast.makeText(requireContext(), task.exception.toString(), Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    parentFragmentManager.popBackStack()
+                                    Toast.makeText(requireContext(), "Berhasil dihapus", Toast.LENGTH_SHORT)
+                                        .show()
+                                }.addOnFailureListener {
+                                    Toast.makeText(requireContext(), it.toString(), Toast.LENGTH_SHORT)
+                                        .show()
+                                }
+                                storageBuktiRef.child("${pesananId}.jpg").delete().addOnSuccessListener { }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(
+                                            requireContext(),
+                                            e.toString(),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                            }
+
+                            if (pesanan.idPelanggan == pelangganId) {
+                                db.collection("pesanan").document(pesananId).collection("keranjang")
+                                    .addSnapshotListener { valueKeranjang, errorKeranjang ->
+                                        var total = 0
+                                        listKeranjang.clear()
+                                        if (errorKeranjang != null) {
+                                            Log.d("List Keranjang", errorKeranjang.toString())
+                                            return@addSnapshotListener
+                                        }
+                                        if (valueKeranjang != null) {
+                                            for (docKeranjang in valueKeranjang) {
+                                                val barang = docKeranjang.toObject(Barang::class.java)
+                                                val jumlah = docKeranjang.get("jumlah").toString().toInt()
+                                                total += (barang.biayaSewa * jumlah)
+
+                                                val keranjang = Keranjang(barang, jumlah)
+                                                keranjang.barang = docKeranjang.toObject(Barang::class.java)
+                                                keranjang.jumlah = jumlah
+
+                                                listKeranjang.add(keranjang)
+                                            }
+                                        }
+                                        listKeranjangAdapter.setData(listKeranjang)
+                                        tvTotal.text =
+                                            currencyFormat.format(total * masaSewa)
+                                    }
+                            }
+                        }
                     }
+
                 } else {
                     Log.d("List Riwayat", "Data Kosong")
                 }
@@ -205,9 +244,9 @@ class DetailRiwayatFragment : Fragment() {
                 val url = "https://api.whatsapp.com/send?phone=$phone"
                 intent.setPackage("com.whatsapp")
                 intent.data = Uri.parse(url)
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P){
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     context?.startActivity(intent)
-                }else {
+                } else {
                     if (intent.resolveActivity(packageManager) != null) {
                         context?.startActivity(intent)
                     }

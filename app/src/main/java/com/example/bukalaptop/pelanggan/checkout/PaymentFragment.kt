@@ -144,7 +144,8 @@ class PaymentFragment : Fragment() {
                     val pesanan = hashMapOf(
                         "idPelanggan" to pelangganId,
                         "tglPengiriman" to formattedTglPengiriman?.let { tgl -> Timestamp(tgl) },
-                        "tglPengambilan" to formattedTglPengambilan?.let { tgl -> Timestamp(tgl) }
+                        "tglPengambilan" to formattedTglPengambilan?.let { tgl -> Timestamp(tgl) },
+                        "status" to "netral"
                     )
 
                     db.collection("pesanan").add(pesanan).addOnSuccessListener { doc ->
@@ -187,6 +188,12 @@ class PaymentFragment : Fragment() {
                             db.collection("pesanan").document(doc.id).collection("keranjang")
                                 .document(it.barang.barangId).set(keranjang)
                         }
+
+                        Toast.makeText(
+                            requireContext(),
+                            "Pesanan sudah dikirim",
+                            Toast.LENGTH_SHORT
+                        ).show()
 
                         parentFragmentManager.popBackStack()
                     }.addOnFailureListener { e ->
