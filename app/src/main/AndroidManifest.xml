@@ -19,6 +19,10 @@
         android:theme="@style/Theme.BukalaptopActionBar"
         tools:targetApi="31">
         <activity
+            android:name=".pegawai.LoginPegawaiActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Bukalaptop" />
+        <activity
             android:name=".ZoomImageActivity"
             android:exported="false" />
 
