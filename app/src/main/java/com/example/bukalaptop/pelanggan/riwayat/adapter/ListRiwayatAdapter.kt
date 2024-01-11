@@ -14,6 +14,7 @@ import com.example.bukalaptop.model.Pesanan
 import com.example.bukalaptop.pegawai.pesanan.DetailPesananFragment
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListPesananAdapter
 import com.example.bukalaptop.pelanggan.riwayat.DetailRiwayatFragment
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -43,7 +44,7 @@ class ListRiwayatAdapter(private val listRiwayat: ArrayList<Pesanan>) :
         val (pesananId,idPelanggan) = listRiwayat[position]
         holder.apply {
             val db = Firebase.firestore
-            db.collection("pelanggan").addSnapshotListener{valuePelanggan,errorPelanggan->
+            db.collection("pengguna").addSnapshotListener{valuePelanggan,errorPelanggan->
                 if (errorPelanggan != null) {
                     Log.d("List Pesanan Error", errorPelanggan.toString())
                     return@addSnapshotListener

@@ -41,7 +41,7 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
         val (pesananId,idPelanggan) = listPesanan[position]
         holder.apply {
             val db = Firebase.firestore
-            db.collection("pelanggan").addSnapshotListener{valuePelanggan,errorPelanggan->
+            db.collection("pengguna").addSnapshotListener{valuePelanggan,errorPelanggan->
                 if (errorPelanggan != null) {
                     Log.d("List Pesanan Error", errorPelanggan.toString())
                     return@addSnapshotListener

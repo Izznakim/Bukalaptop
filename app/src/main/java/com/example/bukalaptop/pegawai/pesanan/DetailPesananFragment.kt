@@ -133,7 +133,7 @@ class DetailPesananFragment : Fragment() {
                         (pesanan.tglPengambilan?.time ?: 0) - (pesanan.tglPengiriman?.time ?: 0)
                     val masaSewa = (diff / 1000 / 60 / 60 / 24).toInt()
 
-                    db.collection("pelanggan").addSnapshotListener{valuePelanggan,errorPelanggan->
+                    db.collection("pengguna").addSnapshotListener{valuePelanggan,errorPelanggan->
                         if (errorPelanggan != null) {
                             Log.d("List Pesanan Error", errorPelanggan.toString())
                             return@addSnapshotListener

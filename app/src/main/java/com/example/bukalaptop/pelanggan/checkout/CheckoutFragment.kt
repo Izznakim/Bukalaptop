@@ -14,6 +14,7 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.text.NumberFormat
@@ -44,15 +45,17 @@ class CheckoutFragment : Fragment() {
         rvKeranjang.setHasFixedSize(true)
 
         initAdapter()
+        val auth = Firebase.auth
+        val db = Firebase.firestore
 
-        val pelangganId = "ug58i2Mfv60PPjuzhjKr"
+        val pelangganId = auth.currentUser?.uid ?: ""
         var total = 0
 
-        val db = Firebase.firestore
         listKeranjang = arrayListOf()
-        db.collection("pelanggan").document(pelangganId).collection("keranjang")
+        db.collection("pengguna").document(pelangganId).collection("keranjang")
             .addSnapshotListener { keranjang, error ->
                 listKeranjang.clear()
+                total = 0
                 if (keranjang != null) {
                     for (krnjng in keranjang) {
                         db.collection("barang")

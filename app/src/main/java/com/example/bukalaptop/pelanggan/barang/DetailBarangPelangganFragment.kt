@@ -20,6 +20,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
 import com.example.bukalaptop.ZoomImageActivity
 import com.example.bukalaptop.pegawai.barang.model.Barang
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.text.NumberFormat
@@ -92,6 +93,7 @@ class DetailBarangPelangganFragment : Fragment() {
         }
 
         val db = Firebase.firestore
+        val auth = Firebase.auth
         db.collection("barang").addSnapshotListener { value, error ->
             if (value != null) {
                 for (document in value) {
@@ -178,7 +180,8 @@ class DetailBarangPelangganFragment : Fragment() {
                     "jumlah" to jumlah
                 )
 
-                db.collection("pelanggan").document("ug58i2Mfv60PPjuzhjKr").collection("keranjang").document(barangId)
+                db.collection("pengguna").document(auth.currentUser?.uid ?: "")
+                    .collection("keranjang").document(barangId)
                     .set(keranjang)
                     .addOnSuccessListener { documentReference ->
                         Toast.makeText(

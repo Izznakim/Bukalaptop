@@ -55,7 +55,7 @@ class ProfilPelangganFragment : Fragment() {
         if (arguments != null) {
             val pelangganId = arguments?.getString(EXTRA_IDPELANGGAN).toString()
 
-            db.collection("pelanggan").addSnapshotListener { value, error ->
+            db.collection("pengguna").addSnapshotListener { value, error ->
                 if (error != null) {
                     Log.d("List Pesanan Error", error.toString())
                     return@addSnapshotListener

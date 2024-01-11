@@ -93,7 +93,7 @@ class PaymentFragment : Fragment() {
             val total = arguments?.getInt(EXTRA_TOTAL)
             val listKeranjang = arguments?.getParcelableArrayList<Keranjang>(EXTRA_KERANJANG)
 
-            db.collection("pelanggan").document(pelangganId).addSnapshotListener { value, error ->
+            db.collection("pengguna").document(pelangganId).addSnapshotListener { value, error ->
                 if (error != null) {
                     Log.d("List Pesanan Error", error.toString())
                     return@addSnapshotListener
@@ -133,7 +133,7 @@ class PaymentFragment : Fragment() {
                 } else if (imageBitmap == null) {
                     Toast.makeText(
                         requireContext(),
-                        "Bukti pembayaran belum dipilih",
+                        "Bukti pembayaran belum dicantumkan",
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {

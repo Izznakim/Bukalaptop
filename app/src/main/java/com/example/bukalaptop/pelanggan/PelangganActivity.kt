@@ -17,6 +17,7 @@ import com.example.bukalaptop.MainActivity
 import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.PegawaiActivity
 import com.example.bukalaptop.pegawai.SectionPagerPegawaiAdapter
+import com.example.bukalaptop.pelanggan.riwayat.RiwayatFragment
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.auth.ktx.auth

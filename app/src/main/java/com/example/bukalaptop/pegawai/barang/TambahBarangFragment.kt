@@ -55,8 +55,8 @@ class TambahBarangFragment : Fragment() {
     private var perangkatLunak: String = ""
     private var aksesoris: String = ""
     private var kondisi: String = ""
-    private var biayaSewa: Int = 0
-    private var stok: Int = 0
+    private var biayaSewa: String = "0"
+    private var stok: String = "0"
 
 
     override fun onCreateView(
@@ -107,8 +107,8 @@ class TambahBarangFragment : Fragment() {
             perangkatLunak = etPerangkatLunak.text.toString()
             aksesoris = etAksesoris.text.toString()
             kondisi = etKondisi.text.toString()
-            biayaSewa = etBiayaSewa.text.toString().toInt()
-            stok = etStok.text.toString().toInt()
+            biayaSewa = etBiayaSewa.text.toString()
+            stok = etStok.text.toString()
 
 
             if (imageBitmap == null) {
@@ -183,20 +183,18 @@ class TambahBarangFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            if (biayaSewa == 0) {
+            if (biayaSewa == "0" || biayaSewa.isEmpty()) {
                 etBiayaSewa.requestFocus()
                 etBiayaSewa.error = "Biaya Sewa harus diberi biaya"
                 return@setOnClickListener
             }
 
-            if (stok == 0) {
+            if (stok == "0" || stok.isEmpty()) {
                 etStok.requestFocus()
-                etStok.error = "Stok harus diberi biaya"
+                etStok.error = "Stok harus lebih dari 0"
                 return@setOnClickListener
             }
 
-            Toast.makeText(context, "Tambahkan ke firebase dan firestore", Toast.LENGTH_SHORT)
-                .show()
             addDataToFirestore(
                 imageBitmap,
                 merek,
@@ -210,8 +208,8 @@ class TambahBarangFragment : Fragment() {
                 perangkatLunak,
                 aksesoris,
                 kondisi,
-                biayaSewa,
-                stok
+                biayaSewa.toInt(),
+                stok.toInt()
             )
         }
         btnBatal.setOnClickListener {
@@ -261,13 +259,15 @@ class TambahBarangFragment : Fragment() {
             "kondisi" to kondisi,
             "biayaSewa" to biayaSewa,
             "stok" to stok,
+            "fotoBarang" to "",
+            "barangId" to ""
         )
 
         databaseRef.collection("barang")
             .add(data)
             .addOnSuccessListener { document ->
                 val baos = ByteArrayOutputStream()
-                imageBitmap?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+                imageBitmap?.compress(Bitmap.CompressFormat.PNG, 100, baos)
                 val imageData = baos.toByteArray()
 
                 val imageRef = storageRef.child("barang/${document.id}.jpg")
@@ -281,10 +281,15 @@ class TambahBarangFragment : Fragment() {
                                 "fotoBarang", imageUrl,
                                 "barangId", document.id
                             )
+                        Toast.makeText(
+                            context,
+                            "Tambahkan ke firebase dan firestore",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                        parentFragmentManager.popBackStack()
                     }
                 }
-
-                parentFragmentManager.popBackStack()
             }
             .addOnFailureListener { e ->
                 Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()

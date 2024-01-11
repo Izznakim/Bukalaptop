@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
+import com.example.bukalaptop.ZoomImageActivity
 import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.model.Pesanan
 import com.example.bukalaptop.pegawai.barang.model.Barang
@@ -129,6 +130,13 @@ class DetailRiwayatFragment : Fragment() {
                                 .load(pesanan.buktiBayar)
                                 .apply(RequestOptions())
                                 .into(ivBukti)
+
+                            ivBukti.setOnClickListener {
+                                Intent(activity, ZoomImageActivity::class.java).also {
+                                    it.putExtra(ZoomImageActivity.EXTRA_IMAGE, pesanan.buktiBayar)
+                                    startActivity(it)
+                                }
+                            }
 
                             if (pesanan.status != null) {
                                 when (pesanan.status) {
