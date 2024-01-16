@@ -64,6 +64,7 @@ class ListKeranjangAdapter(
             tvBiayaSewa.text = "${currencyFormat.format(barang.biayaSewa)}/Unit"
             tvJumlah.text = "$jumlah Unit"
             tvSubtotal.text = currencyFormat.format(barang.biayaSewa * jumlah)
+
             itemView.setOnClickListener {
                 val detailBarangFragment = DetailBarangFragment()
                 val detailBarangPelangganFragment = DetailBarangPelangganFragment()

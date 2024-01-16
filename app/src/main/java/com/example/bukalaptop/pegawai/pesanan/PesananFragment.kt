@@ -51,7 +51,10 @@ class PesananFragment : Fragment() {
                     pesanan = Pesanan()
                     pesanan.id = document.id
                     pesanan.idPelanggan=document.getString("idPelanggan").toString()
-                    listPesanan.add(pesanan)
+                    pesanan.status=document.getString("status").toString()
+                    if (pesanan.status=="netral") {
+                        listPesanan.add(pesanan)
+                    }
                 }
             } else {
                 Log.d("List Pesanan", "Data Kosong")

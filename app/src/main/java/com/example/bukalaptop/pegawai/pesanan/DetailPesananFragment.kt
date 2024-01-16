@@ -193,18 +193,28 @@ class DetailPesananFragment : Fragment() {
                 }
             }
             btnTerima.setOnClickListener {
-                Toast.makeText(
-                    requireContext(),
-                    "Coming Soon di Terima tapi masih ada di daftar pesanan tetapi cardView item berwarna hijau",
-                    Toast.LENGTH_SHORT
-                ).show()
+                db.collection("pesanan").document(pesananId).update("status","diterima").addOnSuccessListener {
+                    Toast.makeText(
+                        requireContext(),
+                        "Pesanan telah Anda setujui",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    parentFragmentManager.popBackStack()
+                }.addOnFailureListener {
+                    Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
+                }
             }
             btnTolak.setOnClickListener {
-                Toast.makeText(
-                    requireContext(),
-                    "Coming Soon di Tolak dan item langsung hilang di daftar pesanan",
-                    Toast.LENGTH_SHORT
-                ).show()
+                db.collection("pesanan").document(pesananId).update("status","ditolak").addOnSuccessListener {
+                    Toast.makeText(
+                        requireContext(),
+                        "Pesanan telah Anda tolak",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    parentFragmentManager.popBackStack()
+                }.addOnFailureListener {
+                    Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
