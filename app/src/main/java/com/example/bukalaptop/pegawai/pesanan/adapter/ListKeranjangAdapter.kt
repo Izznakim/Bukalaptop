@@ -1,12 +1,18 @@
 package com.example.bukalaptop.pegawai.pesanan.adapter
 
+import android.app.AlertDialog
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.text.HtmlCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
@@ -14,13 +20,16 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.pegawai.barang.DetailBarangFragment
 import com.example.bukalaptop.pelanggan.barang.DetailBarangPelangganFragment
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import java.text.NumberFormat
 import java.util.Currency
 
 class ListKeranjangAdapter(
     private val listKeranjang: ArrayList<Keranjang>,
-    private val isPegawai: Boolean
-) :
+    private val isPegawai: Boolean,
+    private val pelangganId: String,
+    ) :
     RecyclerView.Adapter<ListKeranjangAdapter.ListViewHolder>() {
     fun setData(data: List<Keranjang>) {
         listKeranjang.clear()
@@ -36,6 +45,7 @@ class ListKeranjangAdapter(
         val tvBiayaSewa: TextView = itemView.findViewById(R.id.tv_biaya_sewa)
         val tvJumlah: TextView = itemView.findViewById(R.id.tv_jumlah)
         val tvSubtotal: TextView = itemView.findViewById(R.id.tv_subtotal)
+        val btnHapus: ImageButton = itemView.findViewById(R.id.btn_hapus)
     }
 
     override fun onCreateViewHolder(
@@ -52,6 +62,7 @@ class ListKeranjangAdapter(
         currencyFormat.maximumFractionDigits = 2
         currencyFormat.currency = Currency.getInstance("IDR")
         val (barang, jumlah) = listKeranjang[position]
+        val db = Firebase.firestore
 
         holder.apply {
             Glide.with(itemView.context)
@@ -64,6 +75,38 @@ class ListKeranjangAdapter(
             tvBiayaSewa.text = "${currencyFormat.format(barang.biayaSewa)}/Unit"
             tvJumlah.text = "$jumlah Unit"
             tvSubtotal.text = currencyFormat.format(barang.biayaSewa * jumlah)
+            btnHapus.setOnClickListener {
+                val builder = AlertDialog.Builder(itemView.context)
+
+                builder.setMessage(HtmlCompat.fromHtml("Anda yakin ingin menghapus <b>${barang.merek}</b> <b>${barang.model}</b> dari Keranjang Anda?",HtmlCompat.FROM_HTML_MODE_LEGACY))
+                    .setTitle("Konfirmasi")
+
+                builder.setPositiveButton("Ya") { dialog, which ->
+                    if (listKeranjang.size <= 1){
+                        listKeranjang.clear()
+                        notifyItemChanged(position)
+                    }
+                    barang.let { mBarang ->
+                        db.collection("pengguna").document(pelangganId).collection("keranjang").document(mBarang.barangId)
+                            .delete()
+                            .addOnSuccessListener {
+                                Toast.makeText(
+                                    itemView.context,
+                                    "${mBarang.merek} ${mBarang.model} berhasil dihapus",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                            .addOnFailureListener { e -> Log.w("Error", "Error deleting document", e) }
+                    }
+                }
+
+                builder.setNegativeButton("Tidak") { dialog, which ->
+                    dialog.cancel()
+                }
+
+                val dialog = builder.create()
+                dialog.show()
+            }
 
             itemView.setOnClickListener {
                 val detailBarangFragment = DetailBarangFragment()

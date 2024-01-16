@@ -2,8 +2,6 @@ package com.example.bukalaptop.pegawai.pesanan
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.SpannableString
-import android.text.style.UnderlineSpan
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -221,7 +219,7 @@ class DetailPesananFragment : Fragment() {
 
     private fun initAdapter() {
         rvKeranjang.layoutManager = LinearLayoutManager(activity)
-        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(),true)
+        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(), true, "")
         rvKeranjang.adapter = listKeranjangAdapter
     }
 

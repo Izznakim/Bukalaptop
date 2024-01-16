@@ -44,12 +44,12 @@ class CheckoutFragment : Fragment() {
         btnCheckout = view.findViewById(R.id.btn_checkout)
         rvKeranjang.setHasFixedSize(true)
 
-        initAdapter()
         val auth = Firebase.auth
         val db = Firebase.firestore
 
         val pelangganId = auth.currentUser?.uid ?: ""
         var total = 0
+        initAdapter(pelangganId)
 
         listKeranjang = arrayListOf()
         db.collection("pengguna").document(pelangganId).collection("keranjang")
@@ -57,13 +57,13 @@ class CheckoutFragment : Fragment() {
                 listKeranjang.clear()
                 total = 0
                 if (keranjang != null) {
+                    val currencyFormat = NumberFormat.getCurrencyInstance()
+                    currencyFormat.maximumFractionDigits = 2
+                    currencyFormat.currency = Currency.getInstance("IDR")
+
                     for (krnjng in keranjang) {
                         db.collection("barang")
                             .addSnapshotListener { barang, error1 ->
-                                val currencyFormat = NumberFormat.getCurrencyInstance()
-                                currencyFormat.maximumFractionDigits = 2
-                                currencyFormat.currency = Currency.getInstance("IDR")
-
                                 if (barang != null) {
                                     for (brng in barang) {
                                         if (brng.id == krnjng.id) {
@@ -86,6 +86,9 @@ class CheckoutFragment : Fragment() {
                                     currencyFormat.format(total)
                             }
                     }
+
+                    tvTotal.text =
+                        currencyFormat.format(total)
                 } else if (error != null) {
                     Log.d("List Keranjang", error.toString())
                 }
@@ -112,9 +115,9 @@ class CheckoutFragment : Fragment() {
         }
     }
 
-    private fun initAdapter() {
+    private fun initAdapter(pelangganId: String) {
         rvKeranjang.layoutManager = LinearLayoutManager(activity)
-        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(), false)
+        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(), false, pelangganId)
         rvKeranjang.adapter = listKeranjangAdapter
     }
 }

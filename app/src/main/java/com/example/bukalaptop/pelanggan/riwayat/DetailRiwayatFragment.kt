@@ -28,7 +28,6 @@ import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.model.Pesanan
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
@@ -267,7 +266,7 @@ class DetailRiwayatFragment : Fragment() {
 
     private fun initAdapter() {
         rvKeranjang.layoutManager = LinearLayoutManager(activity)
-        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(), true)
+        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(), true, "")
         rvKeranjang.adapter = listKeranjangAdapter
     }
 
