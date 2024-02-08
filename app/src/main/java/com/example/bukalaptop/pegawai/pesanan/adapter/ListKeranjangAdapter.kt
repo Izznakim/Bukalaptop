@@ -13,13 +13,11 @@ import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.pegawai.barang.DetailBarangFragment
-import com.example.bukalaptop.pelanggan.barang.DetailBarangPelangganFragment
 import java.text.NumberFormat
 import java.util.Currency
 
 class ListKeranjangAdapter(
-    private val listKeranjang: ArrayList<Keranjang>,
-    private val isPegawai: Boolean
+    private val listKeranjang: ArrayList<Keranjang>
 ) :
     RecyclerView.Adapter<ListKeranjangAdapter.ListViewHolder>() {
     fun setData(data: List<Keranjang>) {
@@ -67,30 +65,20 @@ class ListKeranjangAdapter(
 
             itemView.setOnClickListener {
                 val detailBarangFragment = DetailBarangFragment()
-                val detailBarangPelangganFragment = DetailBarangPelangganFragment()
                 val mFragmentManager =
                     (holder.itemView.context as AppCompatActivity).supportFragmentManager
                 val bundle = Bundle()
                 bundle.putString(DetailBarangFragment.EXTRA_IDBARANG, barang.barangId)
                 detailBarangFragment.arguments = bundle
-                detailBarangPelangganFragment.arguments = bundle
 
                 mFragmentManager.beginTransaction().apply {
-                    if (isPegawai) {
-                        replace(
-                            R.id.fragment_pegawai_container,
-                            detailBarangFragment,
-                            DetailBarangFragment::class.java.simpleName
-                        )
-                    } else {
-                        replace(
-                            R.id.fragment_pelanggan_container,
-                            detailBarangPelangganFragment,
-                            DetailBarangPelangganFragment::class.java.simpleName
-                        )
-                        addToBackStack(null)
-                        commit()
-                    }
+                    replace(
+                        R.id.fragment_pegawai_container,
+                        detailBarangFragment,
+                        DetailBarangFragment::class.java.simpleName
+                    )
+                    addToBackStack(null)
+                    commit()
                 }
             }
         }

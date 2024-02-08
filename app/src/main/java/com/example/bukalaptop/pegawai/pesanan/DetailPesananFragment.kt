@@ -1,6 +1,8 @@
 package com.example.bukalaptop.pegawai.pesanan
 
+import android.app.AlertDialog
 import android.content.Intent
+import android.opengl.Visibility
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.style.UnderlineSpan
@@ -14,6 +16,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.cardview.widget.CardView
+import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -29,6 +32,7 @@ import com.example.bukalaptop.model.Pelanggan
 import com.example.bukalaptop.model.Pesanan
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Currency
@@ -47,6 +51,7 @@ class DetailPesananFragment : Fragment() {
     private lateinit var ivBukti: ImageView
     private lateinit var btnTerima: Button
     private lateinit var btnTolak: Button
+    private lateinit var btnDikembalikan: Button
     private lateinit var rvKeranjang: RecyclerView
     private lateinit var listKeranjangAdapter: ListKeranjangAdapter
     private lateinit var listKeranjang: ArrayList<Keranjang>
@@ -76,6 +81,7 @@ class DetailPesananFragment : Fragment() {
         tvTotal = view.findViewById(R.id.tv_total)
         btnTolak = view.findViewById(R.id.btn_tolak)
         btnTerima = view.findViewById(R.id.btn_terima)
+        btnDikembalikan = view.findViewById(R.id.btn_dikembalikan)
         ivBukti = view.findViewById(R.id.iv_bukti)
 
         cvPelangganProfil.setOnClickListener {
@@ -86,7 +92,11 @@ class DetailPesananFragment : Fragment() {
             bundle.putString(EXTRA_IDPELANGGAN, pesanan.idPelanggan)
             profilPelangganFragment.arguments = bundle
             mFragmentManager?.beginTransaction()?.apply {
-                replace(R.id.fragment_pegawai_container,profilPelangganFragment, ProfilPelangganFragment::class.java.simpleName)
+                replace(
+                    R.id.fragment_pegawai_container,
+                    profilPelangganFragment,
+                    ProfilPelangganFragment::class.java.simpleName
+                )
                 addToBackStack(null)
                 commit()
             }
@@ -115,12 +125,13 @@ class DetailPesananFragment : Fragment() {
                         if (document.id == pesananId) {
                             pesanan = Pesanan()
                             pesanan.id = document.id
-                            pesanan.idPelanggan=document.getString("idPelanggan").toString()
+                            pesanan.idPelanggan = document.getString("idPelanggan").toString()
                             pesanan.buktiBayar = document.getString("buktiBayar").toString()
                             pesanan.tglPengiriman =
                                 document.getTimestamp("tglPengiriman")?.toDate()
                             pesanan.tglPengambilan =
                                 document.getTimestamp("tglPengambilan")?.toDate()
+                            pesanan.status = document.getString("status").toString()
                         }
                     }
 
@@ -133,25 +144,35 @@ class DetailPesananFragment : Fragment() {
                         (pesanan.tglPengambilan?.time ?: 0) - (pesanan.tglPengiriman?.time ?: 0)
                     val masaSewa = (diff / 1000 / 60 / 60 / 24).toInt()
 
-                    db.collection("pengguna").addSnapshotListener{valuePelanggan,errorPelanggan->
-                        if (errorPelanggan != null) {
-                            Log.d("List Pesanan Error", errorPelanggan.toString())
-                            return@addSnapshotListener
-                        }
-                        if (valuePelanggan != null) {
-                            for (document in valuePelanggan) {
-                                if (document.id == pesanan.idPelanggan) {
-                                    pelanggan=document.toObject(Pelanggan::class.java)
-                                    tvNama.text = pelanggan.namaLengkap
-                                    tvEmail.text = pelanggan.email
+                    db.collection("pengguna")
+                        .addSnapshotListener { valuePelanggan, errorPelanggan ->
+                            if (errorPelanggan != null) {
+                                Log.d("List Pesanan Error", errorPelanggan.toString())
+                                return@addSnapshotListener
+                            }
+                            if (valuePelanggan != null) {
+                                for (document in valuePelanggan) {
+                                    if (document.id == pesanan.idPelanggan) {
+                                        pelanggan = document.toObject(Pelanggan::class.java)
+                                        tvNama.text = pelanggan.namaLengkap
+                                        tvEmail.text = pelanggan.email
+                                    }
                                 }
                             }
                         }
-                    }
 
                     tvTglPengiriman.text = sdf.format(pesanan.tglPengiriman ?: Date())
                     tvTglPengambilan.text = sdf.format(pesanan.tglPengambilan ?: Date())
                     tvHari.text = masaSewa.toString()
+                    if (pesanan.status == "diterima") {
+                        btnTerima.visibility = View.GONE
+                        btnTolak.visibility = View.GONE
+                        btnDikembalikan.visibility = View.VISIBLE
+                    }else if (pesanan.status == "netral") {
+                        btnTerima.visibility = View.VISIBLE
+                        btnTolak.visibility = View.VISIBLE
+                        btnDikembalikan.visibility = View.GONE
+                    }
 
                     Glide.with(requireContext())
                         .load(pesanan.buktiBayar)
@@ -193,35 +214,86 @@ class DetailPesananFragment : Fragment() {
                 }
             }
             btnTerima.setOnClickListener {
-                db.collection("pesanan").document(pesananId).update("status","diterima").addOnSuccessListener {
-                    Toast.makeText(
-                        requireContext(),
-                        "Pesanan telah Anda setujui",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    parentFragmentManager.popBackStack()
-                }.addOnFailureListener {
-                    Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
-                }
+                db.collection("pesanan").document(pesananId).update("status", "diterima")
+                    .addOnSuccessListener {
+                        btnTerima.visibility = View.GONE
+                        btnTolak.visibility = View.GONE
+                        btnDikembalikan.visibility = View.VISIBLE
+                        Toast.makeText(
+                            requireContext(),
+                            "Pesanan telah Anda setujui",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }.addOnFailureListener {
+                        Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
+                    }
             }
             btnTolak.setOnClickListener {
-                db.collection("pesanan").document(pesananId).update("status","ditolak").addOnSuccessListener {
-                    Toast.makeText(
-                        requireContext(),
-                        "Pesanan telah Anda tolak",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    parentFragmentManager.popBackStack()
-                }.addOnFailureListener {
-                    Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
+                db.collection("pesanan").document(pesananId).update("status", "ditolak")
+                    .addOnSuccessListener {
+                        Toast.makeText(
+                            requireContext(),
+                            "Pesanan telah Anda tolak",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        parentFragmentManager.popBackStack()
+                    }.addOnFailureListener {
+                        Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
+                    }
+            }
+            btnDikembalikan.setOnClickListener {
+                val builder = AlertDialog.Builder(requireContext())
+
+                builder.setMessage(
+                    HtmlCompat.fromHtml(
+                        "Apakah Anda yakin pelanggan dengan nama <b>${tvNama.text}</b> sudah mengembalikan barang yang disewa?",
+                        HtmlCompat.FROM_HTML_MODE_LEGACY
+                    )
+                )
+                    .setTitle("Konfirmasi")
+
+                builder.setPositiveButton("Sudah") { dialog, which ->
+                    val storageRef = FirebaseStorage.getInstance().reference
+                    val pesananIdRef = storageRef.child("bukti/${pesananId}.jpg")
+
+                    db.collection("pesanan").document(pesananId).get()
+                        .addOnSuccessListener { snapshot ->
+                            val subCollections = snapshot.reference.collection("keranjang")
+                            subCollections.get().addOnSuccessListener { subSnapshot ->
+                                for (doc in subSnapshot.documents) {
+                                    doc.reference.delete()
+                                }
+                            }
+                            subCollections.document().delete()
+                            pesananIdRef.delete()
+                            db.collection("pesanan").document(pesananId).delete()
+                                .addOnSuccessListener {
+                                    Toast.makeText(
+                                        requireContext(),
+                                        "Pesanan berhasil dihapus",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    parentFragmentManager.popBackStack()
+                                }.addOnFailureListener { e ->
+                                Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                        }
                 }
+
+                builder.setNegativeButton("Belum") { dialog, which ->
+                    dialog.cancel()
+                }
+
+                val dialog = builder.create()
+                dialog.show()
             }
         }
     }
 
     private fun initAdapter() {
         rvKeranjang.layoutManager = LinearLayoutManager(activity)
-        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(),true)
+        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf())
         rvKeranjang.adapter = listKeranjangAdapter
     }
 

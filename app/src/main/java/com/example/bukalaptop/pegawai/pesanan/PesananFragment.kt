@@ -52,7 +52,7 @@ class PesananFragment : Fragment() {
                     pesanan.id = document.id
                     pesanan.idPelanggan=document.getString("idPelanggan").toString()
                     pesanan.status=document.getString("status").toString()
-                    if (pesanan.status=="netral") {
+                    if (pesanan.status!="ditolak") {
                         listPesanan.add(pesanan)
                     }
                 }

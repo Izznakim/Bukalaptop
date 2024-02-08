@@ -24,18 +24,14 @@
 
     <LinearLayout
         android:id="@+id/btn_pegawai"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="24dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="@+id/divider"
-        app:layout_constraintEnd_toStartOf="@+id/divider"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/divider">
+        app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:layout_width="148dp"
@@ -53,50 +49,6 @@
             android:layout_marginTop="16dp"
             android:gravity="center"
             android:text="Pegawai"
-            android:textSize="34sp" />
-    </LinearLayout>
-
-    <View
-        android:id="@+id/divider"
-        android:layout_width="1dp"
-        android:layout_height="300dp"
-        android:background="@color/black"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/appBarLayout" />
-
-    <LinearLayout
-        android:id="@+id/btn_pelanggan"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="24dp"
-        android:gravity="center"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="@+id/divider"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/divider"
-        app:layout_constraintTop_toTopOf="@+id/divider">
-
-        <ImageView
-            android:layout_width="148dp"
-            android:layout_height="148dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/circle_background"
-            android:backgroundTint="#FFBB46"
-            android:padding="16dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/baseline_person_50" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:text="Pelanggan"
             android:textSize="34sp" />
     </LinearLayout>
 
