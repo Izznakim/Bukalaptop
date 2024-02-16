@@ -168,7 +168,7 @@ class DetailPesananFragment : Fragment() {
                         btnTerima.visibility = View.GONE
                         btnTolak.visibility = View.GONE
                         btnDikembalikan.visibility = View.VISIBLE
-                    }else if (pesanan.status == "netral") {
+                    } else if (pesanan.status == "netral") {
                         btnTerima.visibility = View.VISIBLE
                         btnTolak.visibility = View.VISIBLE
                         btnDikembalikan.visibility = View.GONE
@@ -191,6 +191,7 @@ class DetailPesananFragment : Fragment() {
 
                                     val keranjang = Keranjang(barang, jumlah)
                                     keranjang.barang = document.toObject(Barang::class.java)
+                                    keranjang.barang.barangId = document.id
                                     keranjang.jumlah = jumlah
 
                                     listKeranjang.add(keranjang)
@@ -275,9 +276,13 @@ class DetailPesananFragment : Fragment() {
                                     ).show()
                                     parentFragmentManager.popBackStack()
                                 }.addOnFailureListener { e ->
-                                Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_SHORT)
-                                    .show()
-                            }
+                                    Toast.makeText(
+                                        requireContext(),
+                                        e.toString(),
+                                        Toast.LENGTH_SHORT
+                                    )
+                                        .show()
+                                }
                         }
                 }
 
