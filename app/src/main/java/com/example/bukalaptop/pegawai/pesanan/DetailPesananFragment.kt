@@ -30,6 +30,7 @@ import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
 import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.model.Pelanggan
 import com.example.bukalaptop.model.Pesanan
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
@@ -57,6 +58,9 @@ class DetailPesananFragment : Fragment() {
     private lateinit var listKeranjang: ArrayList<Keranjang>
     private lateinit var pesanan: Pesanan
     private lateinit var pelanggan: Pelanggan
+
+    private var pesananListenerReg: ListenerRegistration? = null
+    private var penggunaListenerReg: ListenerRegistration? = null
 
     companion object {
         var EXTRA_IDPESANAN = "extra_idpesanan"
@@ -115,98 +119,100 @@ class DetailPesananFragment : Fragment() {
         if (arguments != null) {
             pesananId = arguments?.getString(EXTRA_IDPESANAN).toString()
 
-            db.collection("pesanan").addSnapshotListener { valuePesanan, errorPesanan ->
-                if (errorPesanan != null) {
-                    Log.d("List Pesanan Error", errorPesanan.toString())
-                    return@addSnapshotListener
-                }
-                if (valuePesanan != null) {
-                    for (document in valuePesanan) {
-                        if (document.id == pesananId) {
-                            pesanan = Pesanan()
-                            pesanan.id = document.id
-                            pesanan.idPelanggan = document.getString("idPelanggan").toString()
-                            pesanan.buktiBayar = document.getString("buktiBayar").toString()
-                            pesanan.tglPengiriman =
-                                document.getTimestamp("tglPengiriman")?.toDate()
-                            pesanan.tglPengambilan =
-                                document.getTimestamp("tglPengambilan")?.toDate()
-                            pesanan.status = document.getString("status").toString()
-                        }
+            pesananListenerReg =
+                db.collection("pesanan").addSnapshotListener { valuePesanan, errorPesanan ->
+                    if (errorPesanan != null) {
+                        Log.d("List Pesanan Error", errorPesanan.toString())
+                        return@addSnapshotListener
                     }
-
-                    val currencyFormat = NumberFormat.getCurrencyInstance()
-                    currencyFormat.maximumFractionDigits = 2
-                    currencyFormat.currency = Currency.getInstance("IDR")
-
-                    val sdf = SimpleDateFormat("dd/MM/yyy", Locale.getDefault())
-                    val diff =
-                        (pesanan.tglPengambilan?.time ?: 0) - (pesanan.tglPengiriman?.time ?: 0)
-                    val masaSewa = (diff / 1000 / 60 / 60 / 24).toInt()
-
-                    db.collection("pengguna")
-                        .addSnapshotListener { valuePelanggan, errorPelanggan ->
-                            if (errorPelanggan != null) {
-                                Log.d("List Pesanan Error", errorPelanggan.toString())
-                                return@addSnapshotListener
+                    if (valuePesanan != null) {
+                        for (document in valuePesanan) {
+                            if (document.id == pesananId) {
+                                pesanan = Pesanan()
+                                pesanan.id = document.id
+                                pesanan.idPelanggan = document.getString("idPelanggan").toString()
+                                pesanan.buktiBayar = document.getString("buktiBayar").toString()
+                                pesanan.tglPengiriman =
+                                    document.getTimestamp("tglPengiriman")?.toDate()
+                                pesanan.tglPengambilan =
+                                    document.getTimestamp("tglPengambilan")?.toDate()
+                                pesanan.status = document.getString("status").toString()
                             }
-                            if (valuePelanggan != null) {
-                                for (document in valuePelanggan) {
-                                    if (document.id == pesanan.idPelanggan) {
-                                        pelanggan = document.toObject(Pelanggan::class.java)
-                                        tvNama.text = pelanggan.namaLengkap
-                                        tvEmail.text = pelanggan.email
+                        }
+
+                        val currencyFormat = NumberFormat.getCurrencyInstance()
+                        currencyFormat.maximumFractionDigits = 2
+                        currencyFormat.currency = Currency.getInstance("IDR")
+
+                        val sdf = SimpleDateFormat("dd/MM/yyy", Locale.getDefault())
+                        val diff =
+                            (pesanan.tglPengambilan?.time ?: 0) - (pesanan.tglPengiriman?.time ?: 0)
+                        val masaSewa = (diff / 1000 / 60 / 60 / 24).toInt()
+
+                        penggunaListenerReg = db.collection("pengguna")
+                            .addSnapshotListener { valuePelanggan, errorPelanggan ->
+                                if (errorPelanggan != null) {
+                                    Log.d("List Pesanan Error", errorPelanggan.toString())
+                                    return@addSnapshotListener
+                                }
+                                if (valuePelanggan != null) {
+                                    for (document in valuePelanggan) {
+                                        if (document.id == pesanan.idPelanggan) {
+                                            pelanggan = document.toObject(Pelanggan::class.java)
+                                            tvNama.text = pelanggan.namaLengkap
+                                            tvEmail.text = pelanggan.email
+                                        }
                                     }
                                 }
                             }
+
+                        tvTglPengiriman.text = sdf.format(pesanan.tglPengiriman ?: Date())
+                        tvTglPengambilan.text = sdf.format(pesanan.tglPengambilan ?: Date())
+                        tvHari.text = masaSewa.toString()
+                        if (pesanan.status == "diterima") {
+                            btnTerima.visibility = View.GONE
+                            btnTolak.visibility = View.GONE
+                            btnDikembalikan.visibility = View.VISIBLE
+                        } else if (pesanan.status == "netral") {
+                            btnTerima.visibility = View.VISIBLE
+                            btnTolak.visibility = View.VISIBLE
+                            btnDikembalikan.visibility = View.GONE
                         }
 
-                    tvTglPengiriman.text = sdf.format(pesanan.tglPengiriman ?: Date())
-                    tvTglPengambilan.text = sdf.format(pesanan.tglPengambilan ?: Date())
-                    tvHari.text = masaSewa.toString()
-                    if (pesanan.status == "diterima") {
-                        btnTerima.visibility = View.GONE
-                        btnTolak.visibility = View.GONE
-                        btnDikembalikan.visibility = View.VISIBLE
-                    } else if (pesanan.status == "netral") {
-                        btnTerima.visibility = View.VISIBLE
-                        btnTolak.visibility = View.VISIBLE
-                        btnDikembalikan.visibility = View.GONE
-                    }
+                        Glide.with(requireContext())
+                            .load(pesanan.buktiBayar)
+                            .apply(RequestOptions())
+                            .into(ivBukti)
 
-                    Glide.with(requireContext())
-                        .load(pesanan.buktiBayar)
-                        .apply(RequestOptions())
-                        .into(ivBukti)
+                        pesananListenerReg =
+                            db.collection("pesanan").document(pesananId).collection("keranjang")
+                                .addSnapshotListener { valueKeranjang, errorKeranjang ->
+                                    var total = 0
+                                    listKeranjang.clear()
+                                    if (valueKeranjang != null) {
+                                        for (document in valueKeranjang) {
+                                            val barang = document.toObject(Barang::class.java)
+                                            val jumlah = document.get("jumlah").toString().toInt()
+                                            total += (barang.biayaSewa * jumlah)
 
-                    db.collection("pesanan").document(pesananId).collection("keranjang")
-                        .addSnapshotListener { valueKeranjang, errorKeranjang ->
-                            var total = 0
-                            listKeranjang.clear()
-                            if (valueKeranjang != null) {
-                                for (document in valueKeranjang) {
-                                    val barang = document.toObject(Barang::class.java)
-                                    val jumlah = document.get("jumlah").toString().toInt()
-                                    total += (barang.biayaSewa * jumlah)
+                                            val keranjang = Keranjang(barang, jumlah)
+                                            keranjang.barang = document.toObject(Barang::class.java)
+                                            keranjang.barang.barangId = document.id
+                                            keranjang.jumlah = jumlah
 
-                                    val keranjang = Keranjang(barang, jumlah)
-                                    keranjang.barang = document.toObject(Barang::class.java)
-                                    keranjang.barang.barangId = document.id
-                                    keranjang.jumlah = jumlah
-
-                                    listKeranjang.add(keranjang)
+                                            listKeranjang.add(keranjang)
+                                        }
+                                    } else if (errorKeranjang != null) {
+                                        Log.d("List Keranjang", errorKeranjang.toString())
+                                    }
+                                    listKeranjangAdapter.setData(listKeranjang)
+                                    tvTotal.text =
+                                        currencyFormat.format(total * masaSewa)
                                 }
-                            } else if (errorKeranjang != null) {
-                                Log.d("List Keranjang", errorKeranjang.toString())
-                            }
-                            listKeranjangAdapter.setData(listKeranjang)
-                            tvTotal.text =
-                                currencyFormat.format(total * masaSewa)
-                        }
-                } else {
-                    Log.d("List Pesanan", "Data Kosong")
+                    } else {
+                        Log.d("List Pesanan", "Data Kosong")
+                    }
                 }
-            }
 
             ivBukti.setOnClickListener {
                 Intent(activity, ZoomImageActivity::class.java).also {
@@ -312,5 +318,12 @@ class DetailPesananFragment : Fragment() {
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        pesananListenerReg?.remove()
+        penggunaListenerReg?.remove()
     }
 }

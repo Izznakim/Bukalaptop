@@ -12,6 +12,7 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListPesananAdapter
 import com.example.bukalaptop.model.Pelanggan
 import com.example.bukalaptop.model.Pesanan
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -21,6 +22,8 @@ class PesananFragment : Fragment() {
     private lateinit var listPesananAdapter: ListPesananAdapter
     private lateinit var listPesanan: ArrayList<Pesanan>
     private lateinit var pesanan: Pesanan
+
+    private var pesananListenerReg: ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,7 +43,7 @@ class PesananFragment : Fragment() {
 
         val db = Firebase.firestore
         listPesanan = arrayListOf()
-        db.collection("pesanan").addSnapshotListener { value, error ->
+        pesananListenerReg = db.collection("pesanan").addSnapshotListener { value, error ->
             listPesanan.clear()
             if (error != null) {
                 Log.d("List Pesanan Error", error.toString())
@@ -50,9 +53,9 @@ class PesananFragment : Fragment() {
                 for (document in value) {
                     pesanan = Pesanan()
                     pesanan.id = document.id
-                    pesanan.idPelanggan=document.getString("idPelanggan").toString()
-                    pesanan.status=document.getString("status").toString()
-                    if (pesanan.status!="ditolak") {
+                    pesanan.idPelanggan = document.getString("idPelanggan").toString()
+                    pesanan.status = document.getString("status").toString()
+                    if (pesanan.status != "ditolak") {
                         listPesanan.add(pesanan)
                     }
                 }
@@ -67,5 +70,11 @@ class PesananFragment : Fragment() {
         rvPesanan.layoutManager = LinearLayoutManager(activity)
         listPesananAdapter = ListPesananAdapter(arrayListOf())
         rvPesanan.adapter = listPesananAdapter
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        pesananListenerReg?.remove()
     }
 }

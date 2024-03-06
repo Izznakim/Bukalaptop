@@ -19,6 +19,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
 import com.example.bukalaptop.ZoomImageActivity
 import com.example.bukalaptop.pegawai.barang.model.Barang
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
@@ -43,6 +44,8 @@ class DetailBarangFragment : Fragment() {
     private lateinit var btnUpdate: Button
     private lateinit var btnHapus: Button
     private lateinit var barang: Barang
+
+    private var barangListenerReg: ListenerRegistration? = null
 
     companion object {
         var EXTRA_BARANG = "extra_barang"
@@ -87,7 +90,7 @@ class DetailBarangFragment : Fragment() {
         }
 
         val db = Firebase.firestore
-        db.collection("barang").addSnapshotListener { value, error ->
+        barangListenerReg = db.collection("barang").addSnapshotListener { value, error ->
             if (value != null) {
                 for (document in value) {
                     if (document.id == barangId) {
@@ -194,5 +197,11 @@ class DetailBarangFragment : Fragment() {
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        barangListenerReg?.remove()
     }
 }

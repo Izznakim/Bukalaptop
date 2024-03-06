@@ -15,6 +15,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
 import com.example.bukalaptop.ZoomImageActivity
 import com.example.bukalaptop.model.Pelanggan
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -26,6 +27,8 @@ class ProfilPelangganFragment : Fragment() {
     private lateinit var tvEmail: TextView
     private lateinit var tvNomorTelpon: TextView
     private lateinit var tvAlamatAsal: TextView
+
+    private var penggunaListenerReg: ListenerRegistration? = null
 
     companion object {
         var EXTRA_IDPELANGGAN = "extra_idpelanggan"
@@ -55,7 +58,7 @@ class ProfilPelangganFragment : Fragment() {
         if (arguments != null) {
             val pelangganId = arguments?.getString(EXTRA_IDPELANGGAN).toString()
 
-            db.collection("pengguna").addSnapshotListener { value, error ->
+            penggunaListenerReg = db.collection("pengguna").addSnapshotListener { value, error ->
                 if (error != null) {
                     Log.d("List Pesanan Error", error.toString())
                     return@addSnapshotListener
@@ -105,5 +108,11 @@ class ProfilPelangganFragment : Fragment() {
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        penggunaListenerReg?.remove()
     }
 }

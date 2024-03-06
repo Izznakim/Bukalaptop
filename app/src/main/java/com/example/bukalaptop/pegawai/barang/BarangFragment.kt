@@ -12,6 +12,7 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.barang.adapter.ListBarangAdapter
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -21,6 +22,8 @@ class BarangFragment : Fragment() {
     private lateinit var listBarangAdapter: ListBarangAdapter
     private lateinit var listBarang: ArrayList<Barang>
     private lateinit var fabTambahBarang: FloatingActionButton
+
+    private var barangListenerReg: ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,7 +45,7 @@ class BarangFragment : Fragment() {
 
         val db = Firebase.firestore
         listBarang = arrayListOf()
-        db.collection("barang").addSnapshotListener { value, error ->
+        barangListenerReg = db.collection("barang").addSnapshotListener { value, error ->
             listBarang.clear()
             if (value != null) {
                 for (document in value) {
@@ -57,7 +60,11 @@ class BarangFragment : Fragment() {
 
         fabTambahBarang.setOnClickListener {
             parentFragmentManager.beginTransaction().apply {
-                replace(R.id.fragment_pegawai_container,TambahBarangFragment(), TambahBarangFragment::class.java.simpleName)
+                replace(
+                    R.id.fragment_pegawai_container,
+                    TambahBarangFragment(),
+                    TambahBarangFragment::class.java.simpleName
+                )
                 addToBackStack(null)
                 commit()
             }
@@ -68,5 +75,11 @@ class BarangFragment : Fragment() {
         rvBarang.layoutManager = LinearLayoutManager(activity)
         listBarangAdapter = ListBarangAdapter(arrayListOf())
         rvBarang.adapter = listBarangAdapter
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        barangListenerReg?.remove()
     }
 }

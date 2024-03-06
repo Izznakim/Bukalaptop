@@ -12,12 +12,16 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.pesanan.DetailPesananFragment
 import com.example.bukalaptop.model.Pelanggan
 import com.example.bukalaptop.model.Pesanan
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
     RecyclerView.Adapter<ListPesananAdapter.ListViewHolder>() {
-    fun setData(data:List<Pesanan>){
+
+    private var penggunaListenerReg: ListenerRegistration? = null
+
+    fun setData(data: List<Pesanan>) {
         listPesanan.clear()
         listPesanan.addAll(data)
         notifyDataSetChanged()
@@ -38,24 +42,25 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
     }
 
     override fun onBindViewHolder(holder: ListViewHolder, position: Int) {
-        val (pesananId,idPelanggan) = listPesanan[position]
+        val (pesananId, idPelanggan) = listPesanan[position]
         holder.apply {
             val db = Firebase.firestore
-            db.collection("pengguna").addSnapshotListener{valuePelanggan,errorPelanggan->
-                if (errorPelanggan != null) {
-                    Log.d("List Pesanan Error", errorPelanggan.toString())
-                    return@addSnapshotListener
-                }
-                if (valuePelanggan != null) {
-                    for (document in valuePelanggan) {
-                        if (document.id == idPelanggan) {
-                            val pelanggan=document.toObject(Pelanggan::class.java)
-                            tvNama.text = pelanggan.namaLengkap
-                            tvTelepon.text = pelanggan.nomorTelepon
+            penggunaListenerReg =
+                db.collection("pengguna").addSnapshotListener { valuePelanggan, errorPelanggan ->
+                    if (errorPelanggan != null) {
+                        Log.d("List Pesanan Error", errorPelanggan.toString())
+                        return@addSnapshotListener
+                    }
+                    if (valuePelanggan != null) {
+                        for (document in valuePelanggan) {
+                            if (document.id == idPelanggan) {
+                                val pelanggan = document.toObject(Pelanggan::class.java)
+                                tvNama.text = pelanggan.namaLengkap
+                                tvTelepon.text = pelanggan.nomorTelepon
+                            }
                         }
                     }
                 }
-            }
             itemView.setOnClickListener {
                 val detailPesananFragment = DetailPesananFragment()
                 val mFragmentManager =
@@ -65,7 +70,11 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
                 bundle.putString(DetailPesananFragment.EXTRA_IDPESANAN, pesananId)
                 detailPesananFragment.arguments = bundle
                 mFragmentManager.beginTransaction().apply {
-                    replace(R.id.fragment_pegawai_container,detailPesananFragment, DetailPesananFragment::class.java.simpleName)
+                    replace(
+                        R.id.fragment_pegawai_container,
+                        detailPesananFragment,
+                        DetailPesananFragment::class.java.simpleName
+                    )
                     addToBackStack(null)
                     commit()
                 }
@@ -74,4 +83,10 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
     }
 
     override fun getItemCount(): Int = listPesanan.size
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+
+        penggunaListenerReg?.remove()
+    }
 }
