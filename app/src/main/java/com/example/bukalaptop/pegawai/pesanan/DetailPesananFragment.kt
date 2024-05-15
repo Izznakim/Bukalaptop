@@ -11,6 +11,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -50,6 +51,9 @@ class DetailPesananFragment : Fragment() {
     private lateinit var listKeranjang: ArrayList<Keranjang>
     private lateinit var pesanan: Pesanan
     private lateinit var pelanggan: Pelanggan
+    private lateinit var tvProgress: TextView
+    private lateinit var builder: AlertDialog.Builder
+    private lateinit var progressDialog: AlertDialog
 
     companion object {
         var EXTRA_IDPESANAN = "extra_idpesanan"
@@ -93,6 +97,15 @@ class DetailPesananFragment : Fragment() {
         rvKeranjang = view.findViewById(R.id.rv_keranjang)
         rvKeranjang.setHasFixedSize(true)
 
+        builder = AlertDialog.Builder(requireContext())
+        val inflater=layoutInflater
+        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        builder.setView(dialogView)
+        builder.setCancelable(false)
+        progressDialog = builder.create()
+
+        tvProgress=dialogView.findViewById(R.id.tv_progress)
+
         initAdapter()
 
         var pesananId = ""
@@ -103,6 +116,8 @@ class DetailPesananFragment : Fragment() {
         if (arguments != null) {
             pesananId = arguments?.getString(EXTRA_IDPESANAN).toString()
 
+            tvProgress.text="Memuat informasi pesanan..."
+            progressDialog.show()
             db.collection("pesanan").addSnapshotListener { valuePesanan, errorPesanan ->
                 if (errorPesanan != null) {
                     Log.d("List Pesanan Error", errorPesanan.toString())
@@ -151,10 +166,12 @@ class DetailPesananFragment : Fragment() {
                     tvTglPengambilan.text = sdf.format(pesanan.tglPengambilan ?: Date())
                     tvHari.text = masaSewa.toString()
 
-                    Glide.with(requireContext())
-                        .load(pesanan.buktiBayar)
-                        .apply(RequestOptions())
-                        .into(ivBukti)
+                    if (isAdded) {
+                        Glide.with(requireContext())
+                            .load(pesanan.buktiBayar)
+                            .apply(RequestOptions())
+                            .into(ivBukti)
+                    }
 
                     db.collection("pesanan").document(pesananId).collection("keranjang")
                         .addSnapshotListener { valueKeranjang, errorKeranjang ->
@@ -182,6 +199,7 @@ class DetailPesananFragment : Fragment() {
                 } else {
                     Log.d("List Pesanan", "Data Kosong")
                 }
+                progressDialog.dismiss()
             }
 
             ivBukti.setOnClickListener {
@@ -191,6 +209,8 @@ class DetailPesananFragment : Fragment() {
                 }
             }
             btnTerima.setOnClickListener {
+                tvProgress.text="Memuat pesanan..."
+                progressDialog.show()
                 db.collection("pesanan").document(pesananId).update("status","diterima").addOnSuccessListener {
                     Toast.makeText(
                         requireContext(),
@@ -198,11 +218,15 @@ class DetailPesananFragment : Fragment() {
                         Toast.LENGTH_SHORT
                     ).show()
                     parentFragmentManager.popBackStack()
+                    progressDialog.dismiss()
                 }.addOnFailureListener {
                     Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
+                    progressDialog.dismiss()
                 }
             }
             btnTolak.setOnClickListener {
+                tvProgress.text="Memuat pesanan..."
+                progressDialog.show()
                 db.collection("pesanan").document(pesananId).update("status","ditolak").addOnSuccessListener {
                     Toast.makeText(
                         requireContext(),
@@ -210,8 +234,10 @@ class DetailPesananFragment : Fragment() {
                         Toast.LENGTH_SHORT
                     ).show()
                     parentFragmentManager.popBackStack()
+                    progressDialog.dismiss()
                 }.addOnFailureListener {
                     Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
+                    progressDialog.dismiss()
                 }
             }
         }

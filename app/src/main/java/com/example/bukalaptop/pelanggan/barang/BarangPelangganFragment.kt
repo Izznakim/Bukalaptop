@@ -5,6 +5,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -19,6 +21,9 @@ class BarangPelangganFragment : Fragment() {
     private lateinit var rvBarang: RecyclerView
     private lateinit var listBarangPelangganAdapter: ListBarangPelangganAdapter
     private lateinit var listBarang: ArrayList<Barang>
+    private lateinit var tvProgress: TextView
+    private lateinit var builder: AlertDialog.Builder
+    private lateinit var progressDialog: AlertDialog
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,10 +39,21 @@ class BarangPelangganFragment : Fragment() {
         rvBarang = view.findViewById(R.id.rv_barang)
         rvBarang.setHasFixedSize(true)
 
+        builder = AlertDialog.Builder(requireContext())
+        val inflater=layoutInflater
+        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        builder.setView(dialogView)
+        builder.setCancelable(false)
+        progressDialog = builder.create()
+
+        tvProgress=dialogView.findViewById(R.id.tv_progress)
+
         initAdapter()
 
         val db = Firebase.firestore
         listBarang = arrayListOf()
+        tvProgress.text="Memuat barang..."
+        progressDialog.show()
         db.collection("barang").addSnapshotListener { value, error ->
             listBarang.clear()
             if (value != null) {
@@ -49,6 +65,7 @@ class BarangPelangganFragment : Fragment() {
                 Log.d("List Barang", error.toString())
             }
             listBarangPelangganAdapter.setData(listBarang)
+            progressDialog.dismiss()
         }
     }
 

@@ -52,6 +52,9 @@ class UpdateBarangFragment : Fragment() {
     private lateinit var btnTerapkan: Button
     private lateinit var storageRef: StorageReference
     private lateinit var databaseRef: FirebaseFirestore
+    private lateinit var tvProgress: TextView
+    private lateinit var builder: AlertDialog.Builder
+    private lateinit var progressDialog: AlertDialog
 
     private var barang: Barang? = null
     private var imageBitmap: Bitmap? = null
@@ -101,6 +104,15 @@ class UpdateBarangFragment : Fragment() {
         etStok = view.findViewById(R.id.et_stok)
         btnTerapkan = view.findViewById(R.id.btn_terapkan)
         btnBatal = view.findViewById(R.id.btn_batal)
+
+        builder = AlertDialog.Builder(requireContext())
+        val inflater=layoutInflater
+        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        builder.setView(dialogView)
+        builder.setCancelable(false)
+        progressDialog = builder.create()
+
+        tvProgress=dialogView.findViewById(R.id.tv_progress)
 
         var barangId=""
         var barangImageUrl=""
@@ -233,6 +245,8 @@ class UpdateBarangFragment : Fragment() {
                 return@setOnClickListener
             }
 
+            tvProgress.text="Memperbarui barang..."
+            progressDialog.show()
             GlobalScope.launch(Dispatchers.IO) {
                 try {
                     val baos = ByteArrayOutputStream()
@@ -276,15 +290,13 @@ class UpdateBarangFragment : Fragment() {
                                     "stok", stok,
                                 )
                         }
+                        progressDialog.dismiss()
                     }
                 }catch (e:IOException){
                     e.printStackTrace()
                 }
             }
 
-
-            Toast.makeText(context, "Barang sudah terupdate", Toast.LENGTH_SHORT)
-                .show()
             parentFragmentManager.popBackStack()
         }
         btnBatal.setOnClickListener {

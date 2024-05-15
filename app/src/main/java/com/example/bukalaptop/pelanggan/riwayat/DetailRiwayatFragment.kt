@@ -18,6 +18,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -53,6 +54,9 @@ class DetailRiwayatFragment : Fragment() {
     private lateinit var listKeranjang: ArrayList<Keranjang>
     private lateinit var pesanan: Pesanan
     private lateinit var storageBuktiRef: StorageReference
+    private lateinit var tvProgress: TextView
+    private lateinit var builder: AlertDialog.Builder
+    private lateinit var progressDialog: AlertDialog
 
     companion object {
         var EXTRA_IDPELANGGAN = "extra_idpelanggan"
@@ -79,6 +83,15 @@ class DetailRiwayatFragment : Fragment() {
         etNomorWa = view.findViewById(R.id.et_nomorWa)
         btnHapus = view.findViewById(R.id.btn_hapus)
 
+        builder = AlertDialog.Builder(requireContext())
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.progress_layout, null)
+        builder.setView(dialogView)
+        builder.setCancelable(false)
+        progressDialog = builder.create()
+
+        tvProgress = dialogView.findViewById(R.id.tv_progress)
+
         rvKeranjang.setHasFixedSize(true)
 
         initAdapter()
@@ -93,6 +106,8 @@ class DetailRiwayatFragment : Fragment() {
         if (arguments != null) {
             pelangganId = arguments?.getString(EXTRA_IDPELANGGAN).toString()
             pesananId = arguments?.getString(EXTRA_IDPESANAN).toString()
+            tvProgress.text = "Memuat informasi riwayat..."
+            progressDialog.show()
 
             db.collection("pesanan").addSnapshotListener { valueRiwayat, errorRiwayat ->
                 if (errorRiwayat != null) {
@@ -118,7 +133,8 @@ class DetailRiwayatFragment : Fragment() {
 
                             val sdf = SimpleDateFormat("dd/MM/yyy", Locale.getDefault())
                             val diff =
-                                (pesanan.tglPengambilan?.time ?: 0) - (pesanan.tglPengiriman?.time ?: 0)
+                                (pesanan.tglPengambilan?.time ?: 0) - (pesanan.tglPengiriman?.time
+                                    ?: 0)
                             val masaSewa = (diff / 1000 / 60 / 60 / 24).toInt()
 
                             tvTglPengiriman.text = sdf.format(pesanan.tglPengiriman ?: Date())
@@ -176,32 +192,52 @@ class DetailRiwayatFragment : Fragment() {
                             }
 
                             btnHapus.setOnClickListener {
-                                db.collection("pesanan").document(pesananId).delete().addOnSuccessListener {
-                                    db.collection("pesanan").document(pesananId).collection("keranjang")
-                                        .get()
-                                        .addOnCompleteListener{ task ->
-                                            if (task.isSuccessful) {
-                                                for (doc in task.result) {
-                                                    doc.reference.delete()
+                                tvProgress.text = "Sedang menghapus riwayat pesanan..."
+                                progressDialog.show()
+                                db.collection("pesanan").document(pesananId).delete()
+                                    .addOnSuccessListener {
+                                        db.collection("pesanan").document(pesananId)
+                                            .collection("keranjang")
+                                            .get()
+                                            .addOnCompleteListener { task ->
+                                                if (task.isSuccessful) {
+                                                    for (doc in task.result) {
+                                                        doc.reference.delete()
+                                                    }
+                                                } else {
+                                                    Toast.makeText(
+                                                        requireContext(),
+                                                        task.exception.toString(),
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
                                                 }
-                                            } else {
-                                                Toast.makeText(requireContext(), task.exception.toString(), Toast.LENGTH_SHORT).show()
                                             }
-                                        }
-                                    parentFragmentManager.popBackStack()
-                                    Toast.makeText(requireContext(), "Berhasil dihapus", Toast.LENGTH_SHORT)
-                                        .show()
-                                }.addOnFailureListener {
-                                    Toast.makeText(requireContext(), it.toString(), Toast.LENGTH_SHORT)
+                                        parentFragmentManager.popBackStack()
+                                        Toast.makeText(
+                                            requireContext(),
+                                            "Berhasil dihapus",
+                                            Toast.LENGTH_SHORT
+                                        )
+                                            .show()
+                                    }.addOnFailureListener {
+                                    Toast.makeText(
+                                        requireContext(),
+                                        it.toString(),
+                                        Toast.LENGTH_SHORT
+                                    )
                                         .show()
                                 }
-                                storageBuktiRef.child("${pesananId}.jpg").delete().addOnSuccessListener { }
+                                storageBuktiRef.child("${pesananId}.jpg").delete()
+                                    .addOnSuccessListener {
+                                        progressDialog.dismiss()
+                                    }
                                     .addOnFailureListener { e ->
                                         Toast.makeText(
                                             requireContext(),
                                             e.toString(),
                                             Toast.LENGTH_SHORT
                                         ).show()
+                                        progressDialog.dismiss()
                                     }
                             }
 
@@ -216,12 +252,15 @@ class DetailRiwayatFragment : Fragment() {
                                         }
                                         if (valueKeranjang != null) {
                                             for (docKeranjang in valueKeranjang) {
-                                                val barang = docKeranjang.toObject(Barang::class.java)
-                                                val jumlah = docKeranjang.get("jumlah").toString().toInt()
+                                                val barang =
+                                                    docKeranjang.toObject(Barang::class.java)
+                                                val jumlah =
+                                                    docKeranjang.get("jumlah").toString().toInt()
                                                 total += (barang.biayaSewa * jumlah)
 
                                                 val keranjang = Keranjang(barang, jumlah)
-                                                keranjang.barang = docKeranjang.toObject(Barang::class.java)
+                                                keranjang.barang =
+                                                    docKeranjang.toObject(Barang::class.java)
                                                 keranjang.jumlah = jumlah
 
                                                 listKeranjang.add(keranjang)
@@ -238,6 +277,7 @@ class DetailRiwayatFragment : Fragment() {
                 } else {
                     Log.d("List Riwayat", "Data Kosong")
                 }
+                progressDialog.dismiss()
             }
         }
     }

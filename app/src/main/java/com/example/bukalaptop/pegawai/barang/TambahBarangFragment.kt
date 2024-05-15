@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -42,6 +43,9 @@ class TambahBarangFragment : Fragment() {
     private lateinit var btnTambah: Button
     private lateinit var storageRef: StorageReference
     private lateinit var databaseRef: FirebaseFirestore
+    private lateinit var tvProgress: TextView
+    private lateinit var builder: AlertDialog.Builder
+    private lateinit var progressDialog: AlertDialog
 
     private var imageBitmap: Bitmap? = null
     private var merek: String = ""
@@ -90,6 +94,15 @@ class TambahBarangFragment : Fragment() {
         etStok = view.findViewById(R.id.et_stok)
         btnTambah = view.findViewById(R.id.btn_tambah)
         btnBatal = view.findViewById(R.id.btn_batal)
+
+        builder = AlertDialog.Builder(requireContext())
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.progress_layout, null)
+        builder.setView(dialogView)
+        builder.setCancelable(false)
+        progressDialog = builder.create()
+
+        tvProgress = dialogView.findViewById(R.id.tv_progress)
 
         ivTambahBarang.setOnClickListener {
             onPickImageClick()
@@ -245,6 +258,9 @@ class TambahBarangFragment : Fragment() {
         biayaSewa: Int,
         stok: Int
     ) {
+        tvProgress.text = "Menambahkan barang..."
+        progressDialog.show()
+
         val data = hashMapOf(
             "merek" to merek,
             "model" to model,
@@ -283,16 +299,18 @@ class TambahBarangFragment : Fragment() {
                             )
                         Toast.makeText(
                             context,
-                            "Tambahkan ke firebase dan firestore",
+                            "Barang telah ditambahkan",
                             Toast.LENGTH_SHORT
                         )
                             .show()
                         parentFragmentManager.popBackStack()
                     }
                 }
+                progressDialog.dismiss()
             }
             .addOnFailureListener { e ->
                 Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
+                progressDialog.dismiss()
             }
     }
 

@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
@@ -26,6 +27,9 @@ class ProfilPelangganFragment : Fragment() {
     private lateinit var tvEmail: TextView
     private lateinit var tvNomorTelpon: TextView
     private lateinit var tvAlamatAsal: TextView
+    private lateinit var tvProgress: TextView
+    private lateinit var builder: AlertDialog.Builder
+    private lateinit var progressDialog: AlertDialog
 
     companion object {
         var EXTRA_IDPELANGGAN = "extra_idpelanggan"
@@ -49,11 +53,22 @@ class ProfilPelangganFragment : Fragment() {
         tvNomorTelpon = view.findViewById(R.id.tv_nomor_telpon)
         tvAlamatAsal = view.findViewById(R.id.tv_alamat_asal)
 
+        builder = AlertDialog.Builder(requireContext())
+        val inflater=layoutInflater
+        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        builder.setView(dialogView)
+        builder.setCancelable(false)
+        progressDialog = builder.create()
+
+        tvProgress=dialogView.findViewById(R.id.tv_progress)
+
         val db = Firebase.firestore
         var pelanggan = Pelanggan()
 
         if (arguments != null) {
             val pelangganId = arguments?.getString(EXTRA_IDPELANGGAN).toString()
+            tvProgress.text="Memuat profil..."
+            progressDialog.show()
 
             db.collection("pengguna").addSnapshotListener { value, error ->
                 if (error != null) {
@@ -76,6 +91,7 @@ class ProfilPelangganFragment : Fragment() {
                         }
                     }
                 }
+                progressDialog.dismiss()
             }
         }
 

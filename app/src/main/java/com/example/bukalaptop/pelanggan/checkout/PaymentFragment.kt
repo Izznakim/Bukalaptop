@@ -44,6 +44,9 @@ class PaymentFragment : Fragment() {
     private lateinit var ivBuktiPembayaran: ImageView
     private lateinit var btnSewa: Button
     private lateinit var storageRef: StorageReference
+    private lateinit var tvProgress: TextView
+    private lateinit var builder: AlertDialog.Builder
+    private lateinit var progressDialog: AlertDialog
 
     private var imageBitmap: Bitmap? = null
     private var mSelisihHari: Long? = 0
@@ -79,6 +82,15 @@ class PaymentFragment : Fragment() {
         ivBuktiPembayaran = view.findViewById(R.id.iv_bukti_pembayaran)
         btnSewa = view.findViewById(R.id.btn_sewa)
 
+        builder = AlertDialog.Builder(requireContext())
+        val inflater=layoutInflater
+        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        builder.setView(dialogView)
+        builder.setCancelable(false)
+        progressDialog = builder.create()
+
+        tvProgress=dialogView.findViewById(R.id.tv_progress)
+
         var pelangganId = ""
         val db = Firebase.firestore
         storageRef = FirebaseStorage.getInstance().reference
@@ -94,6 +106,8 @@ class PaymentFragment : Fragment() {
             val listKeranjang = arguments?.getParcelableArrayList<Keranjang>(EXTRA_KERANJANG)
 
             db.collection("pengguna").document(pelangganId).addSnapshotListener { value, error ->
+                tvProgress.text="Memuat data..."
+                progressDialog.show()
                 if (error != null) {
                     Log.d("List Pesanan Error", error.toString())
                     return@addSnapshotListener
@@ -102,6 +116,7 @@ class PaymentFragment : Fragment() {
                     tvNamaLengkap.text = value.getString("namaLengkap")
                     tvEmail.text = value.getString("email")
                 }
+                progressDialog.dismiss()
             }
 
             btnPengiriman.setOnClickListener {
@@ -127,6 +142,8 @@ class PaymentFragment : Fragment() {
             }
 
             btnSewa.setOnClickListener {
+                tvProgress.text="Sedang menyewa..."
+                progressDialog.show()
                 if (mSelisihHari?.toInt() == 0) {
                     Toast.makeText(requireContext(), "Tanggal belum dipilih", Toast.LENGTH_SHORT)
                         .show()
@@ -196,8 +213,10 @@ class PaymentFragment : Fragment() {
                         ).show()
 
                         parentFragmentManager.popBackStack()
+                        progressDialog.dismiss()
                     }.addOnFailureListener { e ->
                         Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
+                        progressDialog.dismiss()
                     }
                 }
             }

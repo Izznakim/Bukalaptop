@@ -43,6 +43,9 @@ class DetailBarangFragment : Fragment() {
     private lateinit var btnUpdate: Button
     private lateinit var btnHapus: Button
     private lateinit var barang: Barang
+    private lateinit var tvProgress: TextView
+    private lateinit var builder: androidx.appcompat.app.AlertDialog.Builder
+    private lateinit var progressDialog: androidx.appcompat.app.AlertDialog
 
     companion object {
         var EXTRA_BARANG = "extra_barang"
@@ -80,6 +83,15 @@ class DetailBarangFragment : Fragment() {
         btnUpdate = view.findViewById(R.id.btn_update)
         btnHapus = view.findViewById(R.id.btn_hapus)
 
+        builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.progress_layout, null)
+        builder.setView(dialogView)
+        builder.setCancelable(false)
+        progressDialog = builder.create()
+
+        tvProgress = dialogView.findViewById(R.id.tv_progress)
+
         var barangId = ""
 
         if (arguments != null) {
@@ -87,6 +99,8 @@ class DetailBarangFragment : Fragment() {
         }
 
         val db = Firebase.firestore
+        tvProgress.text = "Memuat informasi barang..."
+        progressDialog.show()
         db.collection("barang").addSnapshotListener { value, error ->
             if (value != null) {
                 for (document in value) {
@@ -110,8 +124,10 @@ class DetailBarangFragment : Fragment() {
                         tvStok.text = barang.stok.toString()
                     }
                 }
+                progressDialog.dismiss()
             } else if (error != null) {
                 Log.d("Detail Barang", error.toString())
+                progressDialog.dismiss()
             }
         }
 
@@ -142,10 +158,17 @@ class DetailBarangFragment : Fragment() {
         btnHapus.setOnClickListener {
             val builder = AlertDialog.Builder(requireContext())
 
-            builder.setMessage(HtmlCompat.fromHtml("Anda yakin ingin menghapus <b>${barang.merek}</b> <b>${barang.model}</b>?",HtmlCompat.FROM_HTML_MODE_LEGACY))
+            builder.setMessage(
+                HtmlCompat.fromHtml(
+                    "Anda yakin ingin menghapus <b>${barang.merek}</b> <b>${barang.model}</b>?",
+                    HtmlCompat.FROM_HTML_MODE_LEGACY
+                )
+            )
                 .setTitle("Konfirmasi")
 
             builder.setPositiveButton("Ya") { dialog, which ->
+                tvProgress.text = "Menghapus barang..."
+                progressDialog.show()
                 val storageRef = FirebaseStorage.getInstance().reference
                 val barangIdRef = storageRef.child("barang/${barang.barangId}.jpg")
 
@@ -160,10 +183,17 @@ class DetailBarangFragment : Fragment() {
                             ).show()
                             parentFragmentManager.popBackStack()
                         }
-                        .addOnFailureListener { e -> Log.w("Error", "Error deleting document", e) }
+                        .addOnFailureListener { e ->
+                            Log.w("Error", "Error deleting document", e)
+                            progressDialog.dismiss()
+                        }
 
                     barangIdRef.delete().addOnSuccessListener {
-                    }.addOnFailureListener { e -> Log.w("Error", "Error deleting image", e) }
+                        progressDialog.dismiss()
+                    }.addOnFailureListener { e ->
+                        Log.w("Error", "Error deleting image", e)
+                        progressDialog.dismiss()
+                    }
                 }
             }
 

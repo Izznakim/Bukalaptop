@@ -9,6 +9,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.doOnTextChanged
 import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.PegawaiActivity
@@ -26,6 +27,9 @@ class SignInPelangganActivity : AppCompatActivity() {
     private lateinit var tvLupaPassword: TextView
     private lateinit var btnSignIn: Button
     private lateinit var tvSignUp: TextView
+    private lateinit var tvProgress: TextView
+    private lateinit var builder: AlertDialog.Builder
+    private lateinit var progressDialog: AlertDialog
 
     private var isEmailValid = false
     private var isPasswordValid = false
@@ -46,6 +50,15 @@ class SignInPelangganActivity : AppCompatActivity() {
         etEmail = findViewById(R.id.et_email)
         etPassword = findViewById(R.id.et_password)
         btnSignIn = findViewById(R.id.btn_signIn)
+
+        builder = AlertDialog.Builder(this)
+        val inflater=layoutInflater
+        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        builder.setView(dialogView)
+        builder.setCancelable(false)
+        progressDialog = builder.create()
+
+        tvProgress=dialogView.findViewById(R.id.tv_progress)
 
         btnSignIn.isEnabled = false
 
@@ -79,22 +92,28 @@ class SignInPelangganActivity : AppCompatActivity() {
         }
 
         btnSignIn.setOnClickListener {
+            tvProgress.text="Signing in..."
+            progressDialog.show()
             auth.signInWithEmailAndPassword(etEmail.text.toString(), etPassword.text.toString())
                 .addOnSuccessListener { task ->
                     val user = task.user?.uid
                     jenisPengguna(user)
+                    progressDialog.dismiss()
                 }.addOnFailureListener {
                     Toast.makeText(
                         baseContext,
                         "Sign In gagal.",
                         Toast.LENGTH_SHORT,
                     ).show()
+                    progressDialog.dismiss()
                 }
         }
     }
 
     private fun jenisPengguna(userId: String?) {
         if (userId != null) {
+            tvProgress.text="Signing in..."
+            progressDialog.show()
             val db = Firebase.firestore
             val penggunaRef = db.collection("pengguna").document(userId)
             penggunaRef.get().addOnSuccessListener { snapshot ->
@@ -111,6 +130,7 @@ class SignInPelangganActivity : AppCompatActivity() {
                         ).show()
                     }
                 }
+                progressDialog.dismiss()
             }
         }
     }

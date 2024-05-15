@@ -6,7 +6,9 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
@@ -24,6 +26,9 @@ class RiwayatFragment : Fragment() {
     private lateinit var listRiwayatAdapter: ListRiwayatAdapter
     private lateinit var listRiwayat: ArrayList<Pesanan>
     private lateinit var riwayat: Pesanan
+    private lateinit var tvProgress: TextView
+    private lateinit var builder: AlertDialog.Builder
+    private lateinit var progressDialog: AlertDialog
 
     var riwayatListener: ListenerRegistration? = null
 
@@ -41,11 +46,22 @@ class RiwayatFragment : Fragment() {
         rvRiwayat = view.findViewById(R.id.rv_riwayat)
         rvRiwayat.setHasFixedSize(true)
 
+        builder = AlertDialog.Builder(requireContext())
+        val inflater=layoutInflater
+        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        builder.setView(dialogView)
+        builder.setCancelable(false)
+        progressDialog = builder.create()
+
+        tvProgress=dialogView.findViewById(R.id.tv_progress)
+
         initAdapter()
 
         val db = Firebase.firestore
         val auth = Firebase.auth
         listRiwayat = arrayListOf()
+        tvProgress.text="Memuat riwayat..."
+        progressDialog.show()
         riwayatListener = db.collection("pesanan").addSnapshotListener { value, error ->
             listRiwayat.clear()
             if (error != null) {
@@ -65,6 +81,7 @@ class RiwayatFragment : Fragment() {
                 Toast.makeText(requireContext(), "Data Kosong", Toast.LENGTH_SHORT).show()
             }
             listRiwayatAdapter.setData(listRiwayat)
+            progressDialog.dismiss()
         }
     }
 
