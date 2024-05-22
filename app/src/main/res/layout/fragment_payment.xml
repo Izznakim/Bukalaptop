@@ -4,10 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="8dp"
+    android:background="?android:attr/windowBackground"
     android:clickable="true"
     android:focusable="true"
-    android:background="?android:attr/windowBackground"
+    android:padding="8dp"
+    android:tag="fragment_payment_tag"
     tools:context=".pelanggan.checkout.PaymentFragment">
 
     <TextView
@@ -107,6 +108,29 @@
         app:layout_constraintTop_toBottomOf="@+id/textView22" />
 
     <TextView
+        android:id="@+id/tv_alamat"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:layout_marginEnd="8dp"
+        android:gravity="center_vertical"
+        android:text="Alamat akan ditampilkan disini"
+        android:textColor="#0000EE"
+        app:layout_constraintBottom_toBottomOf="@+id/iv_my_loc"
+        app:layout_constraintEnd_toStartOf="@+id/iv_my_loc"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/iv_my_loc" />
+
+    <ImageButton
+        android:id="@+id/iv_my_loc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#000000"
+        android:src="@drawable/baseline_my_location_24"
+        app:layout_constraintBottom_toTopOf="@+id/textView23"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_total" />
+
+    <TextView
         android:id="@+id/textView23"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -114,7 +138,7 @@
         android:text="Untuk pembayarannya di mohon untuk mengirim ke nomor rekening ___________ atas nama _____________ dan mengupload bukti transfernya."
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_total" />
+        app:layout_constraintTop_toBottomOf="@id/barrier2" />
 
     <TextView
         android:id="@+id/textView25"
@@ -156,5 +180,12 @@
         app:layout_constraintStart_toEndOf="@+id/btn_pengiriman"
         app:layout_constraintTop_toTopOf="@+id/btn_pengambilan"
         tools:text="999 Hari" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="tv_alamat,iv_my_loc" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

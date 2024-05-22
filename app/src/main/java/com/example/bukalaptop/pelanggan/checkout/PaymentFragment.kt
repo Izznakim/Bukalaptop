@@ -1,9 +1,15 @@
 package com.example.bukalaptop.pelanggan.checkout
 
+import android.Manifest
 import android.app.Activity
 import android.app.DatePickerDialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Paint
+import android.location.Address
+import android.location.Geocoder
+import android.location.Location
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
@@ -17,15 +23,19 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Keranjang
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -41,17 +51,22 @@ class PaymentFragment : Fragment() {
     private lateinit var tvHari: TextView
     private lateinit var btnPengambilan: Button
     private lateinit var tvTotal: TextView
+    private lateinit var tvAlamat: TextView
+    private lateinit var ivMyLoc: ImageView
     private lateinit var ivBuktiPembayaran: ImageView
     private lateinit var btnSewa: Button
     private lateinit var storageRef: StorageReference
     private lateinit var tvProgress: TextView
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private var imageBitmap: Bitmap? = null
     private var mSelisihHari: Long? = 0
     private var pengirimanDateString: String = ""
     private var pengambilanDateString: String = ""
+    private var lat: Double = 0.0
+    private var lng: Double = 0.0
 
     var selectedPengirimanDate: Calendar = Calendar.getInstance()
     var selectedPengambilanDate: Calendar = Calendar.getInstance()
@@ -60,6 +75,7 @@ class PaymentFragment : Fragment() {
         var EXTRA_PELANGGANID = "extra_pelangganId"
         var EXTRA_TOTAL = "extra_total"
         var EXTRA_KERANJANG = "extra_keranjang"
+        var EXTRA_ADDRESS = "extra_address"
     }
 
     override fun onCreateView(
@@ -79,17 +95,21 @@ class PaymentFragment : Fragment() {
         btnPengiriman = view.findViewById(R.id.btn_pengiriman)
         btnPengambilan = view.findViewById(R.id.btn_pengambilan)
         tvTotal = view.findViewById(R.id.tv_total)
+        ivMyLoc = view.findViewById(R.id.iv_my_loc)
+        tvAlamat = view.findViewById(R.id.tv_alamat)
         ivBuktiPembayaran = view.findViewById(R.id.iv_bukti_pembayaran)
         btnSewa = view.findViewById(R.id.btn_sewa)
 
         builder = AlertDialog.Builder(requireContext())
-        val inflater=layoutInflater
-        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.progress_layout, null)
         builder.setView(dialogView)
         builder.setCancelable(false)
         progressDialog = builder.create()
 
-        tvProgress=dialogView.findViewById(R.id.tv_progress)
+        tvProgress = dialogView.findViewById(R.id.tv_progress)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
         var pelangganId = ""
         val db = Firebase.firestore
@@ -98,15 +118,18 @@ class PaymentFragment : Fragment() {
         selectedPengirimanDate.add(Calendar.DAY_OF_MONTH, 1)
         selectedPengambilanDate.add(Calendar.DAY_OF_MONTH, 1)
 
+        tvAlamat.paintFlags = tvAlamat.paintFlags or Paint.UNDERLINE_TEXT_FLAG
+
         updateButtonLabel(0)
 
         if (arguments != null) {
             pelangganId = arguments?.getString(EXTRA_PELANGGANID).toString()
             val total = arguments?.getInt(EXTRA_TOTAL)
             val listKeranjang = arguments?.getParcelableArrayList<Keranjang>(EXTRA_KERANJANG)
+            val address = arguments?.getString(EXTRA_ADDRESS).toString()
 
             db.collection("pengguna").document(pelangganId).addSnapshotListener { value, error ->
-                tvProgress.text="Memuat data..."
+                tvProgress.text = "Memuat data..."
                 progressDialog.show()
                 if (error != null) {
                     Log.d("List Pesanan Error", error.toString())
@@ -137,12 +160,39 @@ class PaymentFragment : Fragment() {
 
             }
 
+            if (address != "null") {
+                tvAlamat.text = address
+            }
+
+            tvAlamat.setOnClickListener {
+                val addressText = tvAlamat.text.toString()
+                if (addressText.isNotEmpty() && addressText != "Alamat akan ditampilkan disini") {
+                    openMapsWithAddress(lat, lng)
+                } else {
+                    locationPermissionRequest.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        )
+                    )
+                }
+            }
+
+            ivMyLoc.setOnClickListener {
+                locationPermissionRequest.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }
+
             ivBuktiPembayaran.setOnClickListener {
                 onPickImageClick()
             }
 
             btnSewa.setOnClickListener {
-                tvProgress.text="Sedang menyewa..."
+                tvProgress.text = "Sedang menyewa..."
                 progressDialog.show()
                 if (mSelisihHari?.toInt() == 0) {
                     Toast.makeText(requireContext(), "Tanggal belum dipilih", Toast.LENGTH_SHORT)
@@ -341,4 +391,84 @@ class PaymentFragment : Fragment() {
                 ivBuktiPembayaran.setImageBitmap(imageBitmap)
             }
         }
+
+    private val locationPermissionRequest = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        when {
+            permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false -> {
+                getCurrentLocation()
+            }
+
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false -> {
+                getCurrentLocation()
+            }
+
+            else -> {
+                tvAlamat.text = "Izin lokasi ditolak"
+            }
+        }
+    }
+
+    private val mapsActivityResultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data: Intent? = result.data
+                val selectedAddress = data?.getStringExtra(EXTRA_ADDRESS)
+                lat = data?.getDoubleExtra(MapsPelangganActivity.EXTRA_LATITUDE, 0.0) ?: 0.0
+                lng = data?.getDoubleExtra(MapsPelangganActivity.EXTRA_LONGITUDE, 0.0) ?: 0.0
+                tvAlamat.text = selectedAddress
+            }
+        }
+
+    private fun checkPermission(permission: String): Boolean {
+        return ContextCompat.checkSelfPermission(
+            requireContext(),
+            permission
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun getCurrentLocation() {
+        tvProgress.text = "Sedang memuat..."
+        progressDialog.show()
+        if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION) &&
+            checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+        ) {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+                if (location != null) {
+                    getAddressFromLocation(location.latitude, location.longitude)
+                    lat = location.latitude
+                    lng = location.longitude
+                }
+            }
+        } else {
+            locationPermissionRequest.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+        progressDialog.dismiss()
+    }
+
+    private fun getAddressFromLocation(latitude: Double, longitude: Double) {
+        val geocoder = Geocoder(requireContext(), Locale.getDefault())
+        val addresses: List<Address>? = geocoder.getFromLocation(latitude, longitude, 1)
+        if (!addresses.isNullOrEmpty()) {
+            val address: Address = addresses[0]
+            val addressText = address.getAddressLine(0)
+            tvAlamat.text = addressText
+        } else {
+            tvAlamat.text = "Alamat tidak ditemukan"
+        }
+    }
+
+    private fun openMapsWithAddress(latitude: Double, longitude: Double) {
+        val intent = Intent(activity, MapsPelangganActivity::class.java)
+        intent.putExtra(MapsPelangganActivity.EXTRA_LATITUDE, latitude)
+        intent.putExtra(MapsPelangganActivity.EXTRA_LONGITUDE, longitude)
+
+        mapsActivityResultLauncher.launch(intent)
+    }
 }
