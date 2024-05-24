@@ -1,7 +1,6 @@
 package com.example.bukalaptop.pelanggan.barang
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -44,7 +43,7 @@ class BarangPelangganFragment : Fragment() {
 
         db = Firebase.firestore
 
-        val dialogView=layoutInflater.inflate(R.layout.progress_layout,null)
+        val dialogView=inflater.inflate(R.layout.progress_layout,null)
         builder.setView(dialogView)
         builder.setCancelable(false)
         progressDialog = builder.create()
@@ -81,10 +80,8 @@ class BarangPelangganFragment : Fragment() {
                 }
             }
             toast.observe(viewLifecycleOwner) {
-                if (it != null) {
-                    val toast = it.format(this)
-                    Toast.makeText(activity, toast, Toast.LENGTH_SHORT).show()
-                }
+                val toast = it.format(this)
+                Toast.makeText(activity, toast, Toast.LENGTH_SHORT).show()
             }
             isLoading.observe(viewLifecycleOwner) {
                 showLoading(it)
