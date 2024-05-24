@@ -15,6 +15,8 @@ import androidx.core.content.ContextCompat
 import androidx.viewpager2.widget.ViewPager2
 import com.example.bukalaptop.MainActivity
 import com.example.bukalaptop.R
+import com.example.bukalaptop.databinding.ActivityMainBinding
+import com.example.bukalaptop.databinding.ActivityPelangganBinding
 import com.example.bukalaptop.pegawai.PegawaiActivity
 import com.example.bukalaptop.pegawai.SectionPagerPegawaiAdapter
 import com.example.bukalaptop.pelanggan.riwayat.RiwayatFragment
@@ -25,19 +27,20 @@ import com.google.firebase.ktx.Firebase
 
 class PelangganActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityPelangganBinding
+
     companion object{
         private val TAB_TITLES = arrayListOf("Barang", "Checkout","Riwayat")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_pelanggan)
+        binding = ActivityPelangganBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         val sectionPagerPelangganAdapter = SectionPagerPelangganAdapter(this)
-        val viewPager: ViewPager2 = findViewById(R.id.view_pager)
-        viewPager.adapter = sectionPagerPelangganAdapter
-        val tabs: TabLayout = findViewById(R.id.tabs)
-        TabLayoutMediator(tabs, viewPager) { tab, position ->
+        binding.viewPager.adapter = sectionPagerPelangganAdapter
+        TabLayoutMediator(binding.tabs, binding.viewPager) { tab, position ->
             tab.text = TAB_TITLES[position]
         }.attach()
 

@@ -12,6 +12,8 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.doOnTextChanged
 import com.example.bukalaptop.R
+import com.example.bukalaptop.databinding.ActivityPelangganBinding
+import com.example.bukalaptop.databinding.ActivitySignInPelangganBinding
 import com.example.bukalaptop.pegawai.PegawaiActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -21,15 +23,12 @@ import org.w3c.dom.Text
 
 class SignInPelangganActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivitySignInPelangganBinding
+
     private lateinit var auth: FirebaseAuth
-    private lateinit var etEmail: EditText
-    private lateinit var etPassword: EditText
-    private lateinit var tvLupaPassword: TextView
-    private lateinit var btnSignIn: Button
-    private lateinit var tvSignUp: TextView
-    private lateinit var tvProgress: TextView
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
+    private lateinit var tvProgress: TextView
 
     private var isEmailValid = false
     private var isPasswordValid = false
@@ -43,13 +42,10 @@ class SignInPelangganActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_sign_in_pelanggan)
+        binding = ActivitySignInPelangganBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         auth = Firebase.auth
-
-        etEmail = findViewById(R.id.et_email)
-        etPassword = findViewById(R.id.et_password)
-        btnSignIn = findViewById(R.id.btn_signIn)
 
         builder = AlertDialog.Builder(this)
         val inflater=layoutInflater
@@ -60,53 +56,55 @@ class SignInPelangganActivity : AppCompatActivity() {
 
         tvProgress=dialogView.findViewById(R.id.tv_progress)
 
-        btnSignIn.isEnabled = false
+        binding.apply {
+            btnSignIn.isEnabled = false
 
-        etEmail.doOnTextChanged { text, _, _, _ ->
-            if (text != null) {
-                if (text.isBlank()) {
-                    etEmail.error = "Email harus diisi"
-                    isEmailValid = false
-                } else if (!Patterns.EMAIL_ADDRESS.matcher(text).matches()) {
-                    etEmail.error = "Email tidak valid"
-                    isEmailValid = false
-                } else {
-                    etEmail.error = null
-                    isEmailValid = true
+            etEmail.doOnTextChanged { text, _, _, _ ->
+                if (text != null) {
+                    if (text.isBlank()) {
+                        etEmail.error = "Email harus diisi"
+                        isEmailValid = false
+                    } else if (!Patterns.EMAIL_ADDRESS.matcher(text).matches()) {
+                        etEmail.error = "Email tidak valid"
+                        isEmailValid = false
+                    } else {
+                        etEmail.error = null
+                        isEmailValid = true
+                    }
                 }
+                updateSigninButtonState()
             }
-            updateSigninButtonState()
-        }
 
-        etPassword.doOnTextChanged { text, _, _, _ ->
-            if (text != null) {
-                if (text.isBlank() || text.length < 6) {
-                    etPassword.error = "Password minimal harus 6 karakter"
-                    isPasswordValid = false
-                } else {
-                    etEmail.error = null
-                    isPasswordValid = true
+            etPassword.doOnTextChanged { text, _, _, _ ->
+                if (text != null) {
+                    if (text.isBlank() || text.length < 6) {
+                        etPassword.error = "Password minimal harus 6 karakter"
+                        isPasswordValid = false
+                    } else {
+                        etEmail.error = null
+                        isPasswordValid = true
+                    }
                 }
+                updateSigninButtonState()
             }
-            updateSigninButtonState()
-        }
 
-        btnSignIn.setOnClickListener {
-            tvProgress.text="Signing in..."
-            progressDialog.show()
-            auth.signInWithEmailAndPassword(etEmail.text.toString(), etPassword.text.toString())
-                .addOnSuccessListener { task ->
-                    val user = task.user?.uid
-                    jenisPengguna(user)
-                    progressDialog.dismiss()
-                }.addOnFailureListener {
-                    Toast.makeText(
-                        baseContext,
-                        "Sign In gagal.",
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                    progressDialog.dismiss()
-                }
+            btnSignIn.setOnClickListener {
+                textView15.text = "Signing in..."
+                progressDialog.show()
+                auth.signInWithEmailAndPassword(etEmail.text.toString(), etPassword.text.toString())
+                    .addOnSuccessListener { task ->
+                        val user = task.user?.uid
+                        jenisPengguna(user)
+                        progressDialog.dismiss()
+                    }.addOnFailureListener {
+                        Toast.makeText(
+                            baseContext,
+                            "Sign In gagal.",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                        progressDialog.dismiss()
+                    }
+            }
         }
     }
 
@@ -136,7 +134,7 @@ class SignInPelangganActivity : AppCompatActivity() {
     }
 
     private fun updateSigninButtonState() {
-        btnSignIn.isEnabled = isEmailValid && isPasswordValid
+        binding.btnSignIn.isEnabled = isEmailValid && isPasswordValid
     }
 
     public override fun onStart() {

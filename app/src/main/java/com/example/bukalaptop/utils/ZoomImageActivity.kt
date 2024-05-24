@@ -1,4 +1,4 @@
-package com.example.bukalaptop
+package com.example.bukalaptop.utils
 
 import android.graphics.Matrix
 import android.graphics.PointF
@@ -10,9 +10,10 @@ import android.view.View
 import android.widget.ImageView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
+import com.example.bukalaptop.databinding.ActivityZoomImageBinding
 
 class ZoomImageActivity : AppCompatActivity(), View.OnTouchListener {
-    private lateinit var imgZoom: ImageView
+    private lateinit var binding: ActivityZoomImageBinding
 
     private var matrix: Matrix = Matrix()
     var savedMatrix: Matrix = Matrix()
@@ -35,18 +36,17 @@ class ZoomImageActivity : AppCompatActivity(), View.OnTouchListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_zoom_image)
-
-        imgZoom = findViewById(R.id.imgZoom)
+        binding = ActivityZoomImageBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         val image=intent.getStringExtra(EXTRA_IMAGE)
 
         Glide.with(this)
             .load(image)
             .apply(RequestOptions())
-            .into(imgZoom)
+            .into(binding.imgZoom)
 
-        imgZoom.setOnTouchListener(this)
+        binding.imgZoom.setOnTouchListener(this)
     }
 
     override fun onTouch(v: View, event: MotionEvent): Boolean {

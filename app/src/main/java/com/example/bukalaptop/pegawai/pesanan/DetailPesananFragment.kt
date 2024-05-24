@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
-import com.example.bukalaptop.ZoomImageActivity
+import com.example.bukalaptop.utils.ZoomImageActivity
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pegawai.pesanan.ProfilPelangganFragment.Companion.EXTRA_IDPELANGGAN
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter

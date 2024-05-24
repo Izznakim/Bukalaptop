@@ -39,7 +39,7 @@
             android:exported="false"
             android:theme="@style/Theme.Bukalaptop" />
         <activity
-            android:name=".ZoomImageActivity"
+            android:name=".utils.ZoomImageActivity"
             android:exported="false" />
         <activity
             android:name=".pelanggan.PelangganActivity"
