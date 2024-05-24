@@ -16,6 +16,7 @@ import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.text.NumberFormat
@@ -32,11 +33,14 @@ class CheckoutFragment : Fragment() {
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
 
+    private var listenerRegistration: ListenerRegistration? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
+
         return inflater.inflate(R.layout.fragment_checkout, container, false)
     }
 
@@ -77,7 +81,7 @@ class CheckoutFragment : Fragment() {
                     currencyFormat.currency = Currency.getInstance("IDR")
 
                     for (krnjng in keranjang) {
-                        db.collection("barang")
+                        listenerRegistration = db.collection("barang")
                             .addSnapshotListener { barang, error1 ->
                                 if (barang != null) {
                                     for (brng in barang) {
@@ -133,7 +137,7 @@ class CheckoutFragment : Fragment() {
 
     private fun initAdapter(pelangganId: String) {
         rvKeranjang.layoutManager = LinearLayoutManager(activity)
-        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(), false, pelangganId)
+        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(), false, pelangganId, true)
         rvKeranjang.adapter = listKeranjangAdapter
     }
 }

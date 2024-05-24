@@ -115,10 +115,12 @@ class DetailBarangPelangganFragment : Fragment() {
                 for (document in value) {
                     if (document.id == barangId) {
                         barang = document.toObject(Barang::class.java)
-                        Glide.with(requireActivity())
-                            .load(barang.fotoBarang)
-                            .apply(RequestOptions())
-                            .into(ivBarang)
+                        if (isAdded) {
+                            Glide.with(requireActivity())
+                                .load(barang.fotoBarang)
+                                .apply(RequestOptions())
+                                .into(ivBarang)
+                        }
                         tvMerekModel.text = "${barang.merek} ${barang.model}"
                         tvProsesor.text = barang.prosesor
                         tvRam.text = barang.ram

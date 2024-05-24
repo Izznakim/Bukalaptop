@@ -245,7 +245,7 @@ class DetailPesananFragment : Fragment() {
 
     private fun initAdapter() {
         rvKeranjang.layoutManager = LinearLayoutManager(activity)
-        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(), true, "")
+        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(), true, "", false)
         rvKeranjang.adapter = listKeranjangAdapter
     }
 

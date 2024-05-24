@@ -197,12 +197,21 @@ class PaymentFragment : Fragment() {
                 if (mSelisihHari?.toInt() == 0) {
                     Toast.makeText(requireContext(), "Tanggal belum dipilih", Toast.LENGTH_SHORT)
                         .show()
+                    progressDialog.dismiss()
+                } else if (tvAlamat.text.toString() == "Alamat akan ditampilkan disini") {
+                    Toast.makeText(
+                    requireContext(),
+                        "Alamat belum dicantumkan",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    progressDialog.dismiss()
                 } else if (imageBitmap == null) {
                     Toast.makeText(
                         requireContext(),
                         "Bukti pembayaran belum dicantumkan",
                         Toast.LENGTH_SHORT
                     ).show()
+                    progressDialog.dismiss()
                 } else {
                     val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
                     val formattedTglPengiriman = dateFormat.parse(pengirimanDateString)
@@ -212,6 +221,9 @@ class PaymentFragment : Fragment() {
                         "idPelanggan" to pelangganId,
                         "tglPengiriman" to formattedTglPengiriman?.let { tgl -> Timestamp(tgl) },
                         "tglPengambilan" to formattedTglPengambilan?.let { tgl -> Timestamp(tgl) },
+                        "alamat" to tvAlamat.text.toString(),
+                        "latitude" to lat,
+                        "longitude" to lng,
                         "status" to "netral"
                     )
 
@@ -248,12 +260,14 @@ class PaymentFragment : Fragment() {
                                 "prosesor" to it.barang.prosesor,
                                 "ram" to it.barang.ram,
                                 "sistemOperasi" to it.barang.sistemOperasi,
-                                "stok" to it.barang.stok,
+                                "stok" to (it.barang.stok - it.jumlah),
                                 "ukuranLayar" to it.barang.ukuranLayar
                             )
 
                             db.collection("pesanan").document(doc.id).collection("keranjang")
                                 .document(it.barang.barangId).set(keranjang)
+                            db.collection("barang").document(it.barang.barangId)
+                                .update("stok", it.barang.stok - it.jumlah)
                         }
 
                         Toast.makeText(
@@ -262,8 +276,8 @@ class PaymentFragment : Fragment() {
                             Toast.LENGTH_SHORT
                         ).show()
 
-                        parentFragmentManager.popBackStack()
                         progressDialog.dismiss()
+                        parentFragmentManager.popBackStack()
                     }.addOnFailureListener { e ->
                         Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
                         progressDialog.dismiss()

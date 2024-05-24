@@ -202,7 +202,19 @@ class DetailRiwayatFragment : Fragment() {
                                             .addOnCompleteListener { task ->
                                                 if (task.isSuccessful) {
                                                     for (doc in task.result) {
-                                                        doc.reference.delete()
+                                                            db.collection("barang").document(doc.id)
+                                                                .get().addOnCompleteListener{
+                                                                    if (it.isSuccessful) {
+                                                                        val stok =
+                                                                            it.result.get("stok")
+                                                                                .toString().toInt()
+                                                                        val jumlah =
+                                                                            doc.get("jumlah").toString().toInt()
+                                                                        db.collection("barang").document(doc.id)
+                                                                            .update("stok", stok + jumlah)
+                                                                        doc.reference.delete()
+                                                                    }
+                                                                }
                                                     }
                                                 } else {
                                                     Toast.makeText(
@@ -220,13 +232,13 @@ class DetailRiwayatFragment : Fragment() {
                                         )
                                             .show()
                                     }.addOnFailureListener {
-                                    Toast.makeText(
-                                        requireContext(),
-                                        it.toString(),
-                                        Toast.LENGTH_SHORT
-                                    )
-                                        .show()
-                                }
+                                        Toast.makeText(
+                                            requireContext(),
+                                            it.toString(),
+                                            Toast.LENGTH_SHORT
+                                        )
+                                            .show()
+                                    }
                                 storageBuktiRef.child("${pesananId}.jpg").delete()
                                     .addOnSuccessListener {
                                         progressDialog.dismiss()
@@ -306,7 +318,7 @@ class DetailRiwayatFragment : Fragment() {
 
     private fun initAdapter() {
         rvKeranjang.layoutManager = LinearLayoutManager(activity)
-        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(), true, "")
+        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(), true, "", false)
         rvKeranjang.adapter = listKeranjangAdapter
     }
 

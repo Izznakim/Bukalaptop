@@ -29,6 +29,7 @@ class ListKeranjangAdapter(
     private val listKeranjang: ArrayList<Keranjang>,
     private val isPegawai: Boolean,
     private val pelangganId: String,
+    private val vsblHapus:Boolean
     ) :
     RecyclerView.Adapter<ListKeranjangAdapter.ListViewHolder>() {
     fun setData(data: List<Keranjang>) {
@@ -65,6 +66,11 @@ class ListKeranjangAdapter(
         val db = Firebase.firestore
 
         holder.apply {
+            if (vsblHapus){
+                btnHapus.visibility = View.VISIBLE
+            }else{
+                btnHapus.visibility = View.GONE
+            }
             Glide.with(itemView.context)
                 .load(barang.fotoBarang)
                 .apply(RequestOptions())
