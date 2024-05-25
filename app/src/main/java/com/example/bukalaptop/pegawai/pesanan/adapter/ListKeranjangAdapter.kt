@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -40,7 +39,7 @@ class ListKeranjangAdapter(
 
     class ListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val ivBarang: ImageView = itemView.findViewById(R.id.iv_tambah_barang)
-        val tvMerek: TextView = itemView.findViewById(R.id.et_merek)
+        val tvMerek: TextView = itemView.findViewById(R.id.tv_merek)
         val tvModel: TextView = itemView.findViewById(R.id.tv_model)
         val tvProsesor: TextView = itemView.findViewById(R.id.tv_prosesor)
         val tvBiayaSewa: TextView = itemView.findViewById(R.id.tv_biaya_sewa)

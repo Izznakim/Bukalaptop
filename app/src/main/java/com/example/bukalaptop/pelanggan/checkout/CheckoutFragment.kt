@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.pegawai.barang.model.Barang
-import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
+import com.example.bukalaptop.pelanggan.checkout.adapter.ListBarangCheckoutAdapter
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
@@ -25,7 +25,7 @@ import java.util.Currency
 class CheckoutFragment : Fragment() {
 
     private lateinit var rvKeranjang: RecyclerView
-    private lateinit var listKeranjangAdapter: ListKeranjangAdapter
+    private lateinit var adapter: ListBarangCheckoutAdapter
     private lateinit var listKeranjang: ArrayList<Keranjang>
     private lateinit var tvTotal: TextView
     private lateinit var btnCheckout: Button
@@ -90,17 +90,17 @@ class CheckoutFragment : Fragment() {
                                             val jumlah = krnjng.get("jumlah").toString().toInt()
                                             total += (mBarang.biayaSewa * jumlah)
 
-                                            val keranjang = Keranjang(mBarang, jumlah)
-                                            keranjang.barang = brng.toObject(Barang::class.java)
-                                            keranjang.jumlah = jumlah
+                                            val mKeranjang = Keranjang(mBarang, jumlah)
+                                            mKeranjang.barang = brng.toObject(Barang::class.java)
+                                            mKeranjang.jumlah = jumlah
 
-                                            listKeranjang.add(keranjang)
+                                            listKeranjang.add(mKeranjang)
                                         }
                                     }
                                 } else if (error1 != null) {
                                     Log.d("List Keranjang", error.toString())
                                 }
-                                listKeranjangAdapter.setData(listKeranjang)
+                                adapter.setData(listKeranjang)
                                 tvTotal.text =
                                     currencyFormat.format(total)
                             }
@@ -137,7 +137,7 @@ class CheckoutFragment : Fragment() {
 
     private fun initAdapter(pelangganId: String) {
         rvKeranjang.layoutManager = LinearLayoutManager(activity)
-        listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(), false, pelangganId, true)
-        rvKeranjang.adapter = listKeranjangAdapter
+        adapter = ListBarangCheckoutAdapter(arrayListOf(), pelangganId)
+        rvKeranjang.adapter = adapter
     }
 }
