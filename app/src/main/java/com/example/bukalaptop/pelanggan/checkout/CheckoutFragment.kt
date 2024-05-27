@@ -5,35 +5,41 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
+import com.example.bukalaptop.databinding.FragmentCheckoutBinding
 import com.example.bukalaptop.model.Keranjang
+import com.example.bukalaptop.pegawai.barang.DetailBarangFragment
 import com.example.bukalaptop.pegawai.barang.model.Barang
+import com.example.bukalaptop.pelanggan.barang.DetailBarangPelangganFragment
 import com.example.bukalaptop.pelanggan.checkout.adapter.ListBarangCheckoutAdapter
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.text.NumberFormat
 import java.util.Currency
 
-class CheckoutFragment : Fragment() {
+class CheckoutFragment : Fragment(), ListBarangCheckoutAdapter.OnItemClickListener {
 
-    private lateinit var rvKeranjang: RecyclerView
+    private var _binding: FragmentCheckoutBinding? = null
+
     private lateinit var adapter: ListBarangCheckoutAdapter
     private lateinit var listKeranjang: ArrayList<Keranjang>
-    private lateinit var tvTotal: TextView
-    private lateinit var btnCheckout: Button
     private lateinit var tvProgress: TextView
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
+    private lateinit var db: FirebaseFirestore
+    private lateinit var auth: FirebaseAuth
 
-    private var listenerRegistration: ListenerRegistration? = null
+    private val binding get() = _binding!!
+    private var pelangganId: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,35 +47,34 @@ class CheckoutFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
 
-        return inflater.inflate(R.layout.fragment_checkout, container, false)
+        builder = AlertDialog.Builder(requireContext())
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.progress_layout, null)
+        builder.setView(dialogView)
+        builder.setCancelable(false)
+        progressDialog = builder.create()
+
+        tvProgress = dialogView.findViewById(R.id.tv_progress)
+
+        auth = Firebase.auth
+        db = Firebase.firestore
+
+        listKeranjang = arrayListOf()
+
+        _binding = FragmentCheckoutBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        rvKeranjang = view.findViewById(R.id.rv_keranjang)
-        tvTotal = view.findViewById(R.id.tv_total)
-        btnCheckout = view.findViewById(R.id.btn_checkout)
-        rvKeranjang.setHasFixedSize(true)
+        binding.rvKeranjang.setHasFixedSize(true)
 
-        builder = AlertDialog.Builder(requireContext())
-        val inflater=layoutInflater
-        val dialogView=inflater.inflate(R.layout.progress_layout,null)
-        builder.setView(dialogView)
-        builder.setCancelable(false)
-        progressDialog = builder.create()
-
-        tvProgress=dialogView.findViewById(R.id.tv_progress)
-
-        val auth = Firebase.auth
-        val db = Firebase.firestore
-
-        val pelangganId = auth.currentUser?.uid ?: ""
+        pelangganId = auth.currentUser?.uid ?: ""
         var total = 0
-        initAdapter(pelangganId)
+        initAdapter()
 
-        listKeranjang = arrayListOf()
-        tvProgress.text="Memuat keranjang..."
+        tvProgress.text = "Memuat keranjang..."
         progressDialog.show()
         db.collection("pengguna").document(pelangganId).collection("keranjang")
             .addSnapshotListener { keranjang, error ->
@@ -81,7 +86,7 @@ class CheckoutFragment : Fragment() {
                     currencyFormat.currency = Currency.getInstance("IDR")
 
                     for (krnjng in keranjang) {
-                        listenerRegistration = db.collection("barang")
+                        db.collection("barang")
                             .addSnapshotListener { barang, error1 ->
                                 if (barang != null) {
                                     for (brng in barang) {
@@ -101,12 +106,12 @@ class CheckoutFragment : Fragment() {
                                     Log.d("List Keranjang", error.toString())
                                 }
                                 adapter.setData(listKeranjang)
-                                tvTotal.text =
+                                binding.tvTotal.text =
                                     currencyFormat.format(total)
                             }
                     }
 
-                    tvTotal.text =
+                    binding.tvTotal.text =
                         currencyFormat.format(total)
                 } else if (error != null) {
                     Log.d("List Keranjang", error.toString())
@@ -114,7 +119,7 @@ class CheckoutFragment : Fragment() {
                 progressDialog.dismiss()
             }
 
-        btnCheckout.setOnClickListener {
+        binding.btnCheckout.setOnClickListener {
             val paymentFragment = PaymentFragment()
             val mFragmentManager = activity?.supportFragmentManager
             val bundle = Bundle()
@@ -135,9 +140,74 @@ class CheckoutFragment : Fragment() {
         }
     }
 
-    private fun initAdapter(pelangganId: String) {
-        rvKeranjang.layoutManager = LinearLayoutManager(activity)
-        adapter = ListBarangCheckoutAdapter(arrayListOf(), pelangganId)
-        rvKeranjang.adapter = adapter
+    private fun initAdapter() {
+        binding.rvKeranjang.layoutManager = LinearLayoutManager(activity)
+        adapter = ListBarangCheckoutAdapter(arrayListOf(), this)
+        binding.rvKeranjang.adapter = adapter
+    }
+
+    override fun onItemClick(barang: Barang) {
+        val detailBarangPelangganFragment = DetailBarangPelangganFragment()
+        val mFragmentManager = requireActivity().supportFragmentManager
+        val bundle = Bundle()
+        bundle.putString(DetailBarangFragment.EXTRA_IDBARANG, barang.barangId)
+        detailBarangPelangganFragment.arguments = bundle
+
+        mFragmentManager.beginTransaction().apply {
+            replace(
+                R.id.fragment_pelanggan_container,
+                detailBarangPelangganFragment,
+                DetailBarangPelangganFragment::class.java.simpleName
+            )
+            addToBackStack(null)
+            commit()
+        }
+    }
+
+    override fun onDeleteClick(position: Int, barang: Barang) {
+        val builder = AlertDialog.Builder(requireContext())
+
+        builder.setMessage(
+            HtmlCompat.fromHtml(
+                "Anda yakin ingin menghapus <b>${barang.merek}</b> <b>${barang.model}</b> dari Keranjang Anda?",
+                HtmlCompat.FROM_HTML_MODE_LEGACY
+            )
+        )
+            .setTitle("Konfirmasi")
+
+        builder.setPositiveButton("Ya") { dialog, which ->
+            if (adapter.itemCount <= 1) {
+                adapter.setData(emptyList())
+            } else {
+                adapter.listBarangKeranjang.removeAt(position)
+                adapter.notifyItemRemoved(position)
+            }
+            barang.let { mBarang ->
+                db.collection("pengguna").document(pelangganId).collection("keranjang")
+                    .document(mBarang.barangId)
+                    .delete()
+                    .addOnSuccessListener {
+                        Toast.makeText(
+                            requireContext(),
+                            "${mBarang.merek} ${mBarang.model} berhasil dihapus",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    .addOnFailureListener { e ->
+                        Log.w(
+                            "Error",
+                            "Error deleting document",
+                            e
+                        )
+                    }
+            }
+        }
+
+        builder.setNegativeButton("Tidak") { dialog, which ->
+            dialog.cancel()
+        }
+
+        val dialog = builder.create()
+        dialog.show()
     }
 }
