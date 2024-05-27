@@ -1,7 +1,6 @@
 package com.example.bukalaptop.pelanggan.checkout
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bukalaptop.R
 import com.example.bukalaptop.databinding.FragmentCheckoutBinding
@@ -37,6 +37,7 @@ class CheckoutFragment : Fragment(), ListBarangCheckoutAdapter.OnItemClickListen
     private lateinit var progressDialog: AlertDialog
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
+    private lateinit var checkoutViewModel: CheckoutViewModel
 
     private val binding get() = _binding!!
     private var pelangganId: String = ""
@@ -44,12 +45,11 @@ class CheckoutFragment : Fragment(), ListBarangCheckoutAdapter.OnItemClickListen
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         // Inflate the layout for this fragment
 
         builder = AlertDialog.Builder(requireContext())
-        val inflater = layoutInflater
-        val dialogView = inflater.inflate(R.layout.progress_layout, null)
+        val dialogView = layoutInflater.inflate(R.layout.progress_layout, null)
         builder.setView(dialogView)
         builder.setCancelable(false)
         progressDialog = builder.create()
@@ -68,65 +68,29 @@ class CheckoutFragment : Fragment(), ListBarangCheckoutAdapter.OnItemClickListen
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        checkoutViewModel = ViewModelProvider(this).get(CheckoutViewModel::class.java)
+
         binding.rvKeranjang.setHasFixedSize(true)
 
         pelangganId = auth.currentUser?.uid ?: ""
-        var total = 0
         initAdapter()
-
-        tvProgress.text = "Memuat keranjang..."
-        progressDialog.show()
-        db.collection("pengguna").document(pelangganId).collection("keranjang")
-            .addSnapshotListener { keranjang, error ->
-                listKeranjang.clear()
-                total = 0
-                if (keranjang != null) {
-                    val currencyFormat = NumberFormat.getCurrencyInstance()
-                    currencyFormat.maximumFractionDigits = 2
-                    currencyFormat.currency = Currency.getInstance("IDR")
-
-                    for (krnjng in keranjang) {
-                        db.collection("barang")
-                            .addSnapshotListener { barang, error1 ->
-                                if (barang != null) {
-                                    for (brng in barang) {
-                                        if (brng.id == krnjng.id) {
-                                            val mBarang = brng.toObject(Barang::class.java)
-                                            val jumlah = krnjng.get("jumlah").toString().toInt()
-                                            total += (mBarang.biayaSewa * jumlah)
-
-                                            val mKeranjang = Keranjang(mBarang, jumlah)
-                                            mKeranjang.barang = brng.toObject(Barang::class.java)
-                                            mKeranjang.jumlah = jumlah
-
-                                            listKeranjang.add(mKeranjang)
-                                        }
-                                    }
-                                } else if (error1 != null) {
-                                    Log.d("List Keranjang", error.toString())
-                                }
-                                adapter.setData(listKeranjang)
-                                binding.tvTotal.text =
-                                    currencyFormat.format(total)
-                            }
-                    }
-
-                    binding.tvTotal.text =
-                        currencyFormat.format(total)
-                } else if (error != null) {
-                    Log.d("List Keranjang", error.toString())
-                }
-                progressDialog.dismiss()
-            }
+        viewModel()
 
         binding.btnCheckout.setOnClickListener {
+            if (adapter.itemCount <= 0) {
+                Toast.makeText(activity, "Keranjang masih kosong", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             val paymentFragment = PaymentFragment()
             val mFragmentManager = activity?.supportFragmentManager
             val bundle = Bundle()
 
             bundle.putString(PaymentFragment.EXTRA_PELANGGANID, pelangganId)
-            bundle.putInt(PaymentFragment.EXTRA_TOTAL, total)
-            bundle.putParcelableArrayList(PaymentFragment.EXTRA_KERANJANG, listKeranjang)
+            bundle.putInt(PaymentFragment.EXTRA_TOTAL, checkoutViewModel.total.value?: 0)
+            bundle.putParcelableArrayList(
+                PaymentFragment.EXTRA_KERANJANG,
+                ArrayList(checkoutViewModel.listKeranjang.value ?: listOf())
+            )
             paymentFragment.arguments = bundle
             mFragmentManager?.beginTransaction()?.apply {
                 replace(
@@ -136,6 +100,39 @@ class CheckoutFragment : Fragment(), ListBarangCheckoutAdapter.OnItemClickListen
                 )
                 addToBackStack(null)
                 commit()
+            }
+        }
+    }
+
+    private fun showLoading(isLoading: Boolean) {
+        if (isLoading) {
+            tvProgress.text="Memuat barang..."
+            progressDialog.show()
+        } else {
+            progressDialog.dismiss()
+        }
+    }
+
+    private fun viewModel() {
+        with(checkoutViewModel) {
+            listKeranjang.observe(viewLifecycleOwner) { keranjang ->
+                adapter.setData(keranjang)
+            }
+
+            total.observe(viewLifecycleOwner) { total ->
+                val currencyFormat = NumberFormat.getCurrencyInstance()
+                currencyFormat.maximumFractionDigits = 2
+                currencyFormat.currency = Currency.getInstance("IDR")
+                binding.tvTotal.text = currencyFormat.format(total)
+                progressDialog.dismiss()
+            }
+
+            toast.observe(viewLifecycleOwner) {
+                val toast = it.format(this)
+                Toast.makeText(activity, toast, Toast.LENGTH_SHORT).show()
+            }
+            isLoading.observe(viewLifecycleOwner) {
+                showLoading(it)
             }
         }
     }
@@ -175,39 +172,24 @@ class CheckoutFragment : Fragment(), ListBarangCheckoutAdapter.OnItemClickListen
         )
             .setTitle("Konfirmasi")
 
-        builder.setPositiveButton("Ya") { dialog, which ->
+        builder.setPositiveButton("Ya") { _, _ ->
+            checkoutViewModel.deleteItem(barang)
             if (adapter.itemCount <= 1) {
                 adapter.setData(emptyList())
-            } else {
-                adapter.listBarangKeranjang.removeAt(position)
-                adapter.notifyItemRemoved(position)
-            }
-            barang.let { mBarang ->
-                db.collection("pengguna").document(pelangganId).collection("keranjang")
-                    .document(mBarang.barangId)
-                    .delete()
-                    .addOnSuccessListener {
-                        Toast.makeText(
-                            requireContext(),
-                            "${mBarang.merek} ${mBarang.model} berhasil dihapus",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                    .addOnFailureListener { e ->
-                        Log.w(
-                            "Error",
-                            "Error deleting document",
-                            e
-                        )
-                    }
+                binding.tvTotal.text = "Total semua barang: Rp.0"
             }
         }
 
-        builder.setNegativeButton("Tidak") { dialog, which ->
+        builder.setNegativeButton("Tidak") { dialog, _ ->
             dialog.cancel()
         }
 
         val dialog = builder.create()
         dialog.show()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
