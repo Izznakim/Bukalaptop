@@ -16,8 +16,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -26,16 +24,17 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.bukalaptop.R
+import com.example.bukalaptop.databinding.FragmentPaymentBinding
 import com.example.bukalaptop.model.Keranjang
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import java.io.ByteArrayOutputStream
-import java.io.IOException
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -45,22 +44,17 @@ import kotlin.math.abs
 
 class PaymentFragment : Fragment() {
 
-    private lateinit var tvNamaLengkap: TextView
-    private lateinit var tvEmail: TextView
-    private lateinit var btnPengiriman: Button
-    private lateinit var tvHari: TextView
-    private lateinit var btnPengambilan: Button
-    private lateinit var tvTotal: TextView
-    private lateinit var tvAlamat: TextView
-    private lateinit var ivMyLoc: ImageView
-    private lateinit var ivBuktiPembayaran: ImageView
-    private lateinit var btnSewa: Button
+    private var _binding: FragmentPaymentBinding? = null
+
     private lateinit var storageRef: StorageReference
+    private lateinit var db: FirebaseFirestore
     private lateinit var tvProgress: TextView
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
+    private val binding get() = _binding!!
+    private var pelangganId: String = ""
     private var imageBitmap: Bitmap? = null
     private var mSelisihHari: Long? = 0
     private var pengirimanDateString: String = ""
@@ -81,28 +75,10 @@ class PaymentFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_payment, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        tvNamaLengkap = view.findViewById(R.id.tv_nama_lengkap)
-        tvEmail = view.findViewById(R.id.tv_email)
-        tvHari = view.findViewById(R.id.tv_hari)
-        btnPengiriman = view.findViewById(R.id.btn_pengiriman)
-        btnPengambilan = view.findViewById(R.id.btn_pengambilan)
-        tvTotal = view.findViewById(R.id.tv_total)
-        ivMyLoc = view.findViewById(R.id.iv_my_loc)
-        tvAlamat = view.findViewById(R.id.tv_alamat)
-        ivBuktiPembayaran = view.findViewById(R.id.iv_bukti_pembayaran)
-        btnSewa = view.findViewById(R.id.btn_sewa)
+    ): View {
 
         builder = AlertDialog.Builder(requireContext())
-        val inflater = layoutInflater
-        val dialogView = inflater.inflate(R.layout.progress_layout, null)
+        val dialogView = layoutInflater.inflate(R.layout.progress_layout, null)
         builder.setView(dialogView)
         builder.setCancelable(false)
         progressDialog = builder.create()
@@ -111,64 +87,84 @@ class PaymentFragment : Fragment() {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
-        var pelangganId = ""
-        val db = Firebase.firestore
         storageRef = FirebaseStorage.getInstance().reference
+        db = Firebase.firestore
+
+        _binding = FragmentPaymentBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        pelangganId = ""
 
         selectedPengirimanDate.add(Calendar.DAY_OF_MONTH, 1)
         selectedPengambilanDate.add(Calendar.DAY_OF_MONTH, 1)
 
-        tvAlamat.paintFlags = tvAlamat.paintFlags or Paint.UNDERLINE_TEXT_FLAG
+        with(binding) {
+            tvAlamat.paintFlags = tvAlamat.paintFlags or Paint.UNDERLINE_TEXT_FLAG
 
-        updateButtonLabel(0)
+            updateButtonLabel(0)
 
-        if (arguments != null) {
-            pelangganId = arguments?.getString(EXTRA_PELANGGANID).toString()
-            val total = arguments?.getInt(EXTRA_TOTAL)
-            val listKeranjang = arguments?.getParcelableArrayList<Keranjang>(EXTRA_KERANJANG)
-            val address = arguments?.getString(EXTRA_ADDRESS).toString()
+            if (arguments != null) {
+                pelangganId = arguments?.getString(EXTRA_PELANGGANID).toString()
+                val total = arguments?.getInt(EXTRA_TOTAL)
+                val listKeranjang = arguments?.getParcelableArrayList<Keranjang>(EXTRA_KERANJANG)
+                val address = arguments?.getString(EXTRA_ADDRESS).toString()
 
-            db.collection("pengguna").document(pelangganId).addSnapshotListener { value, error ->
-                tvProgress.text = "Memuat data..."
-                progressDialog.show()
-                if (error != null) {
-                    Log.d("List Pesanan Error", error.toString())
-                    return@addSnapshotListener
-                }
-                if (value != null) {
-                    tvNamaLengkap.text = value.getString("namaLengkap")
-                    tvEmail.text = value.getString("email")
-                }
-                progressDialog.dismiss()
-            }
+                db.collection("pengguna").document(pelangganId)
+                    .addSnapshotListener { value, error ->
+                        tvProgress.text = "Memuat data..."
+                        progressDialog.show()
+                        if (error != null) {
+                            Log.d("List Pesanan Error", error.toString())
+                            return@addSnapshotListener
+                        }
+                        if (value != null) {
+                            tvNamaLengkap.text = value.getString("namaLengkap")
+                            tvEmail.text = value.getString("email")
+                        }
+                        progressDialog.dismiss()
+                    }
 
-            btnPengiriman.setOnClickListener {
-                showDatePickerDialog(selectedPengirimanDate, false) { updatedDate ->
-                    selectedPengirimanDate = updatedDate
+                btnPengiriman.setOnClickListener {
+                    showDatePickerDialog(selectedPengirimanDate, false) { updatedDate ->
+                        selectedPengirimanDate = updatedDate
 
-                    selectedPengambilanDate.timeInMillis = selectedPengirimanDate.timeInMillis
-                    updateButtonLabel(total)
-                }
-            }
-
-            btnPengambilan.setOnClickListener {
-                showDatePickerDialog(selectedPengambilanDate, true) { updatedDate ->
-                    selectedPengambilanDate = updatedDate
-
-                    updateButtonLabel(total)
+                        selectedPengambilanDate.timeInMillis = selectedPengirimanDate.timeInMillis
+                        updateButtonLabel(total)
+                    }
                 }
 
-            }
+                btnPengambilan.setOnClickListener {
+                    showDatePickerDialog(selectedPengambilanDate, true) { updatedDate ->
+                        selectedPengambilanDate = updatedDate
 
-            if (address != "null") {
-                tvAlamat.text = address
-            }
+                        updateButtonLabel(total)
+                    }
 
-            tvAlamat.setOnClickListener {
-                val addressText = tvAlamat.text.toString()
-                if (addressText.isNotEmpty() && addressText != "Alamat akan ditampilkan disini") {
-                    openMapsWithAddress(lat, lng)
-                } else {
+                }
+
+                if (address != "null") {
+                    tvAlamat.text = address
+                }
+
+                tvAlamat.setOnClickListener {
+                    val addressText = tvAlamat.text.toString()
+                    if (addressText.isNotEmpty() && addressText != "Alamat akan ditampilkan disini") {
+                        openMapsWithAddress(lat, lng)
+                    } else {
+                        locationPermissionRequest.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
+                    }
+                }
+
+                ivMyLoc.setOnClickListener {
                     locationPermissionRequest.launch(
                         arrayOf(
                             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -176,111 +172,106 @@ class PaymentFragment : Fragment() {
                         )
                     )
                 }
-            }
 
-            ivMyLoc.setOnClickListener {
-                locationPermissionRequest.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    )
-                )
-            }
+                ivBuktiPembayaran.setOnClickListener {
+                    onPickImageClick()
+                }
 
-            ivBuktiPembayaran.setOnClickListener {
-                onPickImageClick()
-            }
-
-            btnSewa.setOnClickListener {
-                tvProgress.text = "Sedang menyewa..."
-                progressDialog.show()
-                if (mSelisihHari?.toInt() == 0) {
-                    Toast.makeText(requireContext(), "Tanggal belum dipilih", Toast.LENGTH_SHORT)
-                        .show()
-                    progressDialog.dismiss()
-                } else if (tvAlamat.text.toString() == "Alamat akan ditampilkan disini") {
-                    Toast.makeText(
-                    requireContext(),
-                        "Alamat belum dicantumkan",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    progressDialog.dismiss()
-                } else if (imageBitmap == null) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Bukti pembayaran belum dicantumkan",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    progressDialog.dismiss()
-                } else {
-                    val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-                    val formattedTglPengiriman = dateFormat.parse(pengirimanDateString)
-                    val formattedTglPengambilan = dateFormat.parse(pengambilanDateString)
-
-                    val pesanan = hashMapOf(
-                        "idPelanggan" to pelangganId,
-                        "tglPengiriman" to formattedTglPengiriman?.let { tgl -> Timestamp(tgl) },
-                        "tglPengambilan" to formattedTglPengambilan?.let { tgl -> Timestamp(tgl) },
-                        "alamat" to tvAlamat.text.toString(),
-                        "latitude" to lat,
-                        "longitude" to lng,
-                        "status" to "netral"
-                    )
-
-                    db.collection("pesanan").add(pesanan).addOnSuccessListener { doc ->
-                        val baos = ByteArrayOutputStream()
-                        imageBitmap?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-                        val imageData = baos.toByteArray()
-
-                        val imageRef = storageRef.child("bukti/${doc.id}.jpg")
-
-                        val uploadTask = imageRef.putBytes(imageData)
-                        uploadTask.addOnSuccessListener {
-                            imageRef.downloadUrl.addOnSuccessListener { uri ->
-                                val imageUrl = uri.toString()
-                                db.collection("pesanan").document(doc.id)
-                                    .update(
-                                        "buktiBayar", imageUrl
-                                    )
-                            }
-                        }
-
-                        listKeranjang?.forEach {
-                            val keranjang = hashMapOf(
-                                "aksesoris" to it.barang.aksesoris,
-                                "biayaSewa" to it.barang.biayaSewa,
-                                "fotoBarang" to it.barang.fotoBarang,
-                                "jumlah" to it.jumlah,
-                                "kartuGrafis" to it.barang.kartuGrafis,
-                                "kondisi" to it.barang.kondisi,
-                                "merek" to it.barang.merek,
-                                "model" to it.barang.model,
-                                "penyimpanan" to it.barang.penyimpanan,
-                                "perangkatLunak" to it.barang.perangkatLunak,
-                                "prosesor" to it.barang.prosesor,
-                                "ram" to it.barang.ram,
-                                "sistemOperasi" to it.barang.sistemOperasi,
-                                "stok" to (it.barang.stok - it.jumlah),
-                                "ukuranLayar" to it.barang.ukuranLayar
-                            )
-
-                            db.collection("pesanan").document(doc.id).collection("keranjang")
-                                .document(it.barang.barangId).set(keranjang)
-                            db.collection("barang").document(it.barang.barangId)
-                                .update("stok", it.barang.stok - it.jumlah)
-                        }
-
+                btnSewa.setOnClickListener {
+                    tvProgress.text = "Sedang menyewa..."
+                    progressDialog.show()
+                    if (mSelisihHari?.toInt() == 0) {
                         Toast.makeText(
                             requireContext(),
-                            "Pesanan sudah dikirim",
+                            "Tanggal belum dipilih",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                        progressDialog.dismiss()
+                    } else if (tvAlamat.text.toString() == "Alamat akan ditampilkan disini") {
+                        Toast.makeText(
+                            requireContext(),
+                            "Alamat belum dicantumkan",
                             Toast.LENGTH_SHORT
                         ).show()
+                        progressDialog.dismiss()
+                    } else if (imageBitmap == null) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Bukti pembayaran belum dicantumkan",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        progressDialog.dismiss()
+                    } else {
+                        val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+                        val formattedTglPengiriman = dateFormat.parse(pengirimanDateString)
+                        val formattedTglPengambilan = dateFormat.parse(pengambilanDateString)
 
-                        progressDialog.dismiss()
-                        parentFragmentManager.popBackStack()
-                    }.addOnFailureListener { e ->
-                        Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
-                        progressDialog.dismiss()
+                        val pesanan = hashMapOf(
+                            "idPelanggan" to pelangganId,
+                            "tglPengiriman" to formattedTglPengiriman?.let { tgl -> Timestamp(tgl) },
+                            "tglPengambilan" to formattedTglPengambilan?.let { tgl -> Timestamp(tgl) },
+                            "alamat" to tvAlamat.text.toString(),
+                            "latitude" to lat,
+                            "longitude" to lng,
+                            "status" to "netral"
+                        )
+
+                        db.collection("pesanan").add(pesanan).addOnSuccessListener { doc ->
+                            val baos = ByteArrayOutputStream()
+                            imageBitmap?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+                            val imageData = baos.toByteArray()
+
+                            val imageRef = storageRef.child("bukti/${doc.id}.jpg")
+
+                            val uploadTask = imageRef.putBytes(imageData)
+                            uploadTask.addOnSuccessListener {
+                                imageRef.downloadUrl.addOnSuccessListener { uri ->
+                                    val imageUrl = uri.toString()
+                                    db.collection("pesanan").document(doc.id)
+                                        .update(
+                                            "buktiBayar", imageUrl
+                                        )
+                                }
+                            }
+
+                            listKeranjang?.forEach {
+                                val keranjang = hashMapOf(
+                                    "aksesoris" to it.barang.aksesoris,
+                                    "biayaSewa" to it.barang.biayaSewa,
+                                    "fotoBarang" to it.barang.fotoBarang,
+                                    "jumlah" to it.jumlah,
+                                    "kartuGrafis" to it.barang.kartuGrafis,
+                                    "kondisi" to it.barang.kondisi,
+                                    "merek" to it.barang.merek,
+                                    "model" to it.barang.model,
+                                    "penyimpanan" to it.barang.penyimpanan,
+                                    "perangkatLunak" to it.barang.perangkatLunak,
+                                    "prosesor" to it.barang.prosesor,
+                                    "ram" to it.barang.ram,
+                                    "sistemOperasi" to it.barang.sistemOperasi,
+                                    "stok" to (it.barang.stok - it.jumlah),
+                                    "ukuranLayar" to it.barang.ukuranLayar
+                                )
+
+                                db.collection("pesanan").document(doc.id).collection("keranjang")
+                                    .document(it.barang.barangId).set(keranjang)
+                                db.collection("barang").document(it.barang.barangId)
+                                    .update("stok", it.barang.stok - it.jumlah)
+                            }
+
+                            Toast.makeText(
+                                requireContext(),
+                                "Pesanan sudah dikirim",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            progressDialog.dismiss()
+                            parentFragmentManager.popBackStack()
+                        }.addOnFailureListener { e ->
+                            Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
+                            progressDialog.dismiss()
+                        }
                     }
                 }
             }
@@ -341,21 +332,23 @@ class PaymentFragment : Fragment() {
         val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
         pengirimanDateString = dateFormat.format(selectedPengirimanDate.time)
         pengambilanDateString = dateFormat.format(selectedPengambilanDate.time)
-        btnPengiriman.text = pengirimanDateString
-        btnPengambilan.text = pengambilanDateString
+        with(binding) {
+            btnPengiriman.text = pengirimanDateString
+            btnPengambilan.text = pengambilanDateString
 
-        val tanggal1 = Calendar.getInstance().apply {
-            time = dateFormat.parse(btnPengiriman.text.toString())
+            val tanggal1 = Calendar.getInstance().apply {
+                time = dateFormat.parse(btnPengiriman.text.toString())
+            }
+
+            val tanggal2 = Calendar.getInstance().apply {
+                time = dateFormat.parse(btnPengambilan.text.toString())
+            }
+
+            mSelisihHari = hitungSelisihHari(tanggal1, tanggal2)
+
+            tvHari.text = "$mSelisihHari Hari"
+            tvTotal.text = currencyFormat.format((mSelisihHari ?: 0) * (total ?: 0))
         }
-
-        val tanggal2 = Calendar.getInstance().apply {
-            time = dateFormat.parse(btnPengambilan.text.toString())
-        }
-
-        mSelisihHari = hitungSelisihHari(tanggal1, tanggal2)
-
-        tvHari.text = "$mSelisihHari Hari"
-        tvTotal.text = currencyFormat.format((mSelisihHari ?: 0) * (total ?: 0))
     }
 
     private fun onPickImageClick() {
@@ -391,7 +384,7 @@ class PaymentFragment : Fragment() {
             if (result.resultCode == Activity.RESULT_OK) {
                 val data: Intent? = result.data
                 imageBitmap = data?.extras?.get("data") as Bitmap
-                ivBuktiPembayaran.setImageBitmap(imageBitmap)
+                binding.ivBuktiPembayaran.setImageBitmap(imageBitmap)
             }
         }
 
@@ -402,7 +395,7 @@ class PaymentFragment : Fragment() {
                 val imageUri = data?.data
                 imageBitmap =
                     MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, imageUri)
-                ivBuktiPembayaran.setImageBitmap(imageBitmap)
+                binding.ivBuktiPembayaran.setImageBitmap(imageBitmap)
             }
         }
 
@@ -419,7 +412,7 @@ class PaymentFragment : Fragment() {
             }
 
             else -> {
-                tvAlamat.text = "Izin lokasi ditolak"
+                binding.tvAlamat.text = "Izin lokasi ditolak"
             }
         }
     }
@@ -431,7 +424,7 @@ class PaymentFragment : Fragment() {
                 val selectedAddress = data?.getStringExtra(EXTRA_ADDRESS)
                 lat = data?.getDoubleExtra(MapsPelangganActivity.EXTRA_LATITUDE, 0.0) ?: 0.0
                 lng = data?.getDoubleExtra(MapsPelangganActivity.EXTRA_LONGITUDE, 0.0) ?: 0.0
-                tvAlamat.text = selectedAddress
+                binding.tvAlamat.text = selectedAddress
             }
         }
 
@@ -472,9 +465,9 @@ class PaymentFragment : Fragment() {
         if (!addresses.isNullOrEmpty()) {
             val address: Address = addresses[0]
             val addressText = address.getAddressLine(0)
-            tvAlamat.text = addressText
+            binding.tvAlamat.text = addressText
         } else {
-            tvAlamat.text = "Alamat tidak ditemukan"
+            binding.tvAlamat.text = "Alamat tidak ditemukan"
         }
     }
 
