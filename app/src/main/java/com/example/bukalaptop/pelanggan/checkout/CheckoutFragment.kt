@@ -53,13 +53,13 @@ class CheckoutFragment : Fragment() {
         rvKeranjang.setHasFixedSize(true)
 
         builder = AlertDialog.Builder(requireContext())
-        val inflater=layoutInflater
-        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.progress_layout, null)
         builder.setView(dialogView)
         builder.setCancelable(false)
         progressDialog = builder.create()
 
-        tvProgress=dialogView.findViewById(R.id.tv_progress)
+        tvProgress = dialogView.findViewById(R.id.tv_progress)
 
         val auth = Firebase.auth
         val db = Firebase.firestore
@@ -69,12 +69,14 @@ class CheckoutFragment : Fragment() {
         initAdapter(pelangganId)
 
         listKeranjang = arrayListOf()
-        tvProgress.text="Memuat keranjang..."
+        tvProgress.text = "Memuat keranjang..."
         progressDialog.show()
         db.collection("pengguna").document(pelangganId).collection("keranjang")
             .addSnapshotListener { keranjang, error ->
                 listKeranjang.clear()
                 total = 0
+                val existingItemIds = HashSet<String>()
+
                 if (keranjang != null) {
                     val currencyFormat = NumberFormat.getCurrencyInstance()
                     currencyFormat.maximumFractionDigits = 2
@@ -88,13 +90,25 @@ class CheckoutFragment : Fragment() {
                                         if (brng.id == krnjng.id) {
                                             val mBarang = brng.toObject(Barang::class.java)
                                             val jumlah = krnjng.get("jumlah").toString().toInt()
-                                            total += (mBarang.biayaSewa * jumlah)
+                                            if (!existingItemIds.contains(brng.id)) {
+                                                total += (mBarang.biayaSewa * jumlah)
 
-                                            val keranjang = Keranjang(mBarang, jumlah)
-                                            keranjang.barang = brng.toObject(Barang::class.java)
-                                            keranjang.jumlah = jumlah
+                                                val mKeranjang = Keranjang(mBarang, jumlah)
+                                                mKeranjang.barang =
+                                                    brng.toObject(Barang::class.java)
+                                                mKeranjang.jumlah = jumlah
 
-                                            listKeranjang.add(keranjang)
+                                                listKeranjang.add(mKeranjang)
+
+                                                existingItemIds.add(brng.id)
+                                            }
+//                                            total += (mBarang.biayaSewa * jumlah)
+//
+//                                            val keranjang = Keranjang(mBarang, jumlah)
+//                                            keranjang.barang = brng.toObject(Barang::class.java)
+//                                            keranjang.jumlah = jumlah
+//
+//                                            listKeranjang.add(keranjang)
                                         }
                                     }
                                 } else if (error1 != null) {
