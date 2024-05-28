@@ -38,6 +38,7 @@ class CheckoutViewModel : ViewModel() {
                 if (keranjang != null) {
                     val list = arrayListOf<Keranjang>()
                     var totalAmount = 0
+                    val existingItemIds = HashSet<String>()
 
                     for (krnjng in keranjang) {
                         db.collection("barang")
@@ -47,13 +48,18 @@ class CheckoutViewModel : ViewModel() {
                                         if (brng.id == krnjng.id) {
                                             val mBarang = brng.toObject(Barang::class.java)
                                             val jumlah = krnjng.get("jumlah").toString().toInt()
-                                            totalAmount += (mBarang.biayaSewa * jumlah)
+                                            if (!existingItemIds.contains(brng.id)) {
+                                                totalAmount += (mBarang.biayaSewa * jumlah)
 
-                                            val mKeranjang = Keranjang(mBarang, jumlah)
-                                            mKeranjang.barang = brng.toObject(Barang::class.java)
-                                            mKeranjang.jumlah = jumlah
+                                                val mKeranjang = Keranjang(mBarang, jumlah)
+                                                mKeranjang.barang =
+                                                    brng.toObject(Barang::class.java)
+                                                mKeranjang.jumlah = jumlah
 
-                                            list.add(mKeranjang)
+                                                list.add(mKeranjang)
+
+                                                existingItemIds.add(brng.id)
+                                            }
                                         }
                                     }
                                 }

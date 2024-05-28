@@ -244,11 +244,13 @@ class DetailRiwayatFragment : Fragment() {
                                         progressDialog.dismiss()
                                     }
                                     .addOnFailureListener { e ->
-                                        Toast.makeText(
-                                            requireContext(),
-                                            e.toString(),
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                                        if (isAdded) {
+                                            Toast.makeText(
+                                                requireContext(),
+                                                e.toString(),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
                                         progressDialog.dismiss()
                                     }
                             }
