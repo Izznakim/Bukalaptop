@@ -160,6 +160,18 @@
             app:layout_constraintTop_toBottomOf="@+id/textView6" />
 
         <TextView
+            android:id="@+id/tv_alamat"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:text="Alamat akan ditampilkan disini"
+            android:textColor="#0000EE"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_total" />
+
+        <TextView
             android:id="@+id/textView3"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -168,7 +180,7 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_total" />
+            app:layout_constraintTop_toBottomOf="@+id/tv_alamat" />
 
         <ImageView
             android:id="@+id/iv_bukti"

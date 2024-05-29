@@ -2,6 +2,7 @@ package com.example.bukalaptop.pelanggan.riwayat
 
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
@@ -46,6 +47,7 @@ class DetailRiwayatFragment : Fragment() {
     private lateinit var tvHari: TextView
     private lateinit var tvTglPengambilan: TextView
     private lateinit var tvTotal: TextView
+    private lateinit var tvAlamat: TextView
     private lateinit var ivBukti: ImageView
     private lateinit var tvValidasi: TextView
     private lateinit var etNomorWa: EditText
@@ -78,6 +80,7 @@ class DetailRiwayatFragment : Fragment() {
         tvHari = view.findViewById(R.id.tv_hari)
         tvTglPengambilan = view.findViewById(R.id.tv_tglpengambilan)
         tvTotal = view.findViewById(R.id.tv_total)
+        tvAlamat = view.findViewById(R.id.tv_alamat)
         ivBukti = view.findViewById(R.id.iv_bukti)
         tvValidasi = view.findViewById(R.id.tv_validasi)
         etNomorWa = view.findViewById(R.id.et_nomorWa)
@@ -92,12 +95,14 @@ class DetailRiwayatFragment : Fragment() {
 
         tvProgress = dialogView.findViewById(R.id.tv_progress)
 
+        tvAlamat.paintFlags = tvAlamat.paintFlags or Paint.UNDERLINE_TEXT_FLAG
+
         rvKeranjang.setHasFixedSize(true)
 
         initAdapter()
 
-        var pelangganId = ""
-        var pesananId = ""
+        val pelangganId: String
+        val pesananId: String
 
         val db = Firebase.firestore
         storageBuktiRef = FirebaseStorage.getInstance().getReference("bukti/")
@@ -126,6 +131,9 @@ class DetailRiwayatFragment : Fragment() {
                             pesanan.tglPengambilan =
                                 document.getTimestamp("tglPengambilan")?.toDate()
                             pesanan.status = document.getString("status")
+                            pesanan.alamat = document.getString("alamat")
+                            pesanan.latitute = document.getDouble("latitude")
+                            pesanan.longitude = document.getDouble("longitude")
 
                             val currencyFormat = NumberFormat.getCurrencyInstance()
                             currencyFormat.maximumFractionDigits = 2
@@ -140,6 +148,23 @@ class DetailRiwayatFragment : Fragment() {
                             tvTglPengiriman.text = sdf.format(pesanan.tglPengiriman ?: Date())
                             tvTglPengambilan.text = sdf.format(pesanan.tglPengambilan ?: Date())
                             tvHari.text = masaSewa.toString()
+                            tvAlamat.text = pesanan.alamat
+
+                            tvAlamat.setOnClickListener {
+                                val uri =
+                                    Uri.parse("geo:${pesanan.latitute},${pesanan.longitude}?q=${pesanan.latitute},${pesanan.longitude}")
+                                val intent = Intent(Intent.ACTION_VIEW, uri)
+                                intent.setPackage("com.google.android.apps.maps")
+                                if (intent.resolveActivity(requireActivity().packageManager) != null) {
+                                    startActivity(intent)
+                                } else {
+                                    Toast.makeText(
+                                        requireContext(),
+                                        "Google Maps belum diinstall",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
 
                             Glide.with(requireContext())
                                 .load(pesanan.buktiBayar)
@@ -202,19 +227,24 @@ class DetailRiwayatFragment : Fragment() {
                                             .addOnCompleteListener { task ->
                                                 if (task.isSuccessful) {
                                                     for (doc in task.result) {
-                                                            db.collection("barang").document(doc.id)
-                                                                .get().addOnCompleteListener{
-                                                                    if (it.isSuccessful) {
-                                                                        val stok =
-                                                                            it.result.get("stok")
-                                                                                .toString().toInt()
-                                                                        val jumlah =
-                                                                            doc.get("jumlah").toString().toInt()
-                                                                        db.collection("barang").document(doc.id)
-                                                                            .update("stok", stok + jumlah)
-                                                                        doc.reference.delete()
-                                                                    }
+                                                        db.collection("barang").document(doc.id)
+                                                            .get().addOnCompleteListener {
+                                                                if (it.isSuccessful) {
+                                                                    val stok =
+                                                                        it.result.get("stok")
+                                                                            .toString().toInt()
+                                                                    val jumlah =
+                                                                        doc.get("jumlah").toString()
+                                                                            .toInt()
+                                                                    db.collection("barang")
+                                                                        .document(doc.id)
+                                                                        .update(
+                                                                            "stok",
+                                                                            stok + jumlah
+                                                                        )
+                                                                    doc.reference.delete()
                                                                 }
+                                                            }
                                                     }
                                                 } else {
                                                     Toast.makeText(

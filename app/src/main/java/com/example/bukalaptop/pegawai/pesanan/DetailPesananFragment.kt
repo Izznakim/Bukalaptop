@@ -1,6 +1,8 @@
 package com.example.bukalaptop.pegawai.pesanan
 
 import android.content.Intent
+import android.graphics.Paint
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -43,6 +45,7 @@ class DetailPesananFragment : Fragment() {
     private lateinit var tvTglPengambilan: TextView
     private lateinit var tvHari: TextView
     private lateinit var tvTotal: TextView
+    private lateinit var tvAlamat: TextView
     private lateinit var ivBukti: ImageView
     private lateinit var btnTerima: Button
     private lateinit var btnTolak: Button
@@ -79,6 +82,7 @@ class DetailPesananFragment : Fragment() {
         btnTolak = view.findViewById(R.id.btn_tolak)
         btnTerima = view.findViewById(R.id.btn_terima)
         ivBukti = view.findViewById(R.id.iv_bukti)
+        tvAlamat = view.findViewById(R.id.tv_alamat)
 
         cvPelangganProfil.setOnClickListener {
             val profilPelangganFragment = ProfilPelangganFragment()
@@ -105,6 +109,8 @@ class DetailPesananFragment : Fragment() {
         progressDialog = builder.create()
 
         tvProgress=dialogView.findViewById(R.id.tv_progress)
+
+        tvAlamat.paintFlags = tvAlamat.paintFlags or Paint.UNDERLINE_TEXT_FLAG
 
         initAdapter()
 
@@ -134,6 +140,9 @@ class DetailPesananFragment : Fragment() {
                                 document.getTimestamp("tglPengiriman")?.toDate()
                             pesanan.tglPengambilan =
                                 document.getTimestamp("tglPengambilan")?.toDate()
+                            pesanan.alamat = document.getString("alamat")
+                            pesanan.latitute = document.getDouble("latitude")
+                            pesanan.longitude = document.getDouble("longitude")
                         }
                     }
 
@@ -165,6 +174,7 @@ class DetailPesananFragment : Fragment() {
                     tvTglPengiriman.text = sdf.format(pesanan.tglPengiriman ?: Date())
                     tvTglPengambilan.text = sdf.format(pesanan.tglPengambilan ?: Date())
                     tvHari.text = masaSewa.toString()
+                    tvAlamat.text = pesanan.alamat
 
                     if (isAdded) {
                         Glide.with(requireContext())
@@ -200,6 +210,22 @@ class DetailPesananFragment : Fragment() {
                     Log.d("List Pesanan", "Data Kosong")
                 }
                 progressDialog.dismiss()
+            }
+
+            tvAlamat.setOnClickListener {
+                val uri =
+                    Uri.parse("geo:${pesanan.latitute},${pesanan.longitude}?q=${pesanan.latitute},${pesanan.longitude}")
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                intent.setPackage("com.google.android.apps.maps")
+                if (intent.resolveActivity(requireActivity().packageManager) != null) {
+                    startActivity(intent)
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "Google Maps belum diinstall",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
 
             ivBukti.setOnClickListener {

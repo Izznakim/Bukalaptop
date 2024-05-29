@@ -11,5 +11,8 @@ data class Pesanan(
     var buktiBayar: String = "",
     var tglPengiriman: Date? = Date(),
     var tglPengambilan: Date? = Date(),
-    var status:String?=""
+    var status: String? = "",
+    var alamat: String? = "",
+    var latitute: Double? = 0.0,
+    var longitude: Double? = 0.0
 ) : Parcelable

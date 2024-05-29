@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -102,13 +103,6 @@ class CheckoutFragment : Fragment() {
 
                                                 existingItemIds.add(brng.id)
                                             }
-//                                            total += (mBarang.biayaSewa * jumlah)
-//
-//                                            val keranjang = Keranjang(mBarang, jumlah)
-//                                            keranjang.barang = brng.toObject(Barang::class.java)
-//                                            keranjang.jumlah = jumlah
-//
-//                                            listKeranjang.add(keranjang)
                                         }
                                     }
                                 } else if (error1 != null) {
@@ -129,6 +123,10 @@ class CheckoutFragment : Fragment() {
             }
 
         btnCheckout.setOnClickListener {
+            if (listKeranjangAdapter.itemCount <= 0) {
+                Toast.makeText(activity, "Keranjang masih kosong", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             val paymentFragment = PaymentFragment()
             val mFragmentManager = activity?.supportFragmentManager
             val bundle = Bundle()
