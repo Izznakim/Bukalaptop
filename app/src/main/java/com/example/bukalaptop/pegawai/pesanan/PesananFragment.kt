@@ -14,6 +14,7 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListPesananAdapter
 import com.example.bukalaptop.model.Pelanggan
 import com.example.bukalaptop.model.Pesanan
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -56,7 +57,7 @@ class PesananFragment : Fragment() {
         listPesanan = arrayListOf()
         tvProgress.text="Memuat barang..."
         progressDialog.show()
-        db.collection("pesanan").addSnapshotListener { value, error ->
+        db.collection("pesanan").orderBy("timestamp", Query.Direction.ASCENDING).addSnapshotListener { value, error ->
             listPesanan.clear()
             if (error != null) {
                 Log.d("List Pesanan Error", error.toString())

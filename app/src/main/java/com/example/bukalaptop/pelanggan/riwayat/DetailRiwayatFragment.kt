@@ -166,10 +166,12 @@ class DetailRiwayatFragment : Fragment() {
                                 }
                             }
 
-                            Glide.with(requireContext())
-                                .load(pesanan.buktiBayar)
-                                .apply(RequestOptions())
-                                .into(ivBukti)
+                            if (isAdded) {
+                                Glide.with(requireContext())
+                                    .load(pesanan.buktiBayar)
+                                    .apply(RequestOptions())
+                                    .into(ivBukti)
+                            }
 
                             ivBukti.setOnClickListener {
                                 Intent(activity, ZoomImageActivity::class.java).also {

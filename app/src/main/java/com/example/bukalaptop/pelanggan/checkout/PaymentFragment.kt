@@ -216,6 +216,7 @@ class PaymentFragment : Fragment() {
                     val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
                     val formattedTglPengiriman = dateFormat.parse(pengirimanDateString)
                     val formattedTglPengambilan = dateFormat.parse(pengambilanDateString)
+                    val currentTimeMillis=System.currentTimeMillis()
 
                     val pesanan = hashMapOf(
                         "idPelanggan" to pelangganId,
@@ -224,7 +225,8 @@ class PaymentFragment : Fragment() {
                         "alamat" to tvAlamat.text.toString(),
                         "latitude" to lat,
                         "longitude" to lng,
-                        "status" to "netral"
+                        "status" to "netral",
+                        "timestamp" to currentTimeMillis
                     )
 
                     db.collection("pesanan").add(pesanan).addOnSuccessListener { doc ->
