@@ -1,6 +1,7 @@
 package com.example.bukalaptop.pegawai
 
 import android.content.Intent
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Patterns
@@ -81,7 +82,7 @@ class SignInPegawaiActivity : AppCompatActivity() {
                     etPassword.error = "Password minimal harus 6 karakter"
                     isPasswordValid = false
                 } else {
-                    etEmail.error = null
+                    etPassword.error = null
                     isPasswordValid = true
                 }
             }
@@ -134,6 +135,11 @@ class SignInPegawaiActivity : AppCompatActivity() {
 
     private fun updateSigninButtonState() {
         btnSignIn.isEnabled = isEmailValid && isPasswordValid
+        if (btnSignIn.isEnabled){
+            btnSignIn.setBackgroundColor(resources.getColor(R.color.red))
+        }else{
+            btnSignIn.setBackgroundColor(Color.GRAY)
+        }
     }
 
     public override fun onStart() {

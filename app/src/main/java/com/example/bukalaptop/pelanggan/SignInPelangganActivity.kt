@@ -1,6 +1,7 @@
 package com.example.bukalaptop.pelanggan
 
 import android.content.Intent
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Patterns
@@ -13,6 +14,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.doOnTextChanged
 import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.PegawaiActivity
+import com.example.bukalaptop.pelanggan.signup.SignUpPelangganActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
@@ -50,6 +52,7 @@ class SignInPelangganActivity : AppCompatActivity() {
         etEmail = findViewById(R.id.et_email)
         etPassword = findViewById(R.id.et_password)
         btnSignIn = findViewById(R.id.btn_signIn)
+        tvSignUp = findViewById(R.id.tv_signUp)
 
         builder = AlertDialog.Builder(this)
         val inflater=layoutInflater
@@ -84,7 +87,7 @@ class SignInPelangganActivity : AppCompatActivity() {
                     etPassword.error = "Password minimal harus 6 karakter"
                     isPasswordValid = false
                 } else {
-                    etEmail.error = null
+                    etPassword.error = null
                     isPasswordValid = true
                 }
             }
@@ -107,6 +110,10 @@ class SignInPelangganActivity : AppCompatActivity() {
                     ).show()
                     progressDialog.dismiss()
                 }
+        }
+
+        tvSignUp.setOnClickListener {
+            startActivity(Intent(this, SignUpPelangganActivity::class.java))
         }
     }
 
@@ -137,6 +144,11 @@ class SignInPelangganActivity : AppCompatActivity() {
 
     private fun updateSigninButtonState() {
         btnSignIn.isEnabled = isEmailValid && isPasswordValid
+        if (btnSignIn.isEnabled){
+            btnSignIn.setBackgroundColor(resources.getColor(R.color.yelowrangeLight))
+        }else{
+            btnSignIn.setBackgroundColor(Color.GRAY)
+        }
     }
 
     public override fun onStart() {

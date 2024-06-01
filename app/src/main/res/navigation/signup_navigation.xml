@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/signup_navigation"
+    app:startDestination="@id/signUpFragment">
+
+    <fragment
+        android:id="@+id/signUpFragment"
+        android:name="com.example.bukalaptop.pelanggan.signup.SignUpFragment"
+        android:label="fragment_sign_up"
+        tools:layout="@layout/fragment_sign_up" >
+        <action
+            android:id="@+id/action_signUpFragment_to_dataDiriFragment"
+            app:destination="@id/dataDiriFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/dataDiriFragment"
+        android:name="com.example.bukalaptop.pelanggan.signup.DataDiriFragment"
+        android:label="fragment_data_diri"
+        tools:layout="@layout/fragment_data_diri" >
+        <action
+            android:id="@+id/action_dataDiriFragment_to_signUpFragment"
+            app:destination="@id/signUpFragment" />
+        <argument
+            android:name="email"
+            app:argType="string"
+            android:defaultValue='""' />
+        <argument
+            android:name="password"
+            app:argType="string"
+            android:defaultValue='""' />
+        <action
+            android:id="@+id/action_dataDiriFragment_to_dataDiri2Fragment"
+            app:destination="@id/dataDiri2Fragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/dataDiri2Fragment"
+        android:name="com.example.bukalaptop.pelanggan.signup.DataDiri2Fragment"
+        android:label="fragment_data_diri2"
+        tools:layout="@layout/fragment_data_diri2" >
+        <action
+            android:id="@+id/action_dataDiri2Fragment_to_dataDiriFragment"
+            app:destination="@id/dataDiriFragment" />
+        <argument
+            android:name="email"
+            app:argType="string"
+            android:defaultValue='""' />
+        <argument
+            android:name="password"
+            app:argType="string"
+            android:defaultValue='""' />
+        <argument
+            android:name="namaLengkap"
+            app:argType="string"
+            android:defaultValue='""' />
+        <argument
+            android:name="username"
+            app:argType="string"
+            android:defaultValue='""' />
+        <argument
+            android:name="nomorHp"
+            app:argType="string"
+            android:defaultValue='""' />
+    </fragment>
+</navigation>
