@@ -1,9 +1,15 @@
 package com.example.bukalaptop.pegawai.barang
 
+import android.Manifest
 import android.app.Activity
+import android.content.ContentValues
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -17,6 +23,8 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
@@ -30,7 +38,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
+import java.io.OutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class UpdateBarangFragment : Fragment() {
 
@@ -57,7 +71,7 @@ class UpdateBarangFragment : Fragment() {
     private lateinit var progressDialog: AlertDialog
 
     private var barang: Barang? = null
-    private var imageBitmap: Bitmap? = null
+    private var imageUri: Uri? = null
     private var merek: String = ""
     private var model: String = ""
     private var prosesor: String = ""
@@ -249,24 +263,22 @@ class UpdateBarangFragment : Fragment() {
             progressDialog.show()
             GlobalScope.launch(Dispatchers.IO) {
                 try {
-                    val baos = ByteArrayOutputStream()
-                    val bitmap:Bitmap?=Glide
-                        .with(requireContext())
-                        .asBitmap()
-                        .load(barangImageUrl)
-                        .submit()
-                        .get()
-                    imageBitmap?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-                        ?: bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-                    val imageData = baos.toByteArray()
+                    getImageUriFromUrl(barangImageUrl){
+                        if (it != null) {
+                            ivEditBarang.setImageURI(it)
+                            imageUri = it
+                        } else {
+                            Toast.makeText(requireContext(), "Gagal mengunduh gambar", Toast.LENGTH_SHORT).show()
+                        }
+                    }
 
                     val imageRef = storageRef.child("barang/${barangId}.jpg")
 
-                    val uploadTask = imageRef.putBytes(imageData)
+                    val uploadTask = imageRef.putFile(imageUri!!)
 
                     uploadTask.addOnSuccessListener {
                         imageRef.downloadUrl.addOnSuccessListener { uri ->
-                            val imageUrl = if (imageBitmap==null){
+                            val imageUrl = if (imageUri==null){
                                 barangImageUrl
                             }else {
                                 uri.toString()
@@ -316,24 +328,113 @@ class UpdateBarangFragment : Fragment() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
     }
 
+    private fun getImageUriFromUrl(imageUrl: String, callback: (Uri?) -> Unit) {
+        Thread {
+            try {
+                val bitmap = Glide.with(requireContext())
+                    .asBitmap()
+                    .load(imageUrl)
+                    .submit()
+                    .get()
+
+                val uri = saveImageToExternalStorage(bitmap)
+                (context as Activity).runOnUiThread {
+                    callback(uri)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                (context as Activity).runOnUiThread {
+                    callback(null)
+                }
+            }
+        }.start()
+    }
+
+    private fun saveImageToExternalStorage(bitmap: Bitmap): Uri? {
+        val filename = "IMG_${System.currentTimeMillis()}.jpg"
+        var fos: OutputStream? = null
+        var imageUri: Uri? = null
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                context?.contentResolver?.also { resolver ->
+                    val contentValues = ContentValues().apply {
+                        put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                        put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+                    }
+
+                    imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                    fos = imageUri?.let { resolver.openOutputStream(it) }
+                }
+            } else {
+                val imagesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                val image = File(imagesDir, filename)
+                fos = FileOutputStream(image)
+                imageUri = Uri.fromFile(image)
+            }
+
+            fos?.use {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
+        return imageUri
+    }
+
     private fun onPickImageClick() {
         val options = arrayOf("Kamera", "Galeri")
         val builder = AlertDialog.Builder(requireContext())
         builder.setTitle("Pilih Sumber Gambar")
         builder.setItems(options) { _, which ->
             when (which) {
-                0 -> dispatchTakePictureIntent()
+                0 -> checkCameraPermissionAndOpenCamera()
                 1 -> dispatchPickImageIntent()
             }
         }
         builder.show()
     }
 
+    private fun checkCameraPermissionAndOpenCamera() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            dispatchTakePictureIntent()
+        } else {
+            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
     private fun dispatchTakePictureIntent() {
         val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         if (takePictureIntent.resolveActivity(requireContext().packageManager) != null) {
-            takePictureLauncher.launch(takePictureIntent)
+            val photoFile: File? = try {
+                createImageFile()
+            } catch (ex: IOException) {
+                null
+            }
+            photoFile?.also {
+                imageUri = FileProvider.getUriForFile(
+                    requireContext(),
+                    "${requireContext().packageName}.provider",
+                    it
+                )
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
+                takePictureLauncher.launch(takePictureIntent)
+            }
         }
+    }
+
+    private fun createImageFile(): File {
+        val timestamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        val storageDir: File? = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return File.createTempFile(
+            "JPEG_${timestamp}_",
+            ".jpg",
+            storageDir
+        )
     }
 
     private fun dispatchPickImageIntent() {
@@ -344,12 +445,27 @@ class UpdateBarangFragment : Fragment() {
         pickImageLauncher.launch(pickPhotoIntent)
     }
 
+    private val requestCameraPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                dispatchTakePictureIntent()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "Izin kamera diperlukan untuk mengambil gambar",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
     private val takePictureLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                val data: Intent? = result.data
-                imageBitmap = data?.extras?.get("data") as Bitmap
-                ivEditBarang.setImageBitmap(imageBitmap)
+                imageUri?.let {
+                    ivEditBarang.setImageURI(it)
+                }
+            } else {
+                Toast.makeText(requireContext(), "Failed to capture image", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -357,10 +473,8 @@ class UpdateBarangFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val data: Intent? = result.data
-                val imageUri = data?.data
-                imageBitmap =
-                    MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, imageUri)
-                ivEditBarang.setImageBitmap(imageBitmap)
+                imageUri = data?.data
+                ivEditBarang.setImageURI(imageUri)
             }
         }
 }

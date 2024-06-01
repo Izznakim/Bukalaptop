@@ -1,9 +1,13 @@
 package com.example.bukalaptop.pegawai.barang
 
+import android.Manifest
 import android.app.Activity.RESULT_OK
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
@@ -16,12 +20,19 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import com.example.bukalaptop.R
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class TambahBarangFragment : Fragment() {
 
@@ -47,7 +58,7 @@ class TambahBarangFragment : Fragment() {
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
 
-    private var imageBitmap: Bitmap? = null
+    private var imageUri: Uri? = null
     private var merek: String = ""
     private var model: String = ""
     private var prosesor: String = ""
@@ -124,7 +135,7 @@ class TambahBarangFragment : Fragment() {
             stok = etStok.text.toString()
 
 
-            if (imageBitmap == null) {
+            if (imageUri == null) {
                 ivTambahBarang.requestFocus()
                 Toast.makeText(context, "Gambar masih kosong!", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -209,7 +220,7 @@ class TambahBarangFragment : Fragment() {
             }
 
             addDataToFirestore(
-                imageBitmap,
+                imageUri,
                 merek,
                 model,
                 prosesor,
@@ -243,7 +254,7 @@ class TambahBarangFragment : Fragment() {
     }
 
     private fun addDataToFirestore(
-        imageBitmap: Bitmap?,
+        imageUri: Uri?,
         merek: String,
         model: String,
         prosesor: String,
@@ -282,13 +293,10 @@ class TambahBarangFragment : Fragment() {
         databaseRef.collection("barang")
             .add(data)
             .addOnSuccessListener { document ->
-                val baos = ByteArrayOutputStream()
-                imageBitmap?.compress(Bitmap.CompressFormat.PNG, 100, baos)
-                val imageData = baos.toByteArray()
 
                 val imageRef = storageRef.child("barang/${document.id}.jpg")
 
-                val uploadTask = imageRef.putBytes(imageData)
+                val uploadTask = imageRef.putFile(imageUri!!)
                 uploadTask.addOnSuccessListener {
                     imageRef.downloadUrl.addOnSuccessListener { uri ->
                         val imageUrl = uri.toString()
@@ -320,18 +328,51 @@ class TambahBarangFragment : Fragment() {
         builder.setTitle("Pilih Sumber Gambar")
         builder.setItems(options) { _, which ->
             when (which) {
-                0 -> dispatchTakePictureIntent()
+                0 -> checkCameraPermissionAndOpenCamera()
                 1 -> dispatchPickImageIntent()
             }
         }
         builder.show()
     }
 
+    private fun checkCameraPermissionAndOpenCamera() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            dispatchTakePictureIntent()
+        } else {
+            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
     private fun dispatchTakePictureIntent() {
         val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         if (takePictureIntent.resolveActivity(requireContext().packageManager) != null) {
-            takePictureLauncher.launch(takePictureIntent)
+            val photoFile: File? = try {
+                createImageFile()
+            } catch (ex: IOException) {
+                null
+            }
+            photoFile?.also {
+                imageUri = FileProvider.getUriForFile(
+                    requireContext(),
+                    "${requireContext().packageName}.provider",
+                    it
+                )
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
+                takePictureLauncher.launch(takePictureIntent)
+            }
         }
+    }
+
+    private fun createImageFile(): File {
+        val timestamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        val storageDir: File? = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return File.createTempFile(
+            "JPEG_${timestamp}_",
+            ".jpg",
+            storageDir
+        )
     }
 
     private fun dispatchPickImageIntent() {
@@ -342,12 +383,27 @@ class TambahBarangFragment : Fragment() {
         pickImageLauncher.launch(pickPhotoIntent)
     }
 
+    private val requestCameraPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                dispatchTakePictureIntent()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "Izin kamera diperlukan untuk mengambil gambar",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
     private val takePictureLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                val data: Intent? = result.data
-                imageBitmap = data?.extras?.get("data") as Bitmap
-                ivTambahBarang.setImageBitmap(imageBitmap)
+                imageUri?.let {
+                    ivTambahBarang.setImageURI(it)
+                }
+            } else {
+                Toast.makeText(requireContext(), "Failed to capture image", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -355,10 +411,8 @@ class TambahBarangFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
                 val data: Intent? = result.data
-                val imageUri = data?.data
-                imageBitmap =
-                    MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, imageUri)
-                ivTambahBarang.setImageBitmap(imageBitmap)
+                imageUri = data?.data
+                ivTambahBarang.setImageURI(imageUri)
             }
         }
 }
