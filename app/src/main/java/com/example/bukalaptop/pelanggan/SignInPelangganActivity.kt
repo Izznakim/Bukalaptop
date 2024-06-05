@@ -2,7 +2,6 @@ package com.example.bukalaptop.pelanggan
 
 import android.content.Intent
 import android.graphics.Color
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Patterns
 import android.widget.Button
@@ -11,15 +10,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doOnTextChanged
 import com.example.bukalaptop.R
-import com.example.bukalaptop.pegawai.PegawaiActivity
 import com.example.bukalaptop.pelanggan.signup.SignUpPelangganActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import org.w3c.dom.Text
 
 class SignInPelangganActivity : AppCompatActivity() {
 
@@ -55,13 +53,13 @@ class SignInPelangganActivity : AppCompatActivity() {
         tvSignUp = findViewById(R.id.tv_signUp)
 
         builder = AlertDialog.Builder(this)
-        val inflater=layoutInflater
-        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.progress_layout, null)
         builder.setView(dialogView)
         builder.setCancelable(false)
         progressDialog = builder.create()
 
-        tvProgress=dialogView.findViewById(R.id.tv_progress)
+        tvProgress = dialogView.findViewById(R.id.tv_progress)
 
         btnSignIn.isEnabled = false
 
@@ -95,7 +93,7 @@ class SignInPelangganActivity : AppCompatActivity() {
         }
 
         btnSignIn.setOnClickListener {
-            tvProgress.text="Signing in..."
+            tvProgress.text = "Signing in..."
             progressDialog.show()
             auth.signInWithEmailAndPassword(etEmail.text.toString(), etPassword.text.toString())
                 .addOnSuccessListener { task ->
@@ -119,34 +117,40 @@ class SignInPelangganActivity : AppCompatActivity() {
 
     private fun jenisPengguna(userId: String?) {
         if (userId != null) {
-            tvProgress.text="Signing in..."
+            tvProgress.text = "Signing in..."
             progressDialog.show()
             val db = Firebase.firestore
-            val penggunaRef = db.collection("pengguna").document(userId)
-            penggunaRef.get().addOnSuccessListener { snapshot ->
-                if (snapshot.exists()) {
-                    val userType = snapshot.getString("jenis")
-                    if (userType == "pelanggan") {
-                        startActivity(Intent(this, PelangganActivity::class.java))
-                        finish()
-                    } else {
-                        Toast.makeText(
-                            this,
-                            "Anda belum mempunyai akun sebagai pelanggan.",
-                            Toast.LENGTH_SHORT
-                        ).show()
+            db.collection("pengguna").addSnapshotListener { value, error ->
+                if (value != null) {
+                    for (document in value) {
+                        if (document.getString("id") == userId) {
+                            val userType = document.getString("jenis")
+                            if (userType == "pelanggan") {
+                                startActivity(Intent(this, PelangganActivity::class.java))
+                                finish()
+                            } else {
+                                Toast.makeText(
+                                    this,
+                                    "Anda belum mempunyai akun sebagai pelanggan.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
                     }
+                    progressDialog.dismiss()
+                } else if (error != null) {
+                    Toast.makeText(this, "$error", Toast.LENGTH_SHORT).show()
+                    progressDialog.dismiss()
                 }
-                progressDialog.dismiss()
             }
         }
     }
 
     private fun updateSigninButtonState() {
         btnSignIn.isEnabled = isEmailValid && isPasswordValid
-        if (btnSignIn.isEnabled){
+        if (btnSignIn.isEnabled) {
             btnSignIn.setBackgroundColor(resources.getColor(R.color.yelowrangeLight))
-        }else{
+        } else {
             btnSignIn.setBackgroundColor(Color.GRAY)
         }
     }

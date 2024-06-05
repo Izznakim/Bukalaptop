@@ -73,14 +73,4 @@
         app:layout_constraintTop_toBottomOf="@+id/cardView"
         tools:text="081234567890" />
 
-    <TextView
-        android:id="@+id/tv_alamat_asal"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        app:layout_constraintEnd_toEndOf="@+id/tv_nomor_telpon"
-        app:layout_constraintStart_toStartOf="@+id/tv_nomor_telpon"
-        app:layout_constraintTop_toBottomOf="@+id/tv_nomor_telpon"
-        tools:text="Kota, Kecamatan, Kabupaten. RT/RW 00/00, jln. Jalan, 11111" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

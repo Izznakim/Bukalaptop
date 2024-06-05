@@ -5,8 +5,6 @@ import android.app.Activity
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Paint
 import android.location.Address
 import android.location.Geocoder
@@ -15,7 +13,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,7 +23,6 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
@@ -39,7 +35,6 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.text.NumberFormat
@@ -74,7 +69,6 @@ class PaymentFragment : Fragment() {
     private var pengambilanDateString: String = ""
     private var lat: Double = 0.0
     private var lng: Double = 0.0
-    private val CAMERA_PERMISSION_CODE = 100
 
     var selectedPengirimanDate: Calendar = Calendar.getInstance()
     var selectedPengambilanDate: Calendar = Calendar.getInstance()
@@ -136,16 +130,20 @@ class PaymentFragment : Fragment() {
             val listKeranjang = arguments?.getParcelableArrayList<Keranjang>(EXTRA_KERANJANG)
             val address = arguments?.getString(EXTRA_ADDRESS).toString()
 
-            db.collection("pengguna").document(pelangganId).addSnapshotListener { value, error ->
+            db.collection("pengguna").addSnapshotListener { value, error ->
                 tvProgress.text = "Memuat data..."
                 progressDialog.show()
                 if (error != null) {
-                    Log.d("List Pesanan Error", error.toString())
+                    Toast.makeText(requireContext(), "$error", Toast.LENGTH_SHORT).show()
                     return@addSnapshotListener
                 }
                 if (value != null) {
-                    tvNamaLengkap.text = value.getString("namaLengkap")
-                    tvEmail.text = value.getString("email")
+                    for (doc in value) {
+                        if (doc.getString("id") == pelangganId) {
+                            tvNamaLengkap.text = doc.getString("namaLengkap")
+                            tvEmail.text = doc.getString("email")
+                        }
+                    }
                 }
                 progressDialog.dismiss()
             }
@@ -445,7 +443,8 @@ class PaymentFragment : Fragment() {
                     ivBuktiPembayaran.setImageURI(it)
                 }
             } else {
-                Toast.makeText(requireContext(), "Failed to capture image", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Failed to capture image", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
 

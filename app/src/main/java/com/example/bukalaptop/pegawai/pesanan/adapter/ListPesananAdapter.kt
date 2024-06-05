@@ -48,10 +48,10 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
                 }
                 if (valuePelanggan != null) {
                     for (document in valuePelanggan) {
-                        if (document.id == idPelanggan) {
+                        if (document.getString("id") == idPelanggan) {
                             val pelanggan=document.toObject(Pelanggan::class.java)
                             tvNama.text = pelanggan.namaLengkap
-                            tvTelepon.text = pelanggan.nomorTelepon
+                            tvTelepon.text = pelanggan.nomorHp
                         }
                     }
                 }

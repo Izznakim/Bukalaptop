@@ -92,13 +92,13 @@ class DetailBarangPelangganFragment : Fragment() {
         btnTambahKeranjang = view.findViewById(R.id.btn_tambah_keranjang)
 
         builder = AlertDialog.Builder(requireContext())
-        val inflater=layoutInflater
-        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.progress_layout, null)
         builder.setView(dialogView)
         builder.setCancelable(false)
         progressDialog = builder.create()
 
-        tvProgress=dialogView.findViewById(R.id.tv_progress)
+        tvProgress = dialogView.findViewById(R.id.tv_progress)
 
         var barangId = ""
 
@@ -108,7 +108,7 @@ class DetailBarangPelangganFragment : Fragment() {
 
         val db = Firebase.firestore
         val auth = Firebase.auth
-        tvProgress.text="Memuat informasi barang..."
+        tvProgress.text = "Memuat informasi barang..."
         progressDialog.show()
         db.collection("barang").addSnapshotListener { value, error ->
             if (value != null) {
@@ -195,30 +195,41 @@ class DetailBarangPelangganFragment : Fragment() {
         }
 
         btnTambahKeranjang.setOnClickListener {
-            tvProgress.text="Menambahkan ke keranjang..."
+            tvProgress.text = "Menambahkan ke keranjang..."
             progressDialog.show()
             if (jumlah > 0) {
                 val keranjang = hashMapOf(
                     "jumlah" to jumlah
                 )
 
-                db.collection("pengguna").document(auth.currentUser?.uid ?: "")
-                    .collection("keranjang").document(barangId)
-                    .set(keranjang)
-                    .addOnSuccessListener { documentReference ->
-                        Toast.makeText(
-                            activity,
-                            "${barang.merek} ${barang.model} telah ditambahkan ke keranjang.",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                db.collection("pengguna").addSnapshotListener { value, error ->
+                    if (value != null) {
+                        for (document in value) {
+                            if (document.getString("id") == auth.currentUser?.uid) {
+                                document.reference.collection("keranjang").document(barangId)
+                                    .set(keranjang)
+                                    .addOnSuccessListener {
+                                        Toast.makeText(
+                                            activity,
+                                            "${barang.merek} ${barang.model} telah ditambahkan ke keranjang.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
 
-                        parentFragmentManager.popBackStack()
-                        progressDialog.dismiss()
+                                        parentFragmentManager.popBackStack()
+                                        progressDialog.dismiss()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(
+                                            requireContext(),
+                                            e.toString(),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        progressDialog.dismiss()
+                                    }
+                            }
+                        }
                     }
-                    .addOnFailureListener { e ->
-                        Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_SHORT).show()
-                        progressDialog.dismiss()
-                    }
+                }
             }
         }
 

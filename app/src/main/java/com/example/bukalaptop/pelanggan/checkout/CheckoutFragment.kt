@@ -72,55 +72,67 @@ class CheckoutFragment : Fragment() {
         listKeranjang = arrayListOf()
         tvProgress.text = "Memuat keranjang..."
         progressDialog.show()
-        db.collection("pengguna").document(pelangganId).collection("keranjang")
-            .addSnapshotListener { keranjang, error ->
-                listKeranjang.clear()
-                total = 0
-                val existingItemIds = HashSet<String>()
+        db.collection("pengguna").addSnapshotListener { pengguna, _ ->
+            if (pengguna != null) {
+                for (peng in pengguna) {
+                    if (peng.getString("id") == pelangganId) {
+                        peng.reference.collection("keranjang")
+                            .addSnapshotListener { keranjang, error ->
+                                listKeranjang.clear()
+                                total = 0
+                                val existingItemIds = HashSet<String>()
 
-                if (keranjang != null) {
-                    val currencyFormat = NumberFormat.getCurrencyInstance()
-                    currencyFormat.maximumFractionDigits = 2
-                    currencyFormat.currency = Currency.getInstance("IDR")
+                                if (keranjang != null) {
+                                    val currencyFormat = NumberFormat.getCurrencyInstance()
+                                    currencyFormat.maximumFractionDigits = 2
+                                    currencyFormat.currency = Currency.getInstance("IDR")
 
-                    for (krnjng in keranjang) {
-                        listenerRegistration = db.collection("barang")
-                            .addSnapshotListener { barang, error1 ->
-                                if (barang != null) {
-                                    for (brng in barang) {
-                                        if (brng.id == krnjng.id) {
-                                            val mBarang = brng.toObject(Barang::class.java)
-                                            val jumlah = krnjng.get("jumlah").toString().toInt()
-                                            if (!existingItemIds.contains(brng.id)) {
-                                                total += (mBarang.biayaSewa * jumlah)
+                                    for (krnjng in keranjang) {
+                                        listenerRegistration = db.collection("barang")
+                                            .addSnapshotListener { barang, error1 ->
+                                                if (barang != null) {
+                                                    for (brng in barang) {
+                                                        if (brng.id == krnjng.id) {
+                                                            val mBarang =
+                                                                brng.toObject(Barang::class.java)
+                                                            val jumlah =
+                                                                krnjng.get("jumlah").toString()
+                                                                    .toInt()
+                                                            if (!existingItemIds.contains(brng.id)) {
+                                                                total += (mBarang.biayaSewa * jumlah)
 
-                                                val mKeranjang = Keranjang(mBarang, jumlah)
-                                                mKeranjang.barang =
-                                                    brng.toObject(Barang::class.java)
-                                                mKeranjang.jumlah = jumlah
+                                                                val mKeranjang =
+                                                                    Keranjang(mBarang, jumlah)
+                                                                mKeranjang.barang =
+                                                                    brng.toObject(Barang::class.java)
+                                                                mKeranjang.jumlah = jumlah
 
-                                                listKeranjang.add(mKeranjang)
+                                                                listKeranjang.add(mKeranjang)
 
-                                                existingItemIds.add(brng.id)
+                                                                existingItemIds.add(brng.id)
+                                                            }
+                                                        }
+                                                    }
+                                                } else if (error1 != null) {
+                                                    Log.d("List Keranjang", error.toString())
+                                                }
+                                                listKeranjangAdapter.setData(listKeranjang)
+                                                tvTotal.text =
+                                                    currencyFormat.format(total)
                                             }
-                                        }
                                     }
-                                } else if (error1 != null) {
+
+                                    tvTotal.text =
+                                        currencyFormat.format(total)
+                                } else if (error != null) {
                                     Log.d("List Keranjang", error.toString())
                                 }
-                                listKeranjangAdapter.setData(listKeranjang)
-                                tvTotal.text =
-                                    currencyFormat.format(total)
+                                progressDialog.dismiss()
                             }
                     }
-
-                    tvTotal.text =
-                        currencyFormat.format(total)
-                } else if (error != null) {
-                    Log.d("List Keranjang", error.toString())
                 }
-                progressDialog.dismiss()
             }
+        }
 
         btnCheckout.setOnClickListener {
             if (listKeranjangAdapter.itemCount <= 0) {

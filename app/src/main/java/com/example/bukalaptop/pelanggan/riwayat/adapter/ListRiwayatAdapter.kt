@@ -11,10 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Pelanggan
 import com.example.bukalaptop.model.Pesanan
-import com.example.bukalaptop.pegawai.pesanan.DetailPesananFragment
-import com.example.bukalaptop.pegawai.pesanan.adapter.ListPesananAdapter
 import com.example.bukalaptop.pelanggan.riwayat.DetailRiwayatFragment
-import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -51,10 +48,10 @@ class ListRiwayatAdapter(private val listRiwayat: ArrayList<Pesanan>) :
                 }
                 if (valuePelanggan != null) {
                     for (document in valuePelanggan) {
-                        if (document.id == idPelanggan) {
+                        if (document.getString("id") == idPelanggan) {
                             val pelanggan=document.toObject(Pelanggan::class.java)
                             tvNama.text = pelanggan.namaLengkap
-                            tvTelepon.text = pelanggan.nomorTelepon
+                            tvTelepon.text = pelanggan.nomorHp
                         }
                     }
                 }

@@ -92,7 +92,11 @@ class DetailPesananFragment : Fragment() {
             bundle.putString(EXTRA_IDPELANGGAN, pesanan.idPelanggan)
             profilPelangganFragment.arguments = bundle
             mFragmentManager?.beginTransaction()?.apply {
-                replace(R.id.fragment_pegawai_container,profilPelangganFragment, ProfilPelangganFragment::class.java.simpleName)
+                replace(
+                    R.id.fragment_pegawai_container,
+                    profilPelangganFragment,
+                    ProfilPelangganFragment::class.java.simpleName
+                )
                 addToBackStack(null)
                 commit()
             }
@@ -102,19 +106,19 @@ class DetailPesananFragment : Fragment() {
         rvKeranjang.setHasFixedSize(true)
 
         builder = AlertDialog.Builder(requireContext())
-        val inflater=layoutInflater
-        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.progress_layout, null)
         builder.setView(dialogView)
         builder.setCancelable(false)
         progressDialog = builder.create()
 
-        tvProgress=dialogView.findViewById(R.id.tv_progress)
+        tvProgress = dialogView.findViewById(R.id.tv_progress)
 
         tvAlamat.paintFlags = tvAlamat.paintFlags or Paint.UNDERLINE_TEXT_FLAG
 
         initAdapter()
 
-        var pesananId = ""
+        val pesananId: String
 
         val db = Firebase.firestore
         listKeranjang = arrayListOf()
@@ -122,7 +126,7 @@ class DetailPesananFragment : Fragment() {
         if (arguments != null) {
             pesananId = arguments?.getString(EXTRA_IDPESANAN).toString()
 
-            tvProgress.text="Memuat informasi pesanan..."
+            tvProgress.text = "Memuat informasi pesanan..."
             progressDialog.show()
             db.collection("pesanan").addSnapshotListener { valuePesanan, errorPesanan ->
                 if (errorPesanan != null) {
@@ -134,7 +138,7 @@ class DetailPesananFragment : Fragment() {
                         if (document.id == pesananId) {
                             pesanan = Pesanan()
                             pesanan.id = document.id
-                            pesanan.idPelanggan=document.getString("idPelanggan").toString()
+                            pesanan.idPelanggan = document.getString("idPelanggan").toString()
                             pesanan.buktiBayar = document.getString("buktiBayar").toString()
                             pesanan.tglPengiriman =
                                 document.getTimestamp("tglPengiriman")?.toDate()
@@ -155,21 +159,22 @@ class DetailPesananFragment : Fragment() {
                         (pesanan.tglPengambilan?.time ?: 0) - (pesanan.tglPengiriman?.time ?: 0)
                     val masaSewa = (diff / 1000 / 60 / 60 / 24).toInt()
 
-                    db.collection("pengguna").addSnapshotListener{valuePelanggan,errorPelanggan->
-                        if (errorPelanggan != null) {
-                            Log.d("List Pesanan Error", errorPelanggan.toString())
-                            return@addSnapshotListener
-                        }
-                        if (valuePelanggan != null) {
-                            for (document in valuePelanggan) {
-                                if (document.id == pesanan.idPelanggan) {
-                                    pelanggan=document.toObject(Pelanggan::class.java)
-                                    tvNama.text = pelanggan.namaLengkap
-                                    tvEmail.text = pelanggan.email
+                    db.collection("pengguna")
+                        .addSnapshotListener { valuePelanggan, errorPelanggan ->
+                            if (errorPelanggan != null) {
+                                Log.d("List Pesanan Error", errorPelanggan.toString())
+                                return@addSnapshotListener
+                            }
+                            if (valuePelanggan != null) {
+                                for (document in valuePelanggan) {
+                                    if (document.getString("id") == pesanan.idPelanggan) {
+                                        pelanggan = document.toObject(Pelanggan::class.java)
+                                        tvNama.text = pelanggan.namaLengkap
+                                        tvEmail.text = pelanggan.email
+                                    }
                                 }
                             }
                         }
-                    }
 
                     tvTglPengiriman.text = sdf.format(pesanan.tglPengiriman ?: Date())
                     tvTglPengambilan.text = sdf.format(pesanan.tglPengambilan ?: Date())
@@ -235,33 +240,35 @@ class DetailPesananFragment : Fragment() {
                 }
             }
             btnTerima.setOnClickListener {
-                tvProgress.text="Memuat pesanan..."
+                tvProgress.text = "Memuat pesanan..."
                 progressDialog.show()
-                db.collection("pesanan").document(pesananId).update("status","diterima").addOnSuccessListener {
-                    Toast.makeText(
-                        requireContext(),
-                        "Pesanan telah Anda setujui",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    parentFragmentManager.popBackStack()
-                    progressDialog.dismiss()
-                }.addOnFailureListener {
+                db.collection("pesanan").document(pesananId).update("status", "diterima")
+                    .addOnSuccessListener {
+                        Toast.makeText(
+                            requireContext(),
+                            "Pesanan telah Anda setujui",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        parentFragmentManager.popBackStack()
+                        progressDialog.dismiss()
+                    }.addOnFailureListener {
                     Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
                     progressDialog.dismiss()
                 }
             }
             btnTolak.setOnClickListener {
-                tvProgress.text="Memuat pesanan..."
+                tvProgress.text = "Memuat pesanan..."
                 progressDialog.show()
-                db.collection("pesanan").document(pesananId).update("status","ditolak").addOnSuccessListener {
-                    Toast.makeText(
-                        requireContext(),
-                        "Pesanan telah Anda tolak",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    parentFragmentManager.popBackStack()
-                    progressDialog.dismiss()
-                }.addOnFailureListener {
+                db.collection("pesanan").document(pesananId).update("status", "ditolak")
+                    .addOnSuccessListener {
+                        Toast.makeText(
+                            requireContext(),
+                            "Pesanan telah Anda tolak",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        parentFragmentManager.popBackStack()
+                        progressDialog.dismiss()
+                    }.addOnFailureListener {
                     Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
                     progressDialog.dismiss()
                 }

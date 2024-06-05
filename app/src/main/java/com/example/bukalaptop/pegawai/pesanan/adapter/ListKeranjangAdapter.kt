@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -29,8 +28,8 @@ class ListKeranjangAdapter(
     private val listKeranjang: ArrayList<Keranjang>,
     private val isPegawai: Boolean,
     private val pelangganId: String,
-    private val vsblHapus:Boolean
-    ) :
+    private val vsblHapus: Boolean
+) :
     RecyclerView.Adapter<ListKeranjangAdapter.ListViewHolder>() {
     fun setData(data: List<Keranjang>) {
         listKeranjang.clear()
@@ -66,9 +65,9 @@ class ListKeranjangAdapter(
         val db = Firebase.firestore
 
         holder.apply {
-            if (vsblHapus){
+            if (vsblHapus) {
                 btnHapus.visibility = View.VISIBLE
-            }else{
+            } else {
                 btnHapus.visibility = View.GONE
             }
             Glide.with(itemView.context)
@@ -84,25 +83,48 @@ class ListKeranjangAdapter(
             btnHapus.setOnClickListener {
                 val builder = AlertDialog.Builder(itemView.context)
 
-                builder.setMessage(HtmlCompat.fromHtml("Anda yakin ingin menghapus <b>${barang.merek}</b> <b>${barang.model}</b> dari Keranjang Anda?",HtmlCompat.FROM_HTML_MODE_LEGACY))
+                builder.setMessage(
+                    HtmlCompat.fromHtml(
+                        "Anda yakin ingin menghapus <b>${barang.merek}</b> <b>${barang.model}</b> dari Keranjang Anda?",
+                        HtmlCompat.FROM_HTML_MODE_LEGACY
+                    )
+                )
                     .setTitle("Konfirmasi")
 
                 builder.setPositiveButton("Ya") { dialog, which ->
-                    if (listKeranjang.size <= 1){
+                    if (listKeranjang.size <= 1) {
                         listKeranjang.clear()
                         notifyItemChanged(position)
                     }
                     barang.let { mBarang ->
-                        db.collection("pengguna").document(pelangganId).collection("keranjang").document(mBarang.barangId)
-                            .delete()
-                            .addOnSuccessListener {
-                                Toast.makeText(
-                                    itemView.context,
-                                    "${mBarang.merek} ${mBarang.model} berhasil dihapus",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                        db.collection("pengguna").addSnapshotListener { value, error ->
+                            if (error != null) {
+                                Log.w("Error", "Error deleting document", error)
+                                return@addSnapshotListener
                             }
-                            .addOnFailureListener { e -> Log.w("Error", "Error deleting document", e) }
+                            if (value != null) {
+                                for (document in value) {
+                                    if (document.getString("id") == pelangganId) {
+                                        document.reference.collection("keranjang")
+                                            .document(mBarang.barangId).delete()
+                                            .addOnSuccessListener {
+                                                Toast.makeText(
+                                                    itemView.context,
+                                                    "${mBarang.merek} ${mBarang.model} berhasil dihapus",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                            .addOnFailureListener { e ->
+                                                Log.w(
+                                                    "Error",
+                                                    "Error deleting document",
+                                                    e
+                                                )
+                                            }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 

@@ -2,8 +2,6 @@ package com.example.bukalaptop.pelanggan.signup
 
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
-import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -36,9 +34,6 @@ class DataDiriFragment : Fragment() {
 
         val dataEmail=DataDiriFragmentArgs.fromBundle(arguments as Bundle).email
         val dataPassword=DataDiriFragmentArgs.fromBundle(arguments as Bundle).password
-
-        Log.d("mData", "onViewCreated: $dataEmail")
-        Log.d("mData", "onViewCreated: $dataPassword")
 
         with(binding) {
             ibNext.isEnabled = false

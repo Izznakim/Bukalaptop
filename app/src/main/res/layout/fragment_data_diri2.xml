@@ -7,9 +7,22 @@
     android:orientation="vertical"
     tools:context=".pelanggan.signup.DataDiri2Fragment">
 
+    <ImageView
+        android:id="@+id/iv_ktp"
+        android:layout_width="match_parent"
+        android:layout_height="270dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/background_with_stroke"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView25"
+        app:srcCompat="@drawable/baseline_add_a_photo_24" />
+
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_ktp"

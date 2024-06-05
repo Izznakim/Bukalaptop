@@ -8,7 +8,7 @@ data class Pelanggan(
     val namaLengkap: String = "",
     val username: String = "",
     val email: String = "",
-    val alamatAsal: String = "",
-    val nomorTelepon: String = "",
-    val fotoKtp: String = ""
+    val nomorHp: String = "",
+    val fotoKtp: String = "",
+    val nomorKtp: String = ""
 ) : Parcelable

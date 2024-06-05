@@ -26,7 +26,6 @@ class ProfilPelangganFragment : Fragment() {
     private lateinit var tvUsername: TextView
     private lateinit var tvEmail: TextView
     private lateinit var tvNomorTelpon: TextView
-    private lateinit var tvAlamatAsal: TextView
     private lateinit var tvProgress: TextView
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
@@ -51,7 +50,6 @@ class ProfilPelangganFragment : Fragment() {
         tvUsername = view.findViewById(R.id.tv_username)
         tvEmail = view.findViewById(R.id.tv_email)
         tvNomorTelpon = view.findViewById(R.id.tv_nomor_telpon)
-        tvAlamatAsal = view.findViewById(R.id.tv_alamat_asal)
 
         builder = AlertDialog.Builder(requireContext())
         val inflater=layoutInflater
@@ -77,7 +75,7 @@ class ProfilPelangganFragment : Fragment() {
                 }
                 if (value != null) {
                     for (document in value) {
-                        if (document.id == pelangganId) {
+                        if (document.getString("id") == pelangganId) {
                             pelanggan = document.toObject(Pelanggan::class.java)
                             Glide.with(requireContext())
                                 .load(pelanggan.fotoKtp)
@@ -86,8 +84,7 @@ class ProfilPelangganFragment : Fragment() {
                             tvNamaLengkap.text = pelanggan.namaLengkap
                             tvUsername.text = pelanggan.username
                             tvEmail.text = pelanggan.email
-                            tvNomorTelpon.text = pelanggan.nomorTelepon
-                            tvAlamatAsal.text = pelanggan.alamatAsal
+                            tvNomorTelpon.text = pelanggan.nomorHp
                         }
                     }
                 }
