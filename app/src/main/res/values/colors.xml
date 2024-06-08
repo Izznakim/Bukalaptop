@@ -7,4 +7,6 @@
     <color name="gray">#808080</color>
     <color name="yelowrangeLight">#FFBB46</color>
     <color name="blue">#1E90FF</color>
+    <color name="green">#00FF00</color>
+    <color name="default_card_color">#FFFFFF</color>
 </resources>

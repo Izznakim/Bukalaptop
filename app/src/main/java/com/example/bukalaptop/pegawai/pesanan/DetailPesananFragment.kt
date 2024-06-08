@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.cardview.widget.CardView
+import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -30,6 +31,7 @@ import com.example.bukalaptop.model.Pelanggan
 import com.example.bukalaptop.model.Pesanan
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Currency
@@ -49,6 +51,7 @@ class DetailPesananFragment : Fragment() {
     private lateinit var ivBukti: ImageView
     private lateinit var btnTerima: Button
     private lateinit var btnTolak: Button
+    private lateinit var btnDikembalikan: Button
     private lateinit var rvKeranjang: RecyclerView
     private lateinit var listKeranjangAdapter: ListKeranjangAdapter
     private lateinit var listKeranjang: ArrayList<Keranjang>
@@ -81,6 +84,7 @@ class DetailPesananFragment : Fragment() {
         tvTotal = view.findViewById(R.id.tv_total)
         btnTolak = view.findViewById(R.id.btn_tolak)
         btnTerima = view.findViewById(R.id.btn_terima)
+        btnDikembalikan = view.findViewById(R.id.btn_dikembalikan)
         ivBukti = view.findViewById(R.id.iv_bukti)
         tvAlamat = view.findViewById(R.id.tv_alamat)
 
@@ -121,6 +125,7 @@ class DetailPesananFragment : Fragment() {
         val pesananId: String
 
         val db = Firebase.firestore
+        val storageBuktiRef = FirebaseStorage.getInstance().getReference("bukti/")
         listKeranjang = arrayListOf()
 
         if (arguments != null) {
@@ -147,6 +152,16 @@ class DetailPesananFragment : Fragment() {
                             pesanan.alamat = document.getString("alamat")
                             pesanan.latitute = document.getDouble("latitude")
                             pesanan.longitude = document.getDouble("longitude")
+                            pesanan.status = document.getString("status").toString()
+
+                            if (pesanan.status == "diterima") {
+                                btnTerima.visibility = View.GONE
+                                btnTolak.visibility = View.GONE
+                            } else if (pesanan.status == "dikembalikan") {
+                                btnDikembalikan.visibility = View.VISIBLE
+                                btnTerima.visibility = View.INVISIBLE
+                                btnTolak.visibility = View.INVISIBLE
+                            }
                         }
                     }
 
@@ -252,9 +267,9 @@ class DetailPesananFragment : Fragment() {
                         parentFragmentManager.popBackStack()
                         progressDialog.dismiss()
                     }.addOnFailureListener {
-                    Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
-                    progressDialog.dismiss()
-                }
+                        Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
+                        progressDialog.dismiss()
+                    }
             }
             btnTolak.setOnClickListener {
                 tvProgress.text = "Memuat pesanan..."
@@ -269,9 +284,95 @@ class DetailPesananFragment : Fragment() {
                         parentFragmentManager.popBackStack()
                         progressDialog.dismiss()
                     }.addOnFailureListener {
-                    Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
-                    progressDialog.dismiss()
+                        Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
+                        progressDialog.dismiss()
+                    }
+            }
+
+            btnDikembalikan.setOnClickListener {
+                val builder = AlertDialog.Builder(requireContext())
+
+                builder.setMessage(
+                    HtmlCompat.fromHtml(
+                        "Anda yakin pelangan yang bersankutan sudah mengembalikan barang ini?",
+                        HtmlCompat.FROM_HTML_MODE_LEGACY
+                    )
+                )
+                    .setTitle("Konfirmasi")
+
+                builder.setPositiveButton("Ya") { dialog, which ->
+                    tvProgress.text = "Sedang menghapus riwayat pesanan..."
+                    progressDialog.show()
+                    db.collection("pesanan").document(pesananId).delete()
+                        .addOnSuccessListener {
+                            db.collection("pesanan").document(pesananId)
+                                .collection("keranjang")
+                                .get()
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        for (doc in task.result) {
+                                            db.collection("barang").document(doc.id)
+                                                .get().addOnCompleteListener {
+                                                    if (it.isSuccessful) {
+                                                        val stok =
+                                                            it.result.get("stok")
+                                                                .toString().toInt()
+                                                        val jumlah =
+                                                            doc.get("jumlah").toString()
+                                                                .toInt()
+                                                        db.collection("barang")
+                                                            .document(doc.id)
+                                                            .update(
+                                                                "stok",
+                                                                stok + jumlah
+                                                            )
+                                                        doc.reference.delete()
+                                                    }
+                                                }
+                                        }
+                                    } else {
+                                        Toast.makeText(
+                                            requireContext(),
+                                            task.exception.toString(),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            parentFragmentManager.popBackStack()
+                            Toast.makeText(
+                                requireContext(),
+                                "Berhasil dihapus",
+                                Toast.LENGTH_SHORT
+                            )
+                                .show()
+                        }.addOnFailureListener {
+                            Toast.makeText(
+                                requireContext(),
+                                it.toString(),
+                                Toast.LENGTH_SHORT
+                            )
+                                .show()
+                        }
+                    storageBuktiRef.child("${pesananId}.jpg").delete()
+                        .addOnSuccessListener {
+                            progressDialog.dismiss()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(
+                                requireContext(),
+                                e.toString(),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            progressDialog.dismiss()
+                        }
                 }
+
+                builder.setNegativeButton("Tidak") { dialog, which ->
+                    dialog.cancel()
+                }
+
+                val dialog = builder.create()
+                dialog.show()
             }
         }
     }

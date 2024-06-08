@@ -9,7 +9,6 @@ import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,6 +19,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
+import androidx.core.text.HtmlCompat
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -30,6 +31,7 @@ import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.model.Pesanan
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
@@ -191,7 +193,65 @@ class DetailRiwayatFragment : Fragment() {
                                             val phone = etNomorWa.text
                                             intentToWhatsApp(phone)
                                         }
-                                        btnHapus.text = "Hapus pesanan"
+//                                      ---------------------------------------------- Pengetesan
+//                                        val handler = Handler(Looper.getMainLooper())
+//                                        val currentTime = Calendar.getInstance().timeInMillis
+//
+//                                        val targetCalendar = Calendar.getInstance().apply {
+//
+//                                            set(2024, Calendar.JUNE, 5, 15, 45, 0)
+//                                        }
+//                                        val targetTime = targetCalendar.timeInMillis
+//
+//                                        val delay = targetTime - currentTime
+//
+//                                        btnHapus.isEnabled = false
+//                                        btnHapus.text =
+//                                            "Barang akan kami ambil pada tanggal ${tvTglPengambilan.text}"
+//
+//                                        if (delay > 0) {
+//                                            handler.postDelayed({
+//                                                btnHapus.isEnabled = true
+//                                                btnHapus.text = "Barang sudah dikembalikan?"
+//                                            }, delay)
+//                                        }
+//                                      ---------------------------------------------------------------------
+                                        val tanggalSaatIni = Date()
+
+                                        if (pesanan.tglPengambilan != null && tanggalSaatIni >= pesanan.tglPengambilan) {
+                                            btnHapus.isEnabled = true
+                                            btnHapus.text = "Barang sudah dikembalikan?"
+                                        } else {
+                                            btnHapus.isEnabled = false
+                                            btnHapus.text =
+                                                "Barang akan kami ambil pada tanggal ${tvTglPengambilan.text}"
+                                        }
+//                                      ----------------------------------------------------------------------------
+                                        btnHapus.setOnClickListener {
+
+                                            val builder = AlertDialog.Builder(requireContext())
+
+                                            builder.setMessage(
+                                                HtmlCompat.fromHtml(
+                                                    "Anda yakin sudah mengembalikan barang ini?",
+                                                    HtmlCompat.FROM_HTML_MODE_LEGACY
+                                                )
+                                            )
+                                                .setTitle("Konfirmasi")
+
+                                            builder.setPositiveButton("Ya") { dialog, which ->
+                                                db.collection("pesanan")
+                                                    .document(pesananId)
+                                                    .update("status", "dikembalikan")
+                                            }
+
+                                            builder.setNegativeButton("Tidak") { dialog, which ->
+                                                dialog.cancel()
+                                            }
+
+                                            val dialog = builder.create()
+                                            dialog.show()
+                                        }
                                     }
 
                                     "ditolak" -> {
@@ -204,6 +264,7 @@ class DetailRiwayatFragment : Fragment() {
                                             intentToWhatsApp(phone)
                                         }
                                         btnHapus.text = "Hapus pesanan"
+                                        HapusRiwayat(db, pesananId)
                                     }
 
                                     "netral" -> {
@@ -214,75 +275,20 @@ class DetailRiwayatFragment : Fragment() {
                                             intentToWhatsApp(phone)
                                         }
                                         btnHapus.text = "Batalkan pemesanan"
+                                        HapusRiwayat(db, pesananId)
+                                    }
+
+                                    "dikembalikan" -> {
+                                        tvValidasi.text =
+                                            "RIWAYAT PESANAN INI AKAN TERHAPUS OTOMATIS SETELAH KONFIRMASI PENGEMBALIAN BARANG DITERIMA PEGAWAI.\nHubungi nomor di bawah ini untuk informasi lebih lanjut."
+                                        etNomorWa.setOnClickListener {
+                                            val phone = etNomorWa.text
+                                            intentToWhatsApp(phone)
+                                        }
+
+                                        btnHapus.visibility = View.INVISIBLE
                                     }
                                 }
-                            }
-
-                            btnHapus.setOnClickListener {
-                                tvProgress.text = "Sedang menghapus riwayat pesanan..."
-                                progressDialog.show()
-                                db.collection("pesanan").document(pesananId).delete()
-                                    .addOnSuccessListener {
-                                        db.collection("pesanan").document(pesananId)
-                                            .collection("keranjang")
-                                            .get()
-                                            .addOnCompleteListener { task ->
-                                                if (task.isSuccessful) {
-                                                    for (doc in task.result) {
-                                                        db.collection("barang").document(doc.id)
-                                                            .get().addOnCompleteListener {
-                                                                if (it.isSuccessful) {
-                                                                    val stok =
-                                                                        it.result.get("stok")
-                                                                            .toString().toInt()
-                                                                    val jumlah =
-                                                                        doc.get("jumlah").toString()
-                                                                            .toInt()
-                                                                    db.collection("barang")
-                                                                        .document(doc.id)
-                                                                        .update(
-                                                                            "stok",
-                                                                            stok + jumlah
-                                                                        )
-                                                                    doc.reference.delete()
-                                                                }
-                                                            }
-                                                    }
-                                                } else {
-                                                    Toast.makeText(
-                                                        requireContext(),
-                                                        task.exception.toString(),
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
-                                                }
-                                            }
-                                        parentFragmentManager.popBackStack()
-                                        Toast.makeText(
-                                            requireContext(),
-                                            "Berhasil dihapus",
-                                            Toast.LENGTH_SHORT
-                                        )
-                                            .show()
-                                    }.addOnFailureListener {
-                                        Toast.makeText(
-                                            requireContext(),
-                                            it.toString(),
-                                            Toast.LENGTH_SHORT
-                                        )
-                                            .show()
-                                    }
-                                storageBuktiRef.child("${pesananId}.jpg").delete()
-                                    .addOnSuccessListener {
-                                        progressDialog.dismiss()
-                                    }
-                                    .addOnFailureListener { e ->
-                                        Toast.makeText(
-                                            requireContext(),
-                                            e.toString(),
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        progressDialog.dismiss()
-                                    }
                             }
 
                             if (pesanan.idPelanggan == pelangganId) {
@@ -323,6 +329,75 @@ class DetailRiwayatFragment : Fragment() {
                 }
                 progressDialog.dismiss()
             }
+        }
+    }
+
+    private fun HapusRiwayat(db: FirebaseFirestore, pesananId: String) {
+        btnHapus.setOnClickListener {
+            tvProgress.text = "Sedang menghapus riwayat pesanan..."
+            progressDialog.show()
+            db.collection("pesanan").document(pesananId).delete()
+                .addOnSuccessListener {
+                    db.collection("pesanan").document(pesananId)
+                        .collection("keranjang")
+                        .get()
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                for (doc in task.result) {
+                                    db.collection("barang").document(doc.id)
+                                        .get().addOnCompleteListener {
+                                            if (it.isSuccessful) {
+                                                val stok =
+                                                    it.result.get("stok")
+                                                        .toString().toInt()
+                                                val jumlah =
+                                                    doc.get("jumlah").toString()
+                                                        .toInt()
+                                                db.collection("barang")
+                                                    .document(doc.id)
+                                                    .update(
+                                                        "stok",
+                                                        stok + jumlah
+                                                    )
+                                                doc.reference.delete()
+                                            }
+                                        }
+                                }
+                            } else {
+                                Toast.makeText(
+                                    requireContext(),
+                                    task.exception.toString(),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    parentFragmentManager.popBackStack()
+                    Toast.makeText(
+                        requireContext(),
+                        "Berhasil dihapus",
+                        Toast.LENGTH_SHORT
+                    )
+                        .show()
+                }.addOnFailureListener {
+                    Toast.makeText(
+                        requireContext(),
+                        it.toString(),
+                        Toast.LENGTH_SHORT
+                    )
+                        .show()
+                }
+            storageBuktiRef.child("${pesananId}.jpg").delete()
+                .addOnSuccessListener {
+                    progressDialog.dismiss()
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(
+                        requireContext(),
+                        e.toString(),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    progressDialog.dismiss()
+                }
         }
     }
 
