@@ -193,29 +193,7 @@ class DetailRiwayatFragment : Fragment() {
                                             val phone = etNomorWa.text
                                             intentToWhatsApp(phone)
                                         }
-//                                      ---------------------------------------------- Pengetesan
-//                                        val handler = Handler(Looper.getMainLooper())
-//                                        val currentTime = Calendar.getInstance().timeInMillis
-//
-//                                        val targetCalendar = Calendar.getInstance().apply {
-//
-//                                            set(2024, Calendar.JUNE, 5, 15, 45, 0)
-//                                        }
-//                                        val targetTime = targetCalendar.timeInMillis
-//
-//                                        val delay = targetTime - currentTime
-//
-//                                        btnHapus.isEnabled = false
-//                                        btnHapus.text =
-//                                            "Barang akan kami ambil pada tanggal ${tvTglPengambilan.text}"
-//
-//                                        if (delay > 0) {
-//                                            handler.postDelayed({
-//                                                btnHapus.isEnabled = true
-//                                                btnHapus.text = "Barang sudah dikembalikan?"
-//                                            }, delay)
-//                                        }
-//                                      ---------------------------------------------------------------------
+
                                         val tanggalSaatIni = Date()
 
                                         if (pesanan.tglPengambilan != null && tanggalSaatIni >= pesanan.tglPengambilan) {
@@ -226,7 +204,7 @@ class DetailRiwayatFragment : Fragment() {
                                             btnHapus.text =
                                                 "Barang akan kami ambil pada tanggal ${tvTglPengambilan.text}"
                                         }
-//                                      ----------------------------------------------------------------------------
+
                                         btnHapus.setOnClickListener {
 
                                             val builder = AlertDialog.Builder(requireContext())

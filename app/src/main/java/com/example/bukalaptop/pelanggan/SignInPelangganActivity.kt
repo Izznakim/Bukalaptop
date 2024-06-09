@@ -24,7 +24,6 @@ class SignInPelangganActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var etEmail: EditText
     private lateinit var etPassword: EditText
-    private lateinit var tvLupaPassword: TextView
     private lateinit var btnSignIn: Button
     private lateinit var tvSignUp: TextView
     private lateinit var tvProgress: TextView

@@ -1,7 +1,11 @@
 package com.example.bukalaptop.pegawai.pesanan
 
 import android.content.Intent
+import android.graphics.Paint
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.text.Editable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -23,6 +27,7 @@ class ProfilPelangganFragment : Fragment() {
 
     private lateinit var ivKtpPelanggan: ImageView
     private lateinit var tvNamaLengkap: TextView
+    private lateinit var tvNomorKtp: TextView
     private lateinit var tvUsername: TextView
     private lateinit var tvEmail: TextView
     private lateinit var tvNomorTelpon: TextView
@@ -47,6 +52,7 @@ class ProfilPelangganFragment : Fragment() {
 
         ivKtpPelanggan = view.findViewById(R.id.iv_ktp_pelanggan)
         tvNamaLengkap = view.findViewById(R.id.tv_nama_lengkap)
+        tvNomorKtp = view.findViewById(R.id.tv_nomor_ktp)
         tvUsername = view.findViewById(R.id.tv_username)
         tvEmail = view.findViewById(R.id.tv_email)
         tvNomorTelpon = view.findViewById(R.id.tv_nomor_telpon)
@@ -59,6 +65,8 @@ class ProfilPelangganFragment : Fragment() {
         progressDialog = builder.create()
 
         tvProgress=dialogView.findViewById(R.id.tv_progress)
+
+        tvNomorTelpon.paintFlags = tvNomorTelpon.paintFlags or Paint.UNDERLINE_TEXT_FLAG
 
         val db = Firebase.firestore
         var pelanggan = Pelanggan()
@@ -82,6 +90,7 @@ class ProfilPelangganFragment : Fragment() {
                                 .apply(RequestOptions())
                                 .into(ivKtpPelanggan)
                             tvNamaLengkap.text = pelanggan.namaLengkap
+                            tvNomorKtp.text = pelanggan.nomorKtp
                             tvUsername.text = pelanggan.username
                             tvEmail.text = pelanggan.email
                             tvNomorTelpon.text = pelanggan.nomorHp
@@ -97,6 +106,10 @@ class ProfilPelangganFragment : Fragment() {
                 it.putExtra(ZoomImageActivity.EXTRA_IMAGE, pelanggan.fotoKtp)
                 startActivity(it)
             }
+        }
+
+        tvNomorTelpon.setOnClickListener {
+            intentToWhatsApp(tvNomorTelpon.text.toString())
         }
 
         val callback = object : OnBackPressedCallback(true) {
@@ -118,5 +131,27 @@ class ProfilPelangganFragment : Fragment() {
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+    }
+
+    private fun intentToWhatsApp(phone: String) {
+        val packageManager = context?.packageManager
+        val intent = Intent(Intent.ACTION_VIEW)
+
+        if (packageManager != null) {
+            try {
+                val url = "https://api.whatsapp.com/send?phone=$phone"
+                intent.setPackage("com.whatsapp")
+                intent.data = Uri.parse(url)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    context?.startActivity(intent)
+                } else {
+                    if (intent.resolveActivity(packageManager) != null) {
+                        context?.startActivity(intent)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }
