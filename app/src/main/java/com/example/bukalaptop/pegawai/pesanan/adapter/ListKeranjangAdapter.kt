@@ -77,7 +77,7 @@ class ListKeranjangAdapter(
             tvMerek.text = barang.merek
             tvModel.text = barang.model
             tvProsesor.text = barang.prosesor
-            tvBiayaSewa.text = "${currencyFormat.format(barang.biayaSewa)}/Unit"
+            tvBiayaSewa.text = "${currencyFormat.format(barang.biayaSewa)}/Hari"
             tvJumlah.text = "$jumlah Unit"
             tvSubtotal.text = currencyFormat.format(barang.biayaSewa * jumlah)
             btnHapus.setOnClickListener {

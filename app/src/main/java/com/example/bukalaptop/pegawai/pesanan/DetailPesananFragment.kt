@@ -301,7 +301,7 @@ class DetailPesananFragment : Fragment() {
                     .setTitle("Konfirmasi")
 
                 builder.setPositiveButton("Ya") { dialog, which ->
-                    tvProgress.text = "Sedang menghapus riwayat pesanan..."
+                    tvProgress.text = "Sedang menghapus pesanan..."
                     progressDialog.show()
                     db.collection("pesanan").document(pesananId).delete()
                         .addOnSuccessListener {
@@ -341,7 +341,7 @@ class DetailPesananFragment : Fragment() {
                             parentFragmentManager.popBackStack()
                             Toast.makeText(
                                 requireContext(),
-                                "Berhasil dihapus",
+                                "Pesanan telah dihapus.",
                                 Toast.LENGTH_SHORT
                             )
                                 .show()

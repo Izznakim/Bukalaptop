@@ -11,7 +11,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
@@ -32,12 +32,10 @@ import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
-import com.google.firebase.storage.UploadTask
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -120,20 +118,20 @@ class UpdateBarangFragment : Fragment() {
         btnBatal = view.findViewById(R.id.btn_batal)
 
         builder = AlertDialog.Builder(requireContext())
-        val inflater=layoutInflater
-        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.progress_layout, null)
         builder.setView(dialogView)
         builder.setCancelable(false)
         progressDialog = builder.create()
 
-        tvProgress=dialogView.findViewById(R.id.tv_progress)
+        tvProgress = dialogView.findViewById(R.id.tv_progress)
 
-        var barangId=""
-        var barangImageUrl=""
+        var barangId = ""
+        var barangImageUrl = ""
 
         if (arguments != null) {
             barang = arguments?.getParcelable(DetailBarangFragment.EXTRA_BARANG)
-            barangImageUrl= barang?.fotoBarang.toString()
+            barangImageUrl = barang?.fotoBarang.toString()
             Glide.with(requireContext())
                 .load(barang?.fotoBarang)
                 .apply(RequestOptions())
@@ -151,7 +149,7 @@ class UpdateBarangFragment : Fragment() {
             etKondisi.setText(barang?.kondisi ?: "")
             etBiayaSewa.setText(barang?.biayaSewa.toString())
             etStok.setText(barang?.stok.toString())
-            barangId=barang?.barangId.toString()
+            barangId = barang?.barangId.toString()
         }
 
         val callback = object : OnBackPressedCallback(true) {
@@ -259,52 +257,39 @@ class UpdateBarangFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            tvProgress.text="Memperbarui barang..."
+            tvProgress.text = "Memperbarui barang..."
             progressDialog.show()
             GlobalScope.launch(Dispatchers.IO) {
                 try {
-                    getImageUriFromUrl(barangImageUrl){
+                    getImageUriFromUrl(barangImageUrl) {
                         if (it != null) {
                             ivEditBarang.setImageURI(it)
                             imageUri = it
                         } else {
-                            Toast.makeText(requireContext(), "Gagal mengunduh gambar", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                requireContext(),
+                                "Gagal mengunduh gambar",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
 
                     val imageRef = storageRef.child("barang/${barangId}.jpg")
 
-                    val uploadTask = imageRef.putFile(imageUri!!)
-
-                    uploadTask.addOnSuccessListener {
-                        imageRef.downloadUrl.addOnSuccessListener { uri ->
-                            val imageUrl = if (imageUri==null){
-                                barangImageUrl
-                            }else {
-                                uri.toString()
+                    if (imageUri != null) {
+                        val uploadTask = imageRef.putFile(imageUri!!)
+                        uploadTask.addOnSuccessListener {
+                            imageRef.downloadUrl.addOnSuccessListener { uri ->
+                                uploadDatabase(barangId, uri.toString())
                             }
-                            databaseRef.collection("barang").document(barangId)
-                                .update(
-                                    "fotoBarang", imageUrl,
-                                    "barangId", barangId,
-                                    "merek", merek,
-                                    "model", model,
-                                    "prosesor", prosesor,
-                                    "ram", ram,
-                                    "sistemOperasi", os,
-                                    "kartuGrafis", grafis,
-                                    "penyimpanan", penyimpanan,
-                                    "ukuranLayar", ukuranLayar,
-                                    "perangkatLunak", perangkatLunak,
-                                    "aksesoris", aksesoris,
-                                    "kondisi", kondisi,
-                                    "biayaSewa", biayaSewa,
-                                    "stok", stok,
-                                )
+                            progressDialog.dismiss()
                         }
+                    } else {
+                        uploadDatabase(barangId, barangImageUrl)
                         progressDialog.dismiss()
                     }
-                }catch (e:IOException){
+
+                } catch (e: IOException) {
                     e.printStackTrace()
                 }
             }
@@ -314,6 +299,27 @@ class UpdateBarangFragment : Fragment() {
         btnBatal.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
+    }
+
+    private fun uploadDatabase(barangId: String, imageUrl: String) {
+        databaseRef.collection("barang").document(barangId)
+            .update(
+                "fotoBarang", imageUrl,
+                "barangId", barangId,
+                "merek", merek,
+                "model", model,
+                "prosesor", prosesor,
+                "ram", ram,
+                "sistemOperasi", os,
+                "kartuGrafis", grafis,
+                "penyimpanan", penyimpanan,
+                "ukuranLayar", ukuranLayar,
+                "perangkatLunak", perangkatLunak,
+                "aksesoris", aksesoris,
+                "kondisi", kondisi,
+                "biayaSewa", biayaSewa,
+                "stok", stok,
+            )
     }
 
     override fun onResume() {
@@ -343,9 +349,6 @@ class UpdateBarangFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                (context as Activity).runOnUiThread {
-                    callback(null)
-                }
             }
         }.start()
     }
@@ -364,11 +367,13 @@ class UpdateBarangFragment : Fragment() {
                         put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
                     }
 
-                    imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                    imageUri =
+                        resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
                     fos = imageUri?.let { resolver.openOutputStream(it) }
                 }
             } else {
-                val imagesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                val imagesDir =
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
                 val image = File(imagesDir, filename)
                 fos = FileOutputStream(image)
                 imageUri = Uri.fromFile(image)
@@ -465,7 +470,8 @@ class UpdateBarangFragment : Fragment() {
                     ivEditBarang.setImageURI(it)
                 }
             } else {
-                Toast.makeText(requireContext(), "Failed to capture image", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Failed to capture image", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
 

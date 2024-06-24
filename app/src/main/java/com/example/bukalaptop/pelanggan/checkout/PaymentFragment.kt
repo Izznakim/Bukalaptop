@@ -35,6 +35,10 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.text.NumberFormat
@@ -518,14 +522,27 @@ class PaymentFragment : Fragment() {
     }
 
     private fun getAddressFromLocation(latitude: Double, longitude: Double) {
-        val geocoder = Geocoder(requireContext(), Locale.getDefault())
-        val addresses: List<Address>? = geocoder.getFromLocation(latitude, longitude, 1)
-        if (!addresses.isNullOrEmpty()) {
-            val address: Address = addresses[0]
-            val addressText = address.getAddressLine(0)
-            tvAlamat.text = addressText
-        } else {
-            tvAlamat.text = "Alamat tidak ditemukan"
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val geocoder = Geocoder(requireContext(), Locale.getDefault())
+                val addresses: List<Address>? = geocoder.getFromLocation(latitude, longitude, 1)
+                if (!addresses.isNullOrEmpty()) {
+                    val address: Address = addresses[0]
+                    val addressText = address.getAddressLine(0)
+                    tvAlamat.text = addressText
+                } else {
+                    tvAlamat.text = "Alamat tidak ditemukan"
+                }
+            } catch (e: IOException) {
+                withContext(Dispatchers.Main) {
+                    // Handle IOException, such as network or other I/O problems
+                    Toast.makeText(
+                        requireContext(),
+                        "Unable to fetch address: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
         }
     }
 
