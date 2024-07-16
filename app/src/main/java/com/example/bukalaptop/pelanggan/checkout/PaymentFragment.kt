@@ -3,8 +3,12 @@ package com.example.bukalaptop.pelanggan.checkout
 import android.Manifest
 import android.app.Activity
 import android.app.DatePickerDialog
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.graphics.Paint
 import android.location.Address
 import android.location.Geocoder
@@ -13,6 +17,10 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,6 +32,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import com.example.bukalaptop.R
@@ -59,6 +68,7 @@ class PaymentFragment : Fragment() {
     private lateinit var tvTotal: TextView
     private lateinit var tvAlamat: TextView
     private lateinit var ivMyLoc: ImageView
+    private lateinit var tvPaymentInfo: TextView
     private lateinit var ivBuktiPembayaran: ImageView
     private lateinit var btnSewa: Button
     private lateinit var storageRef: StorageReference
@@ -102,6 +112,7 @@ class PaymentFragment : Fragment() {
         btnPengambilan = view.findViewById(R.id.btn_pengambilan)
         tvTotal = view.findViewById(R.id.tv_total)
         ivMyLoc = view.findViewById(R.id.iv_my_loc)
+        tvPaymentInfo = view.findViewById(R.id.tv_payment_info)
         tvAlamat = view.findViewById(R.id.tv_alamat)
         ivBuktiPembayaran = view.findViewById(R.id.iv_bukti_pembayaran)
         btnSewa = view.findViewById(R.id.btn_sewa)
@@ -114,6 +125,31 @@ class PaymentFragment : Fragment() {
         progressDialog = builder.create()
 
         tvProgress = dialogView.findViewById(R.id.tv_progress)
+
+        val fullText =
+            "Untuk pembayarannya di mohon untuk mengirim ke nomor rekening 4452120121 (BCA) atas nama 'Mataram Teknologi Indonesia' dan mengupload bukti transfernya."
+        val nomorRekening = "4452120121"
+
+        val spannableString = SpannableString(fullText)
+        val startIndex = fullText.indexOf(nomorRekening)
+        val endIndex = startIndex + nomorRekening.length
+
+        val clickableSpan = object : ClickableSpan() {
+            override fun onClick(widget: View) {
+                copyToClipboard(nomorRekening)
+            }
+
+            override fun updateDrawState(ds: android.text.TextPaint) {
+                super.updateDrawState(ds)
+                ds.isUnderlineText = false
+                ds.color = Color.BLUE
+            }
+        }
+
+        spannableString.setSpan(clickableSpan, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        tvPaymentInfo.text = spannableString
+        tvPaymentInfo.movementMethod = LinkMovementMethod.getInstance()
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
@@ -307,6 +343,13 @@ class PaymentFragment : Fragment() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
     }
 
+    private fun copyToClipboard(text: String) {
+        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("Nomor Rekening", text)
+        clipboard.setPrimaryClip(clip)
+        Toast.makeText(requireContext(), "Nomor rekening telah disalin", Toast.LENGTH_SHORT).show()
+    }
+
     fun hitungSelisihHari(tanggal1: Calendar, tanggal2: Calendar): Long {
         val waktu1 = tanggal1.timeInMillis
         val waktu2 = tanggal2.timeInMillis
@@ -447,7 +490,7 @@ class PaymentFragment : Fragment() {
                     ivBuktiPembayaran.setImageURI(it)
                 }
             } else {
-                Toast.makeText(requireContext(), "Failed to capture image", Toast.LENGTH_SHORT)
+                Toast.makeText(requireContext(), "Gagal mengambil gambar", Toast.LENGTH_SHORT)
                     .show()
             }
         }

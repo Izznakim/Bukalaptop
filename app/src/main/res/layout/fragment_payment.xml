@@ -131,12 +131,12 @@
             android:layout_height="wrap_content"
             android:backgroundTint="#000000"
             android:src="@drawable/baseline_my_location_24"
-            app:layout_constraintBottom_toTopOf="@+id/textView23"
+            app:layout_constraintBottom_toTopOf="@+id/tv_payment_info"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_total" />
 
         <TextView
-            android:id="@+id/textView23"
+            android:id="@+id/tv_payment_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
@@ -152,7 +152,7 @@
             android:layout_marginTop="8dp"
             android:text="Upload bukti transfer"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView23" />
+            app:layout_constraintTop_toBottomOf="@+id/tv_payment_info" />
 
         <ImageView
             android:id="@+id/iv_bukti_pembayaran"
