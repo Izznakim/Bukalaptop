@@ -123,7 +123,7 @@ class TambahBarangFragment : Fragment() {
             merek = etMerek.text.toString()
             model = etModel.text.toString()
             prosesor = etProsesor.text.toString()
-            ram = etRam.text.toString()
+            ram = etRam.text.toString()+" GB"
             os = etOs.text.toString()
             grafis = etGrafis.text.toString()
             penyimpanan = etPenyimpanan.text.toString()

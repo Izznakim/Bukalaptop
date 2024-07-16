@@ -139,7 +139,7 @@ class UpdateBarangFragment : Fragment() {
             etMerek.setText(barang?.merek ?: "")
             etModel.setText(barang?.model ?: "")
             etProsesor.setText(barang?.prosesor ?: "")
-            etRam.setText(barang?.ram ?: "")
+            etRam.setText(barang?.ram?.split(" ")?.take(1)?.joinToString(" ") ?: "")
             etOs.setText(barang?.sistemOperasi ?: "")
             etGrafis.setText(barang?.kartuGrafis ?: "")
             etPenyimpanan.setText(barang?.penyimpanan ?: "")
@@ -168,7 +168,7 @@ class UpdateBarangFragment : Fragment() {
             merek = etMerek.text.toString()
             model = etModel.text.toString()
             prosesor = etProsesor.text.toString()
-            ram = etRam.text.toString()
+            ram = etRam.text.toString()+" GB"
             os = etOs.text.toString()
             grafis = etGrafis.text.toString()
             penyimpanan = etPenyimpanan.text.toString()
