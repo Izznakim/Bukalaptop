@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.text.HtmlCompat
 import androidx.core.widget.doOnTextChanged
 import com.example.bukalaptop.R
 import com.example.bukalaptop.pelanggan.signup.SignUpPelangganActivity
@@ -24,6 +25,7 @@ class SignInPelangganActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var etEmail: EditText
     private lateinit var etPassword: EditText
+    private lateinit var tvLupaPassword: TextView
     private lateinit var btnSignIn: Button
     private lateinit var tvSignUp: TextView
     private lateinit var tvProgress: TextView
@@ -48,6 +50,7 @@ class SignInPelangganActivity : AppCompatActivity() {
 
         etEmail = findViewById(R.id.et_email)
         etPassword = findViewById(R.id.et_password)
+        tvLupaPassword = findViewById(R.id.tv_lupa_password)
         btnSignIn = findViewById(R.id.btn_signIn)
         tvSignUp = findViewById(R.id.tv_signUp)
 
@@ -61,6 +64,50 @@ class SignInPelangganActivity : AppCompatActivity() {
         tvProgress = dialogView.findViewById(R.id.tv_progress)
 
         btnSignIn.isEnabled = false
+
+        tvLupaPassword.setOnClickListener {
+            if (isEmailValid) {
+                val builder = android.app.AlertDialog.Builder(this)
+
+                builder.setMessage(
+                    HtmlCompat.fromHtml(
+                        "Apakah Anda sudah yakin ingin mereset password pada email <b>${etEmail.text}</b>?",
+                        HtmlCompat.FROM_HTML_MODE_LEGACY
+                    )
+                )
+                    .setTitle("Reset Password")
+
+                builder.setPositiveButton("Ya") { dialog, which ->
+                    tvProgress.text = "Mereset password..."
+                    progressDialog.show()
+                    auth.sendPasswordResetEmail(etEmail.text.toString())
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "Silahkan cek email Anda", Toast.LENGTH_LONG)
+                                .show()
+                            progressDialog.dismiss()
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(this, "Gagal mereset password: ${it.message}", Toast.LENGTH_SHORT)
+                                .show()
+                            progressDialog.dismiss()
+                        }
+                }
+
+                builder.setNegativeButton("Tidak") { dialog, which ->
+                    dialog.cancel()
+                }
+
+                val dialog = builder.create()
+                dialog.show()
+            } else {
+                Toast.makeText(
+                    this,
+                    "Masukkan email yang valid terlebih dahulu",
+                    Toast.LENGTH_SHORT
+                ).show()
+                etEmail.requestFocus()
+            }
+        }
 
         etEmail.doOnTextChanged { text, _, _, _ ->
             if (text != null) {
