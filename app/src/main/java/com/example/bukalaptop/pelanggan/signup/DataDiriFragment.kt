@@ -2,6 +2,7 @@ package com.example.bukalaptop.pelanggan.signup
 
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +17,7 @@ class DataDiriFragment : Fragment() {
     private var isNamaValid = false
     private var isUsernameValid = false
     private var isPhoneValid = false
+    private var dataEnable = false
 
     private var _binding: FragmentDataDiriBinding? = null
     private val binding get() = _binding!!
@@ -34,9 +36,17 @@ class DataDiriFragment : Fragment() {
 
         val dataEmail=DataDiriFragmentArgs.fromBundle(arguments as Bundle).email
         val dataPassword=DataDiriFragmentArgs.fromBundle(arguments as Bundle).password
+        val dataNama = DataDiriFragmentArgs.fromBundle(arguments as Bundle).namaLengkap
+        val dataUsername = DataDiriFragmentArgs.fromBundle(arguments as Bundle).username
+        val dataNomorHp = DataDiriFragmentArgs.fromBundle(arguments as Bundle).nomorHp
+        dataEnable = DataDiriFragmentArgs.fromBundle(arguments as Bundle).isEnable
 
         with(binding) {
-            ibNext.isEnabled = false
+            initSignUpButtonState()
+            etNama.setText(dataNama)
+            etUsername.setText(dataUsername)
+            etNomorHp.setText(dataNomorHp)
+
             etNama.doOnTextChanged { text, _, _, _ ->
                 if (text != null) {
                     if (text.isBlank()) {
@@ -91,17 +101,39 @@ class DataDiriFragment : Fragment() {
             }
 
             ibBack.setOnClickListener {
-                findNavController().navigate(R.id.action_dataDiriFragment_to_signUpFragment)
+                val toSignUpFragment = DataDiriFragmentDirections.actionDataDiriFragmentToSignUpFragment()
+                toSignUpFragment.email = dataEmail
+                toSignUpFragment.password = dataPassword
+                toSignUpFragment.isEnable=true
+                findNavController().navigate(toSignUpFragment)
             }
         }
 
     }
 
-    private fun updateSignUpButtonState() {
-        binding.ibNext.isEnabled = isNamaValid && isUsernameValid && isPhoneValid
-        if (binding.ibNext.isEnabled){
+    private fun initSignUpButtonState() {
+        if (dataEnable){
+            binding.ibNext.isEnabled=true
+            isNamaValid = true
+            isUsernameValid = true
+            isPhoneValid = true
             binding.ibNext.setBackgroundColor(resources.getColor(R.color.yelowrangeLight))
         }else{
+            binding.ibNext.isEnabled=false
+            isNamaValid = false
+            isUsernameValid = false
+            isPhoneValid = false
+            binding.ibNext.setBackgroundColor(Color.GRAY)
+        }
+    }
+
+    private fun updateSignUpButtonState() {
+        dataEnable = isNamaValid && isUsernameValid && isPhoneValid
+        if (dataEnable){
+            binding.ibNext.isEnabled=true
+            binding.ibNext.setBackgroundColor(resources.getColor(R.color.yelowrangeLight))
+        }else{
+            binding.ibNext.isEnabled=false
             binding.ibNext.setBackgroundColor(Color.GRAY)
         }
     }

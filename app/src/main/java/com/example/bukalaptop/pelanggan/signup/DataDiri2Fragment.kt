@@ -193,7 +193,14 @@ class DataDiri2Fragment : Fragment() {
             }
 
             ibBack.setOnClickListener {
-                findNavController().navigate(R.id.action_dataDiri2Fragment_to_dataDiriFragment)
+                val toDataDiriFragment = DataDiri2FragmentDirections.actionDataDiri2FragmentToDataDiriFragment()
+                toDataDiriFragment.email = dataEmail
+                toDataDiriFragment.password = dataPassword
+                toDataDiriFragment.namaLengkap = dataNama
+                toDataDiriFragment.username = dataUsername
+                toDataDiriFragment.nomorHp = dataNomorHp
+                toDataDiriFragment.isEnable=true
+                findNavController().navigate(toDataDiriFragment)
             }
         }
     }

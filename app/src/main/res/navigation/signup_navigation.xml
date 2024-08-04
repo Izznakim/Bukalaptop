@@ -10,57 +10,101 @@
         android:name="com.example.bukalaptop.pelanggan.signup.SignUpFragment"
         android:label="fragment_sign_up"
         tools:layout="@layout/fragment_sign_up" >
+        <argument
+            android:name="email"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="password"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="namaLengkap"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="username"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="nomorHp"
+            app:argType="string"
+            android:defaultValue="" />
         <action
             android:id="@+id/action_signUpFragment_to_dataDiriFragment"
             app:destination="@id/dataDiriFragment" />
+        <argument
+            android:name="isEnable"
+            app:argType="boolean"
+            android:defaultValue="false" />
     </fragment>
     <fragment
         android:id="@+id/dataDiriFragment"
         android:name="com.example.bukalaptop.pelanggan.signup.DataDiriFragment"
         android:label="fragment_data_diri"
         tools:layout="@layout/fragment_data_diri" >
-        <action
-            android:id="@+id/action_dataDiriFragment_to_signUpFragment"
-            app:destination="@id/signUpFragment" />
         <argument
             android:name="email"
             app:argType="string"
-            android:defaultValue='""' />
+            android:defaultValue="" />
         <argument
             android:name="password"
             app:argType="string"
-            android:defaultValue='""' />
+            android:defaultValue="" />
+        <argument
+            android:name="namaLengkap"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="username"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="nomorHp"
+            app:argType="string"
+            android:defaultValue="" />
+        <action
+            android:id="@+id/action_dataDiriFragment_to_signUpFragment"
+            app:destination="@id/signUpFragment" />
         <action
             android:id="@+id/action_dataDiriFragment_to_dataDiri2Fragment"
             app:destination="@id/dataDiri2Fragment" />
+        <argument
+            android:name="isEnable"
+            app:argType="boolean"
+            android:defaultValue="false" />
     </fragment>
     <fragment
         android:id="@+id/dataDiri2Fragment"
         android:name="com.example.bukalaptop.pelanggan.signup.DataDiri2Fragment"
         android:label="fragment_data_diri2"
         tools:layout="@layout/fragment_data_diri2" >
+        <argument
+            android:name="email"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="password"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="namaLengkap"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="username"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="nomorHp"
+            app:argType="string"
+            android:defaultValue="" />
         <action
             android:id="@+id/action_dataDiri2Fragment_to_dataDiriFragment"
             app:destination="@id/dataDiriFragment" />
         <argument
-            android:name="email"
-            app:argType="string"
-            android:defaultValue='""' />
-        <argument
-            android:name="password"
-            app:argType="string"
-            android:defaultValue='""' />
-        <argument
-            android:name="namaLengkap"
-            app:argType="string"
-            android:defaultValue='""' />
-        <argument
-            android:name="username"
-            app:argType="string"
-            android:defaultValue='""' />
-        <argument
-            android:name="nomorHp"
-            app:argType="string"
-            android:defaultValue='""' />
+            android:name="isEnable"
+            app:argType="boolean"
+            android:defaultValue="false" />
     </fragment>
 </navigation>

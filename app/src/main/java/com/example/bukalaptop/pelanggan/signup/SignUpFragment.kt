@@ -21,6 +21,7 @@ class SignUpFragment : Fragment() {
     private var isEmailValid = false
     private var isPasswordValid = false
     private var isUlangPasswordValid = false
+    private var dataEnable = false
 
     private val binding get() = _binding!!
 
@@ -36,8 +37,18 @@ class SignUpFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val dataEmail=SignUpFragmentArgs.fromBundle(arguments as Bundle).email
+        val dataPassword=SignUpFragmentArgs.fromBundle(arguments as Bundle).password
+        val dataNama = SignUpFragmentArgs.fromBundle(arguments as Bundle).namaLengkap
+        val dataUsername = SignUpFragmentArgs.fromBundle(arguments as Bundle).username
+        val dataNomorHp = SignUpFragmentArgs.fromBundle(arguments as Bundle).nomorHp
+        dataEnable = SignUpFragmentArgs.fromBundle(arguments as Bundle).isEnable
+
         with(binding) {
-            ibNext.isEnabled = false
+            initSignUpButtonState()
+            etEmail.setText(dataEmail)
+            etPassword.setText(dataPassword)
+            etUlangiPassword.setText(dataPassword)
 
             etEmail.doOnTextChanged { text, _, _, _ ->
                 if (text != null) {
@@ -85,16 +96,37 @@ class SignUpFragment : Fragment() {
                 val toDataDiriFragment = SignUpFragmentDirections.actionSignUpFragmentToDataDiriFragment()
                 toDataDiriFragment.email = etEmail.text.toString()
                 toDataDiriFragment.password = etPassword.text.toString()
+                toDataDiriFragment.namaLengkap = dataNama
+                toDataDiriFragment.username = dataUsername
+                toDataDiriFragment.nomorHp = dataNomorHp
                 findNavController().navigate(toDataDiriFragment)
             }
         }
     }
 
-    private fun updateSignUpButtonState() {
-        binding.ibNext.isEnabled = isEmailValid && isPasswordValid && isUlangPasswordValid
-        if (binding.ibNext.isEnabled){
+    private fun initSignUpButtonState() {
+        if (dataEnable){
+            binding.ibNext.isEnabled=true
+            isEmailValid = true
+            isPasswordValid = true
+            isUlangPasswordValid = true
             binding.ibNext.setBackgroundColor(resources.getColor(R.color.yelowrangeLight))
         }else{
+            binding.ibNext.isEnabled=false
+            isEmailValid = false
+            isPasswordValid = false
+            isUlangPasswordValid = false
+            binding.ibNext.setBackgroundColor(Color.GRAY)
+        }
+    }
+
+    private fun updateSignUpButtonState() {
+        dataEnable = isEmailValid && isPasswordValid && isUlangPasswordValid
+        if (dataEnable){
+            binding.ibNext.isEnabled=true
+            binding.ibNext.setBackgroundColor(resources.getColor(R.color.yelowrangeLight))
+        }else{
+            binding.ibNext.isEnabled=false
             binding.ibNext.setBackgroundColor(Color.GRAY)
         }
     }
