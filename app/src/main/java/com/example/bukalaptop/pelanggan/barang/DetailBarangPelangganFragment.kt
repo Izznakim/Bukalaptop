@@ -25,6 +25,10 @@ import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.text.NumberFormat
 import java.util.Currency
 
@@ -206,9 +210,11 @@ class DetailBarangPelangganFragment : Fragment() {
                     if (value != null) {
                         for (document in value) {
                             if (document.getString("id") == auth.currentUser?.uid) {
-                                document.reference.collection("keranjang").document(barangId)
-                                    .set(keranjang)
-                                    .addOnSuccessListener {
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    try {
+                                        document.reference.collection("keranjang")
+                                            .document(barangId)
+                                            .set(keranjang).await()
                                         Toast.makeText(
                                             activity,
                                             "${barang.merek} ${barang.model} telah ditambahkan ke keranjang.",
@@ -216,30 +222,30 @@ class DetailBarangPelangganFragment : Fragment() {
                                         ).show()
 
                                         parentFragmentManager.popBackStack()
-                                        progressDialog.dismiss()
-                                    }
-                                    .addOnFailureListener { e ->
+                                    } catch (e: Exception) {
                                         Toast.makeText(
                                             requireContext(),
                                             e.toString(),
                                             Toast.LENGTH_SHORT
                                         ).show()
+                                    } finally {
                                         progressDialog.dismiss()
                                     }
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                parentFragmentManager.popBackStack()
+            val callback = object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    parentFragmentManager.popBackStack()
+                }
             }
-        }
 
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+            requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+        }
     }
 
     override fun onResume() {

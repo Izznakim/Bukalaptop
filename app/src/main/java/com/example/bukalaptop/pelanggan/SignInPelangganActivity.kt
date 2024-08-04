@@ -19,6 +19,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class SignInPelangganActivity : AppCompatActivity() {
 
@@ -77,23 +81,33 @@ class SignInPelangganActivity : AppCompatActivity() {
                 )
                     .setTitle("Reset Password")
 
-                builder.setPositiveButton("Ya") { dialog, which ->
-                    tvProgress.text = "Mereset password..."
-                    progressDialog.show()
-                    auth.sendPasswordResetEmail(etEmail.text.toString())
-                        .addOnSuccessListener {
-                            Toast.makeText(this, "Silahkan cek email Anda", Toast.LENGTH_LONG)
+                builder.setPositiveButton("Ya") { _, _ ->
+                    CoroutineScope(Dispatchers.Main).launch {
+                        try {
+                            tvProgress.text = "Mereset password..."
+                            progressDialog.show()
+
+                            auth.sendPasswordResetEmail(etEmail.text.toString()).await()
+                            Toast.makeText(
+                                this@SignInPelangganActivity,
+                                "Silahkan cek email Anda",
+                                Toast.LENGTH_LONG
+                            )
                                 .show()
+                        } catch (e: Exception) {
+                            Toast.makeText(
+                                this@SignInPelangganActivity,
+                                "Gagal mereset password: $e",
+                                Toast.LENGTH_SHORT
+                            )
+                                .show()
+                        } finally {
                             progressDialog.dismiss()
                         }
-                        .addOnFailureListener {
-                            Toast.makeText(this, "Gagal mereset password: ${it.message}", Toast.LENGTH_SHORT)
-                                .show()
-                            progressDialog.dismiss()
-                        }
+                    }
                 }
 
-                builder.setNegativeButton("Tidak") { dialog, which ->
+                builder.setNegativeButton("Tidak") { dialog, _ ->
                     dialog.cancel()
                 }
 
@@ -139,21 +153,24 @@ class SignInPelangganActivity : AppCompatActivity() {
         }
 
         btnSignIn.setOnClickListener {
-            tvProgress.text = "Signing in..."
-            progressDialog.show()
-            auth.signInWithEmailAndPassword(etEmail.text.toString(), etPassword.text.toString())
-                .addOnSuccessListener { task ->
-                    val user = task.user?.uid
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    tvProgress.text = "Signing in..."
+                    progressDialog.show()
+                    val authResult = auth.signInWithEmailAndPassword(
+                        etEmail.text.toString(),
+                        etPassword.text.toString()
+                    )
+                        .await()
+
+                    val user = authResult.user?.uid
                     jenisPengguna(user)
-                    progressDialog.dismiss()
-                }.addOnFailureListener {
-                    Toast.makeText(
-                        baseContext,
-                        "Sign In gagal.",
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                } catch (e: Exception) {
+                    Toast.makeText(baseContext, "Sign In gagal.", Toast.LENGTH_SHORT).show()
+                } finally {
                     progressDialog.dismiss()
                 }
+            }
         }
 
         tvSignUp.setOnClickListener {
@@ -163,29 +180,42 @@ class SignInPelangganActivity : AppCompatActivity() {
 
     private fun jenisPengguna(userId: String?) {
         if (userId != null) {
-            tvProgress.text = "Signing in..."
-            progressDialog.show()
-            val db = Firebase.firestore
-            db.collection("pengguna").addSnapshotListener { value, error ->
-                if (value != null) {
-                    for (document in value) {
-                        if (document.getString("id") == userId) {
-                            val userType = document.getString("jenis")
-                            if (userType == "pelanggan") {
-                                startActivity(Intent(this, PelangganActivity::class.java))
-                                finish()
-                            } else {
-                                Toast.makeText(
-                                    this,
-                                    "Anda belum mempunyai akun sebagai pelanggan.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    tvProgress.text = "Signing in..."
+                    progressDialog.show()
+
+                    val db = Firebase.firestore
+                    val snapshot = db.collection("pengguna").get().await()
+                    val document = snapshot.documents.firstOrNull { it.getString("id") == userId }
+
+                    if (document != null) {
+                        val userType = document.getString("jenis")
+                        if (userType == "pelanggan") {
+                            startActivity(
+                                Intent(
+                                    this@SignInPelangganActivity,
+                                    PelangganActivity::class.java
+                                )
+                            )
+                            finish()
+                        } else {
+                            Toast.makeText(
+                                this@SignInPelangganActivity,
+                                "Anda belum mempunyai akun sebagai pelanggan.",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
+                    } else {
+                        Toast.makeText(
+                            this@SignInPelangganActivity,
+                            "Pengguna tidak ditemukan.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-                    progressDialog.dismiss()
-                } else if (error != null) {
-                    Toast.makeText(this, "$error", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this@SignInPelangganActivity, "$e", Toast.LENGTH_SHORT).show()
+                } finally {
                     progressDialog.dismiss()
                 }
             }

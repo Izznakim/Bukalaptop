@@ -118,6 +118,7 @@ class DataDiri2Fragment : Fragment() {
                     ).show()
                     return@setOnClickListener
                 }
+
                 CoroutineScope(Dispatchers.Main).launch {
                     try {
                         tvProgress.text = "Membuat akun..."

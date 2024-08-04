@@ -12,7 +12,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.location.Address
 import android.location.Geocoder
-import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -32,7 +31,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import com.example.bukalaptop.R
@@ -47,6 +45,7 @@ import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
@@ -275,56 +274,53 @@ class PaymentFragment : Fragment() {
                         "timestamp" to currentTimeMillis
                     )
 
-                    db.collection("pesanan").add(pesanan).addOnSuccessListener { doc ->
-                        val imageRef = storageRef.child("bukti/${doc.id}.jpg")
+                    CoroutineScope(Dispatchers.Main).launch {
+                        try {
+                            val doc = db.collection("pesanan").add(pesanan).await()
 
-                        val uploadTask = imageRef.putFile(imageUri!!)
-                        uploadTask.addOnSuccessListener {
-                            imageRef.downloadUrl.addOnSuccessListener { uri ->
-                                val imageUrl = uri.toString()
-                                db.collection("pesanan").document(doc.id)
-                                    .update(
-                                        "buktiBayar", imageUrl
-                                    )
+                            val imageRef = storageRef.child("bukti/${doc.id}.jpg")
+                            imageRef.putFile(imageUri!!).await()
+                            val imageUrl = imageRef.downloadUrl.await().toString()
+                            db.collection("pesanan").document(doc.id)
+                                .update("buktiBayar", imageUrl).await()
+
+                            listKeranjang?.forEach {
+                                val keranjang = hashMapOf(
+                                    "aksesoris" to it.barang.aksesoris,
+                                    "biayaSewa" to it.barang.biayaSewa,
+                                    "fotoBarang" to it.barang.fotoBarang,
+                                    "jumlah" to it.jumlah,
+                                    "kartuGrafis" to it.barang.kartuGrafis,
+                                    "kondisi" to it.barang.kondisi,
+                                    "merek" to it.barang.merek,
+                                    "model" to it.barang.model,
+                                    "penyimpanan" to it.barang.penyimpanan,
+                                    "perangkatLunak" to it.barang.perangkatLunak,
+                                    "prosesor" to it.barang.prosesor,
+                                    "ram" to it.barang.ram,
+                                    "sistemOperasi" to it.barang.sistemOperasi,
+                                    "stok" to (it.barang.stok - it.jumlah),
+                                    "ukuranLayar" to it.barang.ukuranLayar
+                                )
+
+                                db.collection("pesanan").document(doc.id).collection("keranjang")
+                                    .document(it.barang.barangId).set(keranjang).await()
+                                db.collection("barang").document(it.barang.barangId)
+                                    .update("stok", it.barang.stok - it.jumlah).await()
                             }
+
+                            Toast.makeText(
+                                requireContext(),
+                                "Pesanan sudah dikirim",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            parentFragmentManager.popBackStack()
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
+                        }finally {
+                            progressDialog.dismiss()
                         }
-
-                        listKeranjang?.forEach {
-                            val keranjang = hashMapOf(
-                                "aksesoris" to it.barang.aksesoris,
-                                "biayaSewa" to it.barang.biayaSewa,
-                                "fotoBarang" to it.barang.fotoBarang,
-                                "jumlah" to it.jumlah,
-                                "kartuGrafis" to it.barang.kartuGrafis,
-                                "kondisi" to it.barang.kondisi,
-                                "merek" to it.barang.merek,
-                                "model" to it.barang.model,
-                                "penyimpanan" to it.barang.penyimpanan,
-                                "perangkatLunak" to it.barang.perangkatLunak,
-                                "prosesor" to it.barang.prosesor,
-                                "ram" to it.barang.ram,
-                                "sistemOperasi" to it.barang.sistemOperasi,
-                                "stok" to (it.barang.stok - it.jumlah),
-                                "ukuranLayar" to it.barang.ukuranLayar
-                            )
-
-                            db.collection("pesanan").document(doc.id).collection("keranjang")
-                                .document(it.barang.barangId).set(keranjang)
-                            db.collection("barang").document(it.barang.barangId)
-                                .update("stok", it.barang.stok - it.jumlah)
-                        }
-
-                        Toast.makeText(
-                            requireContext(),
-                            "Pesanan sudah dikirim",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                        progressDialog.dismiss()
-                        parentFragmentManager.popBackStack()
-                    }.addOnFailureListener { e ->
-                        Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
-                        progressDialog.dismiss()
                     }
                 }
             }
@@ -546,11 +542,16 @@ class PaymentFragment : Fragment() {
         if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION) &&
             checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
         ) {
-            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-                if (location != null) {
-                    getAddressFromLocation(location.latitude, location.longitude)
-                    lat = location.latitude
-                    lng = location.longitude
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    val location=fusedLocationClient.lastLocation.await()
+                    if (location != null) {
+                        getAddressFromLocation(location.latitude, location.longitude)
+                        lat = location.latitude
+                        lng = location.longitude
+                    }
+                }catch (e: Exception) {
+                    Toast.makeText(requireContext(), "$e", Toast.LENGTH_SHORT).show()
                 }
             }
         } else {
