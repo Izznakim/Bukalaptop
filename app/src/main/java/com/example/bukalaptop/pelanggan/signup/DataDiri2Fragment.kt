@@ -27,6 +27,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -114,82 +118,48 @@ class DataDiri2Fragment : Fragment() {
                     ).show()
                     return@setOnClickListener
                 }
-
-                auth.createUserWithEmailAndPassword(dataEmail, dataPassword)
-                    .addOnSuccessListener {
+                CoroutineScope(Dispatchers.Main).launch {
+                    try {
                         tvProgress.text = "Membuat akun..."
                         progressDialog.show()
-                        val id = auth.currentUser?.uid
-                        if (id != null) {
-                            val pelanggan = hashMapOf(
-                                "id" to id,
-                                "email" to dataEmail,
-                                "namaLengkap" to dataNama,
-                                "username" to dataUsername,
-                                "nomorHp" to dataNomorHp,
-                                "nomorKtp" to nomorKtp,
-                                "fotoKtp" to "",
-                                "jenis" to "pelanggan"
-                            )
 
-                            databaseRef.collection("pengguna")
-                                .add(pelanggan)
-                                .addOnSuccessListener {
-                                    tvProgress.text = "Membuat akun..."
-                                    progressDialog.show()
+                        auth.createUserWithEmailAndPassword(dataEmail, dataPassword).await()
+                        val id = auth.currentUser?.uid ?: throw Exception("User ID not found")
 
-                                    val imageRef = storageRef.child("pelanggan/${id}.jpg")
+                        val pelanggan = hashMapOf(
+                            "id" to id,
+                            "email" to dataEmail,
+                            "namaLengkap" to dataNama,
+                            "username" to dataUsername,
+                            "nomorHp" to dataNomorHp,
+                            "nomorKtp" to nomorKtp,
+                            "fotoKtp" to "",
+                            "jenis" to "pelanggan"
+                        )
 
-                                    val uploadTask = imageRef.putFile(imageUri!!)
-                                    uploadTask.addOnSuccessListener {
-                                        tvProgress.text = "Membuat akun..."
-                                        progressDialog.show()
-                                        imageRef.downloadUrl.addOnSuccessListener { uri ->
-                                            val imageUrl = uri.toString()
-                                            databaseRef.collection("pengguna").addSnapshotListener{ value, error ->
-                                                tvProgress.text = "Membuat akun..."
-                                                progressDialog.show()
-                                                if (value != null) {
-                                                    for (document in value) {
-                                                        if (document.getString("id") == id) {
-                                                            val userType = document.getString("jenis")
-                                                            if (userType == "pelanggan") {
-                                                                document.reference.update("fotoKtp", imageUrl)
-                                                                Toast.makeText(
-                                                                    context,
-                                                                    "Anda telah terdaftar sebagai pelanggan",
-                                                                    Toast.LENGTH_SHORT
-                                                                )
-                                                                    .show()
-                                                                requireActivity().finish()
-                                                            } else {
-                                                                Toast.makeText(
-                                                                    requireContext(),
-                                                                    "Anda belum mempunyai akun sebagai pelanggan.",
-                                                                    Toast.LENGTH_SHORT
-                                                                ).show()
-                                                            }
-                                                        }
-                                                    }
-                                                    progressDialog.dismiss()
-                                                } else if (error != null) {
-                                                    Toast.makeText(requireContext(), "$error", Toast.LENGTH_SHORT).show()
-                                                    progressDialog.dismiss()
-                                                }
-                                            }
-                                        }
-                                    }.addOnFailureListener { e ->
-                                        Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
-                                        progressDialog.dismiss()
-                                        return@addOnFailureListener
-                                    }
-                                    progressDialog.dismiss()
-                                }.addOnFailureListener { e ->
-                                    Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
-                                    progressDialog.dismiss()
-                                }
+                        databaseRef.collection("pengguna").add(pelanggan).await()
+
+                        val imageRef = storageRef.child("pelanggan/${id}.jpg")
+                        imageRef.putFile(imageUri!!).await()
+
+                        val imageUrl = imageRef.downloadUrl.await().toString()
+                        val snapshot = databaseRef.collection("pengguna").get().await()
+                        val document = snapshot.documents.firstOrNull { it.getString("id") == id }
+                            ?: throw Exception("Document not found")
+
+                        if (document.getString("jenis") == "pelanggan") {
+                            document.reference.update("fotoKtp", imageUrl).await()
+                            Toast.makeText(context, "Anda telah terdaftar sebagai pelanggan", Toast.LENGTH_SHORT).show()
+                            requireActivity().finish()
+                        } else {
+                            throw Exception("Anda belum mempunyai akun sebagai pelanggan.")
                         }
+                    }catch (e: Exception) {
+                        Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
+                    }finally {
+                        progressDialog.dismiss()
                     }
+                }
             }
 
             ibBack.setOnClickListener {
