@@ -171,7 +171,8 @@ class DetailBarangPelangganFragment : Fragment() {
                     btnTambahKeranjang.isEnabled = true
                     btnTambahKeranjang.setBackgroundColor(Color.GREEN)
                 }
-            } catch (_: NumberFormatException) {
+            } catch (e: NumberFormatException) {
+                Toast.makeText(requireContext(), "$e", Toast.LENGTH_SHORT).show()
             }
         }
 

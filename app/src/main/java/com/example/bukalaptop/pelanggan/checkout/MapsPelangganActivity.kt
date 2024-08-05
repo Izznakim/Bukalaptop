@@ -8,29 +8,23 @@ import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 import android.location.LocationListener
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.ImageButton
-import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.example.bukalaptop.MainActivity
 import com.example.bukalaptop.R
-
+import com.example.bukalaptop.databinding.ActivityMapsPelangganBinding
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import com.example.bukalaptop.databinding.ActivityMapsPelangganBinding
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import java.io.IOException
 import java.util.Locale
 
@@ -121,7 +115,7 @@ class MapsPelangganActivity : AppCompatActivity(), OnMapReadyCallback, LocationL
         try {
             addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
         } catch (e: IOException) {
-            e.printStackTrace()
+            Toast.makeText(this, "$e", Toast.LENGTH_SHORT).show()
         }
         setAddress(addresses!![0])
     }
@@ -146,9 +140,9 @@ class MapsPelangganActivity : AppCompatActivity(), OnMapReadyCallback, LocationL
             )
             setAddress(addresses!![0])
         } catch (e: IndexOutOfBoundsException) {
-            e.printStackTrace()
+            Toast.makeText(this, "$e", Toast.LENGTH_SHORT).show()
         } catch (e: IOException) {
-            e.printStackTrace()
+            Toast.makeText(this, "$e", Toast.LENGTH_SHORT).show()
         }
     }
 }

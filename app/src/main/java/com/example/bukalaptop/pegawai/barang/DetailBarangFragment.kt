@@ -22,6 +22,10 @@ import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.text.NumberFormat
 import java.util.Currency
 
@@ -175,26 +179,24 @@ class DetailBarangFragment : Fragment() {
                 val barangIdRef = storageRef.child("barang/${barang.barangId}.jpg")
 
                 barang.let { mBarang ->
-                    db.collection("barang").document(mBarang.barangId)
-                        .delete()
-                        .addOnSuccessListener {
+                    CoroutineScope(Dispatchers.Main).launch {
+                        try {
+                            db.collection("barang").document(mBarang.barangId)
+                                .delete()
+                                .await()
+                            barangIdRef.delete().await()
+
+                            parentFragmentManager.popBackStack()
                             Toast.makeText(
-                                activity,
+                                requireContext(),
                                 "${mBarang.merek} ${mBarang.model} berhasil dihapus",
                                 Toast.LENGTH_SHORT
                             ).show()
-                            parentFragmentManager.popBackStack()
-                        }
-                        .addOnFailureListener { e ->
-                            Log.w("Error", "Error deleting document", e)
+                        } catch (e: Exception) {
+                            Toast.makeText(requireContext(), "$e", Toast.LENGTH_SHORT).show()
+                        } finally {
                             progressDialog.dismiss()
                         }
-
-                    barangIdRef.delete().addOnSuccessListener {
-                        progressDialog.dismiss()
-                    }.addOnFailureListener { e ->
-                        Log.w("Error", "Error deleting image", e)
-                        progressDialog.dismiss()
                     }
                 }
             }

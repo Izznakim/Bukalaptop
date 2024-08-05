@@ -36,6 +36,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -168,7 +169,7 @@ class UpdateBarangFragment : Fragment() {
             merek = etMerek.text.toString()
             model = etModel.text.toString()
             prosesor = etProsesor.text.toString()
-            ram = etRam.text.toString()+" GB"
+            ram = etRam.text.toString() + " GB"
             os = etOs.text.toString()
             grafis = etGrafis.text.toString()
             penyimpanan = etPenyimpanan.text.toString()
@@ -277,31 +278,26 @@ class UpdateBarangFragment : Fragment() {
                     val imageRef = storageRef.child("barang/${barangId}.jpg")
 
                     if (imageUri != null) {
-                        val uploadTask = imageRef.putFile(imageUri!!)
-                        uploadTask.addOnSuccessListener {
-                            imageRef.downloadUrl.addOnSuccessListener { uri ->
-                                uploadDatabase(barangId, uri.toString())
-                            }
-                            progressDialog.dismiss()
-                        }
+                        imageRef.putFile(imageUri!!).await()
+                        val uri = imageRef.downloadUrl.await()
+                        uploadDatabase(barangId, uri.toString())
                     } else {
                         uploadDatabase(barangId, barangImageUrl)
-                        progressDialog.dismiss()
                     }
-
+                    parentFragmentManager.popBackStack()
                 } catch (e: IOException) {
-                    e.printStackTrace()
+                    Toast.makeText(requireContext(), "$e", Toast.LENGTH_SHORT).show()
+                } finally {
+                    progressDialog.dismiss()
                 }
             }
-
-            parentFragmentManager.popBackStack()
         }
         btnBatal.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
     }
 
-    private fun uploadDatabase(barangId: String, imageUrl: String) {
+    private suspend fun uploadDatabase(barangId: String, imageUrl: String) {
         databaseRef.collection("barang").document(barangId)
             .update(
                 "fotoBarang", imageUrl,
@@ -319,7 +315,7 @@ class UpdateBarangFragment : Fragment() {
                 "kondisi", kondisi,
                 "biayaSewa", biayaSewa,
                 "stok", stok,
-            )
+            ).await()
     }
 
     override fun onResume() {

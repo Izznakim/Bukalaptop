@@ -166,7 +166,7 @@ class SignInPelangganActivity : AppCompatActivity() {
                     val user = authResult.user?.uid
                     jenisPengguna(user)
                 } catch (e: Exception) {
-                    Toast.makeText(baseContext, "Sign In gagal.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(baseContext, "Sign In gagal: $e", Toast.LENGTH_SHORT).show()
                 } finally {
                     progressDialog.dismiss()
                 }

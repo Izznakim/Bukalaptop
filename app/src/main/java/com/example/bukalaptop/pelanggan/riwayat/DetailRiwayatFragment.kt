@@ -382,7 +382,7 @@ class DetailRiwayatFragment : Fragment() {
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Toast.makeText(requireContext(), "$e", Toast.LENGTH_SHORT).show()
             }
         }
     }

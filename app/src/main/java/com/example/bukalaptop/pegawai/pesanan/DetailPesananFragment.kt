@@ -32,6 +32,10 @@ import com.example.bukalaptop.model.Pesanan
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Currency
@@ -257,36 +261,42 @@ class DetailPesananFragment : Fragment() {
             btnTerima.setOnClickListener {
                 tvProgress.text = "Memuat pesanan..."
                 progressDialog.show()
-                db.collection("pesanan").document(pesananId).update("status", "diterima")
-                    .addOnSuccessListener {
+                CoroutineScope(Dispatchers.Main).launch {
+                    try {
+                        db.collection("pesanan").document(pesananId).update("status", "diterima")
+                            .await()
                         Toast.makeText(
                             requireContext(),
                             "Pesanan telah Anda setujui",
                             Toast.LENGTH_SHORT
                         ).show()
                         parentFragmentManager.popBackStack()
-                        progressDialog.dismiss()
-                    }.addOnFailureListener {
-                        Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(requireContext(), "$e", Toast.LENGTH_SHORT).show()
+                    } finally {
                         progressDialog.dismiss()
                     }
+                }
             }
             btnTolak.setOnClickListener {
                 tvProgress.text = "Memuat pesanan..."
                 progressDialog.show()
-                db.collection("pesanan").document(pesananId).update("status", "ditolak")
-                    .addOnSuccessListener {
+                CoroutineScope(Dispatchers.Main).launch {
+                    try {
+                        db.collection("pesanan").document(pesananId).update("status", "ditolak")
+                            .await()
                         Toast.makeText(
                             requireContext(),
                             "Pesanan telah Anda tolak",
                             Toast.LENGTH_SHORT
                         ).show()
                         parentFragmentManager.popBackStack()
-                        progressDialog.dismiss()
-                    }.addOnFailureListener {
-                        Toast.makeText(requireContext(), "$it", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(requireContext(), "$e", Toast.LENGTH_SHORT).show()
+                    } finally {
                         progressDialog.dismiss()
                     }
+                }
             }
 
             btnDikembalikan.setOnClickListener {
@@ -303,68 +313,48 @@ class DetailPesananFragment : Fragment() {
                 builder.setPositiveButton("Ya") { dialog, which ->
                     tvProgress.text = "Sedang menghapus pesanan..."
                     progressDialog.show()
-                    db.collection("pesanan").document(pesananId).delete()
-                        .addOnSuccessListener {
-                            db.collection("pesanan").document(pesananId)
+                    CoroutineScope(Dispatchers.Main).launch {
+                        try {
+                            db.collection("pesanan").document(pesananId).delete().await()
+                            val task = db.collection("pesanan").document(pesananId)
                                 .collection("keranjang")
-                                .get()
-                                .addOnCompleteListener { task ->
-                                    if (task.isSuccessful) {
-                                        for (doc in task.result) {
-                                            db.collection("barang").document(doc.id)
-                                                .get().addOnCompleteListener {
-                                                    if (it.isSuccessful) {
-                                                        val stok =
-                                                            it.result.get("stok")
-                                                                .toString().toInt()
-                                                        val jumlah =
-                                                            doc.get("jumlah").toString()
-                                                                .toInt()
-                                                        db.collection("barang")
-                                                            .document(doc.id)
-                                                            .update(
-                                                                "stok",
-                                                                stok + jumlah
-                                                            )
-                                                        doc.reference.delete()
-                                                    }
-                                                }
-                                        }
-                                    } else {
-                                        Toast.makeText(
-                                            requireContext(),
-                                            task.exception.toString(),
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                }
+                                .get().await()
+                            task.forEach {
+                                val doc = db.collection("barang").document(it.id)
+                                    .get().await()
+                                val stok =
+                                    doc.get("stok")
+                                        .toString().toInt()
+                                val jumlah =
+                                    it.get("jumlah").toString()
+                                        .toInt()
+                                db.collection("barang")
+                                    .document(it.id)
+                                    .update(
+                                        "stok",
+                                        stok + jumlah
+                                    ).await()
+                                it.reference.delete().await()
+                            }
+
+                            storageBuktiRef.child("${pesananId}.jpg").delete().await()
+
                             parentFragmentManager.popBackStack()
                             Toast.makeText(
                                 requireContext(),
                                 "Pesanan telah dihapus.",
                                 Toast.LENGTH_SHORT
-                            )
-                                .show()
-                        }.addOnFailureListener {
+                            ).show()
+                        } catch (e: Exception) {
                             Toast.makeText(
                                 requireContext(),
                                 it.toString(),
                                 Toast.LENGTH_SHORT
-                            )
-                                .show()
-                        }
-                    storageBuktiRef.child("${pesananId}.jpg").delete()
-                        .addOnSuccessListener {
-                            progressDialog.dismiss()
-                        }
-                        .addOnFailureListener { e ->
-                            Toast.makeText(
-                                requireContext(),
-                                e.toString(),
-                                Toast.LENGTH_SHORT
                             ).show()
+                        } finally {
                             progressDialog.dismiss()
                         }
+                    }
                 }
 
                 builder.setNegativeButton("Tidak") { dialog, which ->

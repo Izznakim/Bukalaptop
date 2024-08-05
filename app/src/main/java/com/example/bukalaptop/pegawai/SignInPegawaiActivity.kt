@@ -17,6 +17,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class SignInPegawaiActivity : AppCompatActivity() {
 
@@ -91,19 +95,21 @@ class SignInPegawaiActivity : AppCompatActivity() {
         btnSignIn.setOnClickListener {
             tvProgress.text = "Signing in..."
             progressDialog.show()
-            auth.signInWithEmailAndPassword(etEmail.text.toString(), etPassword.text.toString())
-                .addOnSuccessListener { task ->
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    val task = auth.signInWithEmailAndPassword(etEmail.text.toString(), etPassword.text.toString()).await()
                     val user = task.user?.uid
                     jenisPengguna(user)
-                    progressDialog.dismiss()
-                }.addOnFailureListener {
+                }catch (e: Exception){
                     Toast.makeText(
                         baseContext,
-                        "Sign In gagal.",
+                        "Sign In gagal: $e",
                         Toast.LENGTH_SHORT,
                     ).show()
+                }finally {
                     progressDialog.dismiss()
                 }
+            }
         }
     }
 

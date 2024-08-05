@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -27,7 +26,10 @@ import com.example.bukalaptop.R
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
-import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -123,7 +125,7 @@ class TambahBarangFragment : Fragment() {
             merek = etMerek.text.toString()
             model = etModel.text.toString()
             prosesor = etProsesor.text.toString()
-            ram = etRam.text.toString()+" GB"
+            ram = etRam.text.toString() + " GB"
             os = etOs.text.toString()
             grafis = etGrafis.text.toString()
             penyimpanan = etPenyimpanan.text.toString()
@@ -290,36 +292,32 @@ class TambahBarangFragment : Fragment() {
             "barangId" to ""
         )
 
-        databaseRef.collection("barang")
-            .add(data)
-            .addOnSuccessListener { document ->
-
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val document = databaseRef.collection("barang").add(data).await()
                 val imageRef = storageRef.child("barang/${document.id}.jpg")
+                imageRef.putFile(imageUri!!).await()
+                val uri = imageRef.downloadUrl.await()
+                val imageUrl = uri.toString()
+                databaseRef.collection("barang").document(document.id)
+                    .update(
+                        "fotoBarang", imageUrl,
+                        "barangId", document.id
+                    ).await()
 
-                val uploadTask = imageRef.putFile(imageUri!!)
-                uploadTask.addOnSuccessListener {
-                    imageRef.downloadUrl.addOnSuccessListener { uri ->
-                        val imageUrl = uri.toString()
-                        databaseRef.collection("barang").document(document.id)
-                            .update(
-                                "fotoBarang", imageUrl,
-                                "barangId", document.id
-                            )
-                        Toast.makeText(
-                            context,
-                            "Barang telah ditambahkan",
-                            Toast.LENGTH_SHORT
-                        )
-                            .show()
-                        parentFragmentManager.popBackStack()
-                    }
-                }
-                progressDialog.dismiss()
-            }
-            .addOnFailureListener { e ->
+                Toast.makeText(
+                    requireContext(),
+                    "Barang telah ditambahkan",
+                    Toast.LENGTH_SHORT
+                )
+                    .show()
+                parentFragmentManager.popBackStack()
+            } catch (e: Exception) {
                 Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
+            } finally {
                 progressDialog.dismiss()
             }
+        }
     }
 
     private fun onPickImageClick() {
@@ -403,7 +401,8 @@ class TambahBarangFragment : Fragment() {
                     ivTambahBarang.setImageURI(it)
                 }
             } else {
-                Toast.makeText(requireContext(), "Failed to capture image", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Failed to capture image", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
 

@@ -21,6 +21,10 @@ import com.example.bukalaptop.pegawai.barang.DetailBarangFragment
 import com.example.bukalaptop.pelanggan.barang.DetailBarangPelangganFragment
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.text.NumberFormat
 import java.util.Currency
 
@@ -105,22 +109,26 @@ class ListKeranjangAdapter(
                             if (value != null) {
                                 for (document in value) {
                                     if (document.getString("id") == pelangganId) {
-                                        document.reference.collection("keranjang")
-                                            .document(mBarang.barangId).delete()
-                                            .addOnSuccessListener {
+                                        CoroutineScope(Dispatchers.Main).launch {
+                                            try {
+                                                document.reference.collection("keranjang")
+                                                    .document(mBarang.barangId).delete().await()
+
                                                 Toast.makeText(
                                                     itemView.context,
                                                     "${mBarang.merek} ${mBarang.model} berhasil dihapus",
                                                     Toast.LENGTH_SHORT
                                                 ).show()
+                                            }catch (e: Exception){
+                                                Toast.makeText(
+                                                    itemView.context,
+                                                    "$e",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }finally {
+
                                             }
-                                            .addOnFailureListener { e ->
-                                                Log.w(
-                                                    "Error",
-                                                    "Error deleting document",
-                                                    e
-                                                )
-                                            }
+                                        }
                                     }
                                 }
                             }
