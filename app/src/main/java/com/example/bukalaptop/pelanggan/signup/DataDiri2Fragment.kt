@@ -151,10 +151,10 @@ class DataDiri2Fragment : Fragment() {
                         if (document.getString("jenis") == "pelanggan") {
                             document.reference.update("fotoKtp", imageUrl).await()
                             Toast.makeText(context, "Anda telah terdaftar sebagai pelanggan", Toast.LENGTH_SHORT).show()
-                            requireActivity().finish()
                         } else {
                             throw Exception("Anda belum mempunyai akun sebagai pelanggan.")
                         }
+                        requireActivity().finish()
                     }catch (e: Exception) {
                         Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
                     }finally {
