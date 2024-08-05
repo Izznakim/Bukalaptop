@@ -59,21 +59,17 @@ class ZoomImageActivity : AppCompatActivity(), View.OnTouchListener {
                 matrix.set(view.imageMatrix)
                 savedMatrix.set(matrix)
                 start[event.x] = event.y
-                Log.d(TAG, "mode=DRAG")
                 mode = DRAG
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
                 mode = NONE
-                Log.d(TAG, "mode=NONE")
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
                 oldDist = spacing(event)
-                Log.d(TAG, "oldDist=$oldDist")
                 if (oldDist > 5f) {
                     savedMatrix.set(matrix)
                     midPoint(mid, event)
                     mode = ZOOM
-                    Log.d(TAG, "mode=ZOOM")
                 }
             }
             MotionEvent.ACTION_MOVE -> if (mode == DRAG) {
@@ -84,7 +80,6 @@ class ZoomImageActivity : AppCompatActivity(), View.OnTouchListener {
                 )
             } else if (mode == ZOOM) {
                 val newDist = spacing(event)
-                Log.d(TAG, "newDist=$newDist")
                 if (newDist > 5f) {
                     matrix.set(savedMatrix)
                     scale = newDist / oldDist
@@ -138,6 +133,5 @@ class ZoomImageActivity : AppCompatActivity(), View.OnTouchListener {
             if (i + 1 < event.pointerCount) sb.append(";")
         }
         sb.append("]")
-        Log.d("Touch Events ---------", sb.toString())
     }
 }

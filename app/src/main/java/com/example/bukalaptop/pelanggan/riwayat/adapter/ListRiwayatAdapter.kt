@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
@@ -43,7 +44,8 @@ class ListRiwayatAdapter(private val listRiwayat: ArrayList<Pesanan>) :
             val db = Firebase.firestore
             db.collection("pengguna").addSnapshotListener{valuePelanggan,errorPelanggan->
                 if (errorPelanggan != null) {
-                    Log.d("List Pesanan Error", errorPelanggan.toString())
+                    Toast.makeText(holder.itemView.context, "$errorPelanggan", Toast.LENGTH_SHORT)
+                        .show()
                     return@addSnapshotListener
                 }
                 if (valuePelanggan != null) {

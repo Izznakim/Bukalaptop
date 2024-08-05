@@ -122,7 +122,7 @@ class DetailRiwayatFragment : Fragment() {
 
             db.collection("pesanan").addSnapshotListener { valueRiwayat, errorRiwayat ->
                 if (errorRiwayat != null) {
-                    Log.d("Detail Riwayat Error", errorRiwayat.toString())
+                    Toast.makeText(requireContext(), "$errorRiwayat", Toast.LENGTH_SHORT).show()
                     return@addSnapshotListener
                 }
                 if (valueRiwayat != null) {
@@ -279,7 +279,11 @@ class DetailRiwayatFragment : Fragment() {
                                         var total = 0
                                         listKeranjang.clear()
                                         if (errorKeranjang != null) {
-                                            Log.d("List Keranjang", errorKeranjang.toString())
+                                            Toast.makeText(
+                                                requireContext(),
+                                                "$errorKeranjang",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                             return@addSnapshotListener
                                         }
                                         if (valueKeranjang != null) {
@@ -307,7 +311,8 @@ class DetailRiwayatFragment : Fragment() {
                     }
 
                 } else {
-                    Log.d("List Riwayat", "Data Kosong")
+                    Toast.makeText(requireContext(), "Data Kosong.", Toast.LENGTH_SHORT)
+                        .show()
                 }
                 progressDialog.dismiss()
             }

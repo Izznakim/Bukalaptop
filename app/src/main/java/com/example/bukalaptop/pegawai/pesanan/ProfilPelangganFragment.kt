@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
@@ -78,7 +79,7 @@ class ProfilPelangganFragment : Fragment() {
 
             db.collection("pengguna").addSnapshotListener { value, error ->
                 if (error != null) {
-                    Log.d("List Pesanan Error", error.toString())
+                    Toast.makeText(requireContext(), "$error", Toast.LENGTH_SHORT).show()
                     return@addSnapshotListener
                 }
                 if (value != null) {

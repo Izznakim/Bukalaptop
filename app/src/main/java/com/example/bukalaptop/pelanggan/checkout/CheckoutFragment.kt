@@ -114,7 +114,12 @@ class CheckoutFragment : Fragment() {
                                                         }
                                                     }
                                                 } else if (error1 != null) {
-                                                    Log.d("List Keranjang", error.toString())
+                                                    Toast.makeText(
+                                                        requireContext(),
+                                                        "$error1",
+                                                        Toast.LENGTH_SHORT
+                                                    )
+                                                        .show()
                                                 }
                                                 listKeranjangAdapter.setData(listKeranjang)
                                                 tvTotal.text =
@@ -125,7 +130,8 @@ class CheckoutFragment : Fragment() {
                                     tvTotal.text =
                                         currencyFormat.format(total)
                                 } else if (error != null) {
-                                    Log.d("List Keranjang", error.toString())
+                                    Toast.makeText(requireContext(), "$error", Toast.LENGTH_SHORT)
+                                        .show()
                                 }
                                 progressDialog.dismiss()
                             }

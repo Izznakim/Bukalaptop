@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -60,7 +61,7 @@ class PesananFragment : Fragment() {
             .addSnapshotListener { value, error ->
                 listPesanan.clear()
                 if (error != null) {
-                    Log.d("List Pesanan Error", error.toString())
+                    Toast.makeText(requireContext(), "$error", Toast.LENGTH_SHORT).show()
                     return@addSnapshotListener
                 }
                 if (value != null) {
@@ -74,7 +75,8 @@ class PesananFragment : Fragment() {
                         }
                     }
                 } else {
-                    Log.d("List Pesanan", "Data Kosong")
+                    Toast.makeText(requireContext(), "Masih belum ada pesanan.", Toast.LENGTH_SHORT)
+                        .show()
                 }
                 listPesananAdapter.setData(listPesanan)
                 progressDialog.dismiss()

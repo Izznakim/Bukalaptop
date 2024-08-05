@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
@@ -48,7 +49,8 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
             val db = Firebase.firestore
             db.collection("pengguna").addSnapshotListener { valuePelanggan, errorPelanggan ->
                 if (errorPelanggan != null) {
-                    Log.d("List Pesanan Error", errorPelanggan.toString())
+                    Toast.makeText(holder.itemView.context, "$errorPelanggan", Toast.LENGTH_SHORT)
+                        .show()
                     return@addSnapshotListener
                 }
                 if (valuePelanggan != null) {
@@ -63,9 +65,19 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
             }
 
             if (pesanan.status == "diterima" || pesanan.status == "dikembalikan") {
-                cardView.setCardBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.green))
+                cardView.setCardBackgroundColor(
+                    ContextCompat.getColor(
+                        holder.itemView.context,
+                        R.color.green
+                    )
+                )
             } else {
-                cardView.setCardBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.default_card_color))
+                cardView.setCardBackgroundColor(
+                    ContextCompat.getColor(
+                        holder.itemView.context,
+                        R.color.default_card_color
+                    )
+                )
             }
 
             itemView.setOnClickListener {

@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -62,7 +63,7 @@ class BarangPelangganFragment : Fragment() {
                     listBarang.add(barang)
                 }
             } else if (error != null) {
-                Log.d("List Barang", error.toString())
+                Toast.makeText(requireContext(), "$error", Toast.LENGTH_SHORT).show()
             }
             listBarangPelangganAdapter.setData(listBarang)
             progressDialog.dismiss()

@@ -141,7 +141,7 @@ class DetailBarangPelangganFragment : Fragment() {
                 }
                 progressDialog.dismiss()
             } else if (error != null) {
-                Log.d("Detail Barang", error.toString())
+                Toast.makeText(requireContext(), "$error", Toast.LENGTH_SHORT).show()
                 progressDialog.dismiss()
             }
         }

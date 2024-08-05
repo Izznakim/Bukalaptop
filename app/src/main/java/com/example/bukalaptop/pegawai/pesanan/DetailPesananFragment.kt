@@ -139,7 +139,7 @@ class DetailPesananFragment : Fragment() {
             progressDialog.show()
             db.collection("pesanan").addSnapshotListener { valuePesanan, errorPesanan ->
                 if (errorPesanan != null) {
-                    Log.d("List Pesanan Error", errorPesanan.toString())
+                    Toast.makeText(requireContext(), "$errorPesanan", Toast.LENGTH_SHORT).show()
                     return@addSnapshotListener
                 }
                 if (valuePesanan != null) {
@@ -181,7 +181,11 @@ class DetailPesananFragment : Fragment() {
                     db.collection("pengguna")
                         .addSnapshotListener { valuePelanggan, errorPelanggan ->
                             if (errorPelanggan != null) {
-                                Log.d("List Pesanan Error", errorPelanggan.toString())
+                                Toast.makeText(
+                                    requireContext(),
+                                    "$errorPelanggan",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 return@addSnapshotListener
                             }
                             if (valuePelanggan != null) {
@@ -224,14 +228,18 @@ class DetailPesananFragment : Fragment() {
                                     listKeranjang.add(keranjang)
                                 }
                             } else if (errorKeranjang != null) {
-                                Log.d("List Keranjang", errorKeranjang.toString())
+                                Toast.makeText(
+                                    requireContext(),
+                                    "$errorKeranjang",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                             listKeranjangAdapter.setData(listKeranjang)
                             tvTotal.text =
                                 currencyFormat.format(total * masaSewa)
                         }
                 } else {
-                    Log.d("List Pesanan", "Data Kosong")
+                    Toast.makeText(requireContext(), "Data Kosong.", Toast.LENGTH_SHORT).show()
                 }
                 progressDialog.dismiss()
             }
