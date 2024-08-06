@@ -1,7 +1,6 @@
 package com.example.bukalaptop.pelanggan.checkout
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -78,6 +77,12 @@ class CheckoutFragment : Fragment() {
                     if (peng.getString("id") == pelangganId) {
                         peng.reference.collection("keranjang")
                             .addSnapshotListener { keranjang, error ->
+                                if (keranjang != null) {
+                                    if (keranjang.documents.isEmpty()) {
+                                        listKeranjang.clear()
+                                        listKeranjangAdapter.setData(listKeranjang)
+                                    }
+                                }
                                 listKeranjang.clear()
                                 total = 0
                                 val existingItemIds = HashSet<String>()

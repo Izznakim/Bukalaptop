@@ -145,7 +145,12 @@ class PaymentFragment : Fragment() {
             }
         }
 
-        spannableString.setSpan(clickableSpan, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannableString.setSpan(
+            clickableSpan,
+            startIndex,
+            endIndex,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
 
         tvPaymentInfo.text = spannableString
         tvPaymentInfo.movementMethod = LinkMovementMethod.getInstance()
@@ -309,6 +314,17 @@ class PaymentFragment : Fragment() {
                                     .update("stok", it.barang.stok - it.jumlah).await()
                             }
 
+                            val pengguna = db.collection("pengguna").get().await()
+                            for (mPengguna in pengguna) {
+                                if (mPengguna.getString("id") == pelangganId) {
+                                    val dataKeranjang =
+                                        mPengguna.reference.collection("keranjang").get().await()
+                                    dataKeranjang.forEach {
+                                        it.reference.delete().await()
+                                    }
+                                }
+                            }
+
                             Toast.makeText(
                                 requireContext(),
                                 "Pesanan sudah dikirim",
@@ -318,7 +334,7 @@ class PaymentFragment : Fragment() {
                             parentFragmentManager.popBackStack()
                         } catch (e: Exception) {
                             Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
-                        }finally {
+                        } finally {
                             progressDialog.dismiss()
                         }
                     }
@@ -340,7 +356,8 @@ class PaymentFragment : Fragment() {
     }
 
     private fun copyToClipboard(text: String) {
-        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboard =
+            requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("Nomor Rekening", text)
         clipboard.setPrimaryClip(clip)
         Toast.makeText(requireContext(), "Nomor rekening telah disalin", Toast.LENGTH_SHORT).show()
@@ -544,13 +561,13 @@ class PaymentFragment : Fragment() {
         ) {
             CoroutineScope(Dispatchers.Main).launch {
                 try {
-                    val location=fusedLocationClient.lastLocation.await()
+                    val location = fusedLocationClient.lastLocation.await()
                     if (location != null) {
                         getAddressFromLocation(location.latitude, location.longitude)
                         lat = location.latitude
                         lng = location.longitude
                     }
-                }catch (e: Exception) {
+                } catch (e: Exception) {
                     Toast.makeText(requireContext(), "$e", Toast.LENGTH_SHORT).show()
                 }
             }

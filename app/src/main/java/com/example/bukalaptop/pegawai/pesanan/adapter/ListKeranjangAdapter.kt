@@ -2,7 +2,6 @@ package com.example.bukalaptop.pegawai.pesanan.adapter
 
 import android.app.AlertDialog
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -103,7 +102,12 @@ class ListKeranjangAdapter(
                     barang.let { mBarang ->
                         db.collection("pengguna").addSnapshotListener { value, error ->
                             if (error != null) {
-                                Log.w("Error", "Error deleting document", error)
+                                Toast.makeText(
+                                    holder.itemView.context,
+                                    "$error",
+                                    Toast.LENGTH_SHORT
+                                )
+                                    .show()
                                 return@addSnapshotListener
                             }
                             if (value != null) {
@@ -125,8 +129,6 @@ class ListKeranjangAdapter(
                                                     "$e",
                                                     Toast.LENGTH_SHORT
                                                 ).show()
-                                            }finally {
-
                                             }
                                         }
                                     }
