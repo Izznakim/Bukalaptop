@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 import android.location.LocationListener
@@ -25,6 +24,10 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.Locale
 
@@ -33,6 +36,7 @@ class MapsPelangganActivity : AppCompatActivity(), OnMapReadyCallback, LocationL
 
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsPelangganBinding
+    private lateinit var geocoder: Geocoder
 
     private var lat: Double = 0.0
     private var lng: Double = 0.0
@@ -58,6 +62,7 @@ class MapsPelangganActivity : AppCompatActivity(), OnMapReadyCallback, LocationL
         supportActionBar?.title = text
         supportActionBar?.elevation = 0f
         supportActionBar?.setBackgroundDrawable(ColorDrawable(Color.BLACK))
+        geocoder = Geocoder(this, Locale.getDefault())
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
@@ -66,19 +71,23 @@ class MapsPelangganActivity : AppCompatActivity(), OnMapReadyCallback, LocationL
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_maps,menu)
+        menuInflater.inflate(R.menu.menu_maps, menu)
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when(item.itemId){
+        when (item.itemId) {
             R.id.act_submit -> {
                 lat = mMap.cameraPosition.target.latitude
                 lng = mMap.cameraPosition.target.longitude
-                val resultIntent = Intent()
-                resultIntent.putExtra(PaymentFragment.EXTRA_ADDRESS, binding.tvAddress.text.toString())
-                resultIntent.putExtra(EXTRA_LATITUDE, lat)
-                resultIntent.putExtra(EXTRA_LONGITUDE, lng)
+                val resultIntent = Intent().apply {
+                    putExtra(
+                        PaymentFragment.EXTRA_ADDRESS,
+                        binding.tvAddress.text.toString()
+                    )
+                    putExtra(EXTRA_LATITUDE, lat)
+                    putExtra(EXTRA_LONGITUDE, lng)
+                }
                 setResult(Activity.RESULT_OK, resultIntent)
                 finish()
             }
@@ -91,58 +100,69 @@ class MapsPelangganActivity : AppCompatActivity(), OnMapReadyCallback, LocationL
 
         val latitude = intent.getDoubleExtra(EXTRA_LATITUDE, 0.0)
         val longitude = intent.getDoubleExtra(EXTRA_LONGITUDE, 0.0)
-
-        // Add a marker in Sydney and move the camera
         val myLoc = LatLng(latitude, longitude)
-        val geocoder = Geocoder(this, Locale.getDefault())
-        val addresses: List<Address>? = geocoder.getFromLocation(latitude, longitude, 1)
-        if (!addresses.isNullOrEmpty()) {
-            val address: Address = addresses[0]
-            val addressText = address.getAddressLine(0)
-            mMap.addMarker(MarkerOptions().position(myLoc).title(addressText))
-        } else {
-            Toast.makeText(this, "Alamat tidak ditemukan", Toast.LENGTH_SHORT)
-                .show()
+
+        CoroutineScope(Dispatchers.Main).launch {
+            val addressText = getAddressText(latitude, longitude)
+            if (addressText != null) {
+                mMap.addMarker(MarkerOptions().position(myLoc).title(addressText))
+            } else {
+                Toast.makeText(
+                    this@MapsPelangganActivity,
+                    "Alamat tidak ditemukan",
+                    Toast.LENGTH_SHORT
+                )
+                    .show()
+            }
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLoc, 20f))
         }
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLoc, 20f))
 
         mMap.setOnCameraIdleListener(this)
     }
 
     override fun onLocationChanged(location: Location) {
-        val geocoder = Geocoder(this, Locale.getDefault())
-        var addresses: List<Address>? = null
-        try {
-            addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
-        } catch (e: IOException) {
-            Toast.makeText(this, "$e", Toast.LENGTH_SHORT).show()
+        CoroutineScope(Dispatchers.Main).launch {
+            val addressText = getAddressText(location.latitude, location.longitude)
+            if (addressText != null) {
+                setAddress(addressText)
+            } else {
+                Toast.makeText(this@MapsPelangganActivity, "Alamat tidak ditemukan", Toast.LENGTH_SHORT).show()
+            }
         }
-        setAddress(addresses!![0])
     }
 
-    private fun setAddress(addresses: Address) {
-        if (addresses.getAddressLine(0) != null) {
-            binding.tvAddress.text = addresses.getAddressLine(0)
+    private suspend fun getAddressText(latitude: Double, longitude: Double): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+                if (!addresses.isNullOrEmpty()) {
+                    addresses[0].getAddressLine(0)
+                } else {
+                    null
+                }
+            } catch (e: IOException) {
+                null
+            }
         }
-        if (addresses.getAddressLine(1) != null) {
-            binding.tvAddress.text = "${binding.tvAddress.text} ${addresses.getAddressLine(0)}"
-        }
+    }
+
+    private fun setAddress(address: String) {
+        binding.tvAddress.text = address
     }
 
     override fun onCameraIdle() {
-        val addresses: List<Address>?
-        val geocoder = Geocoder(this, Locale.getDefault())
-        try {
-            addresses = geocoder.getFromLocation(
-                mMap.cameraPosition.target.latitude,
-                mMap.cameraPosition.target.longitude,
-                1
-            )
-            setAddress(addresses!![0])
-        } catch (e: IndexOutOfBoundsException) {
-            Toast.makeText(this, "$e", Toast.LENGTH_SHORT).show()
-        } catch (e: IOException) {
-            Toast.makeText(this, "$e", Toast.LENGTH_SHORT).show()
+        CoroutineScope(Dispatchers.Main).launch {
+            val addressText = getAddressText(mMap.cameraPosition.target.latitude, mMap.cameraPosition.target.longitude)
+            if (addressText != null) {
+                setAddress(addressText)
+            } else {
+                setAddress("Memuat alamat...")
+            }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mMap.setOnCameraIdleListener(null)
     }
 }
