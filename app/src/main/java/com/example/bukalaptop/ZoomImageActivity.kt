@@ -4,7 +4,6 @@ import android.graphics.Matrix
 import android.graphics.PointF
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
@@ -24,9 +23,6 @@ class ZoomImageActivity : AppCompatActivity(), View.OnTouchListener {
 
     companion object{
         const val EXTRA_IMAGE="extra_image"
-        private const val TAG = "Touch"
-        private const val MIN_ZOOM = 1f
-        private const val MAX_ZOOM = 1f
 
         const val NONE = 0
         const val DRAG = 1

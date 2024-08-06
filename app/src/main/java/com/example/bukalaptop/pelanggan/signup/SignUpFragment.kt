@@ -2,15 +2,12 @@ package com.example.bukalaptop.pelanggan.signup
 
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.util.Patterns
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
-import androidx.navigation.Navigation
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.bukalaptop.R
 import com.example.bukalaptop.databinding.FragmentSignUpBinding

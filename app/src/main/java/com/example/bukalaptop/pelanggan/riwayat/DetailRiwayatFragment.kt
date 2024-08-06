@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -222,9 +221,20 @@ class DetailRiwayatFragment : Fragment() {
                                                 .setTitle("Konfirmasi")
 
                                             builder.setPositiveButton("Ya") { dialog, which ->
-                                                db.collection("pesanan")
-                                                    .document(pesananId)
-                                                    .update("status", "dikembalikan")
+                                                CoroutineScope(Dispatchers.Main).launch {
+                                                    try {
+                                                        db.collection("pesanan")
+                                                            .document(pesananId)
+                                                            .update("status", "dikembalikan").await()
+                                                    }catch (e: Exception){
+                                                        Toast.makeText(
+                                                            requireContext(),
+                                                            "$e",
+                                                            Toast.LENGTH_SHORT
+                                                        )
+                                                            .show()
+                                                    }
+                                                }
                                             }
 
                                             builder.setNegativeButton("Tidak") { dialog, which ->
