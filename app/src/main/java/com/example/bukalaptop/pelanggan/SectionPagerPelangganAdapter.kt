@@ -3,8 +3,6 @@ package com.example.bukalaptop.pelanggan
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.example.bukalaptop.pegawai.barang.BarangFragment
-import com.example.bukalaptop.pegawai.pesanan.PesananFragment
 import com.example.bukalaptop.pelanggan.barang.BarangPelangganFragment
 import com.example.bukalaptop.pelanggan.checkout.CheckoutFragment
 import com.example.bukalaptop.pelanggan.riwayat.RiwayatFragment

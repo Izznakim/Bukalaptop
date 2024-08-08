@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.barang.adapter.ListBarangPelangganAdapter
 import com.example.bukalaptop.pegawai.barang.model.Barang
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -24,6 +25,8 @@ class BarangPelangganFragment : Fragment() {
     private lateinit var tvProgress: TextView
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
+
+    private var barangListener: ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -54,7 +57,7 @@ class BarangPelangganFragment : Fragment() {
         listBarang = arrayListOf()
         tvProgress.text="Memuat barang..."
         progressDialog.show()
-        db.collection("barang").addSnapshotListener { value, error ->
+        barangListener = db.collection("barang").addSnapshotListener { value, error ->
             listBarang.clear()
             if (value != null) {
                 for (document in value) {
@@ -73,5 +76,11 @@ class BarangPelangganFragment : Fragment() {
         rvBarang.layoutManager = LinearLayoutManager(activity)
         listBarangPelangganAdapter = ListBarangPelangganAdapter(arrayListOf())
         rvBarang.adapter = listBarangPelangganAdapter
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        barangListener?.remove()
+        progressDialog.dismiss()
     }
 }

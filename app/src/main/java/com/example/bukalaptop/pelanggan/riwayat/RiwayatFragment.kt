@@ -14,6 +14,7 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Pesanan
 import com.example.bukalaptop.pelanggan.riwayat.adapter.ListRiwayatAdapter
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -27,6 +28,8 @@ class RiwayatFragment : Fragment() {
     private lateinit var tvProgress: TextView
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
+
+    private var pesananListener: ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -58,11 +61,12 @@ class RiwayatFragment : Fragment() {
         listRiwayat = arrayListOf()
         tvProgress.text = "Memuat riwayat..."
         progressDialog.show()
-        db.collection("pesanan").orderBy("timestamp", Query.Direction.ASCENDING)
+        pesananListener = db.collection("pesanan").orderBy("timestamp", Query.Direction.ASCENDING)
             .addSnapshotListener { value, error ->
                 listRiwayat.clear()
                 if (error != null) {
                     Toast.makeText(requireContext(), error.toString(), Toast.LENGTH_SHORT).show()
+                    progressDialog.dismiss()
                     return@addSnapshotListener
                 }
                 if (value != null) {
@@ -86,5 +90,12 @@ class RiwayatFragment : Fragment() {
         rvRiwayat.layoutManager = LinearLayoutManager(activity)
         listRiwayatAdapter = ListRiwayatAdapter(arrayListOf())
         rvRiwayat.adapter = listRiwayatAdapter
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        pesananListener?.remove()
+        progressDialog.dismiss()
+        listRiwayatAdapter.stopListening()
     }
 }

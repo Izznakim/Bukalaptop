@@ -9,7 +9,6 @@ import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import android.view.Menu
 import android.view.MenuItem
-import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
 import com.example.bukalaptop.MainActivity
@@ -26,17 +25,22 @@ class PegawaiActivity : AppCompatActivity() {
         private val TAB_TITLES = arrayListOf("Pesanan", "Barang")
     }
 
+    private var sectionPagerPegawaiAdapter: SectionPagerPegawaiAdapter? = null
+    private var viewPager: ViewPager2? = null
+    private var tabLayoutMediator: TabLayoutMediator? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pegawai)
 
-        val sectionPagerPegawaiAdapter = SectionPagerPegawaiAdapter(this)
-        val viewPager: ViewPager2 = findViewById(R.id.view_pager)
-        viewPager.adapter = sectionPagerPegawaiAdapter
+        sectionPagerPegawaiAdapter = SectionPagerPegawaiAdapter(this)
+        viewPager = findViewById(R.id.view_pager)
+        viewPager?.adapter = sectionPagerPegawaiAdapter
         val tabs: TabLayout = findViewById(R.id.tabs)
-        TabLayoutMediator(tabs, viewPager) { tab, position ->
+        tabLayoutMediator = TabLayoutMediator(tabs, viewPager!!) { tab, position ->
             tab.text = TAB_TITLES[position]
-        }.attach()
+        }
+        tabLayoutMediator?.attach()
 
         val text: Spannable = SpannableString("Halaman Pegawai")
         text.setSpan(
@@ -50,17 +54,26 @@ class PegawaiActivity : AppCompatActivity() {
         supportActionBar?.setBackgroundDrawable(ColorDrawable(Color.BLACK))
     }
 
+    override fun onDestroy() {
+        viewPager?.adapter = null
+        tabLayoutMediator?.detach()
+        sectionPagerPegawaiAdapter = null
+        viewPager = null
+        tabLayoutMediator = null
+        super.onDestroy()
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_pegawai,menu)
+        menuInflater.inflate(R.menu.menu_pegawai, menu)
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when(item.itemId){
+        when (item.itemId) {
             R.id.act_signOut -> {
                 Firebase.auth.signOut()
                 Intent(this, MainActivity::class.java).also { intent ->
-                    intent.flags= Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
                     finish()
                 }

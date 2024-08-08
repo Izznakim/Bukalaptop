@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Pesanan
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListPesananAdapter
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -26,6 +27,8 @@ class PesananFragment : Fragment() {
     private lateinit var tvProgress: TextView
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
+
+    private var pesananListener: ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -56,11 +59,12 @@ class PesananFragment : Fragment() {
         listPesanan = arrayListOf()
         tvProgress.text = "Memuat barang..."
         progressDialog.show()
-        db.collection("pesanan").orderBy("timestamp", Query.Direction.ASCENDING)
+        pesananListener = db.collection("pesanan").orderBy("timestamp", Query.Direction.ASCENDING)
             .addSnapshotListener { value, error ->
                 listPesanan.clear()
                 if (error != null) {
                     Toast.makeText(requireContext(), "$error", Toast.LENGTH_SHORT).show()
+                    progressDialog.dismiss()
                     return@addSnapshotListener
                 }
                 if (value != null) {
@@ -86,5 +90,12 @@ class PesananFragment : Fragment() {
         rvPesanan.layoutManager = LinearLayoutManager(activity)
         listPesananAdapter = ListPesananAdapter(arrayListOf())
         rvPesanan.adapter = listPesananAdapter
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        pesananListener?.remove()
+        progressDialog.dismiss()
+        listPesananAdapter.stopListening()
     }
 }

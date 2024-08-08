@@ -11,7 +11,6 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.cardview.widget.CardView
 import androidx.core.text.HtmlCompat
@@ -22,12 +21,13 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
 import com.example.bukalaptop.ZoomImageActivity
-import com.example.bukalaptop.pegawai.barang.model.Barang
-import com.example.bukalaptop.pegawai.pesanan.ProfilPelangganFragment.Companion.EXTRA_IDPELANGGAN
-import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
 import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.model.Pelanggan
 import com.example.bukalaptop.model.Pesanan
+import com.example.bukalaptop.pegawai.barang.model.Barang
+import com.example.bukalaptop.pegawai.pesanan.ProfilPelangganFragment.Companion.EXTRA_IDPELANGGAN
+import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
@@ -63,6 +63,10 @@ class DetailPesananFragment : Fragment() {
     private lateinit var tvProgress: TextView
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
+
+    private var pesananListener: ListenerRegistration? = null
+    private var penggunaListener: ListenerRegistration? = null
+    private var keranjangListener: ListenerRegistration? = null
 
     companion object {
         var EXTRA_IDPESANAN = "extra_idpesanan"
@@ -136,112 +140,116 @@ class DetailPesananFragment : Fragment() {
 
             tvProgress.text = "Memuat informasi pesanan..."
             progressDialog.show()
-            db.collection("pesanan").addSnapshotListener { valuePesanan, errorPesanan ->
-                if (errorPesanan != null) {
-                    Toast.makeText(requireContext(), "$errorPesanan", Toast.LENGTH_SHORT).show()
-                    return@addSnapshotListener
-                }
-                if (valuePesanan != null) {
-                    for (document in valuePesanan) {
-                        if (document.id == pesananId) {
-                            pesanan = Pesanan()
-                            pesanan.id = document.id
-                            pesanan.idPelanggan = document.getString("idPelanggan").toString()
-                            pesanan.buktiBayar = document.getString("buktiBayar").toString()
-                            pesanan.tglPengiriman =
-                                document.getTimestamp("tglPengiriman")?.toDate()
-                            pesanan.tglPengambilan =
-                                document.getTimestamp("tglPengambilan")?.toDate()
-                            pesanan.alamat = document.getString("alamat")
-                            pesanan.latitute = document.getDouble("latitude")
-                            pesanan.longitude = document.getDouble("longitude")
-                            pesanan.status = document.getString("status").toString()
+            pesananListener =
+                db.collection("pesanan").addSnapshotListener { valuePesanan, errorPesanan ->
+                    if (errorPesanan != null) {
+                        Toast.makeText(requireContext(), "$errorPesanan", Toast.LENGTH_SHORT).show()
+                        progressDialog.dismiss()
+                        return@addSnapshotListener
+                    }
+                    if (valuePesanan != null) {
+                        for (document in valuePesanan) {
+                            if (document.id == pesananId) {
+                                pesanan = Pesanan()
+                                pesanan.id = document.id
+                                pesanan.idPelanggan = document.getString("idPelanggan").toString()
+                                pesanan.buktiBayar = document.getString("buktiBayar").toString()
+                                pesanan.tglPengiriman =
+                                    document.getTimestamp("tglPengiriman")?.toDate()
+                                pesanan.tglPengambilan =
+                                    document.getTimestamp("tglPengambilan")?.toDate()
+                                pesanan.alamat = document.getString("alamat")
+                                pesanan.latitute = document.getDouble("latitude")
+                                pesanan.longitude = document.getDouble("longitude")
+                                pesanan.status = document.getString("status").toString()
 
-                            if (pesanan.status == "diterima") {
-                                btnTerima.visibility = View.GONE
-                                btnTolak.visibility = View.GONE
-                            } else if (pesanan.status == "dikembalikan") {
-                                btnDikembalikan.visibility = View.VISIBLE
-                                btnTerima.visibility = View.INVISIBLE
-                                btnTolak.visibility = View.INVISIBLE
+                                if (pesanan.status == "diterima") {
+                                    btnTerima.visibility = View.GONE
+                                    btnTolak.visibility = View.GONE
+                                } else if (pesanan.status == "dikembalikan") {
+                                    btnDikembalikan.visibility = View.VISIBLE
+                                    btnTerima.visibility = View.INVISIBLE
+                                    btnTolak.visibility = View.INVISIBLE
+                                }
                             }
                         }
-                    }
 
-                    val currencyFormat = NumberFormat.getCurrencyInstance()
-                    currencyFormat.maximumFractionDigits = 2
-                    currencyFormat.currency = Currency.getInstance("IDR")
+                        val currencyFormat = NumberFormat.getCurrencyInstance()
+                        currencyFormat.maximumFractionDigits = 2
+                        currencyFormat.currency = Currency.getInstance("IDR")
 
-                    val sdf = SimpleDateFormat("dd/MM/yyy", Locale.getDefault())
-                    val diff =
-                        (pesanan.tglPengambilan?.time ?: 0) - (pesanan.tglPengiriman?.time ?: 0)
-                    val masaSewa = (diff / 1000 / 60 / 60 / 24).toInt()
+                        val sdf = SimpleDateFormat("dd/MM/yyy", Locale.getDefault())
+                        val diff =
+                            (pesanan.tglPengambilan?.time ?: 0) - (pesanan.tglPengiriman?.time ?: 0)
+                        val masaSewa = (diff / 1000 / 60 / 60 / 24).toInt()
 
-                    db.collection("pengguna")
-                        .addSnapshotListener { valuePelanggan, errorPelanggan ->
-                            if (errorPelanggan != null) {
-                                Toast.makeText(
-                                    requireContext(),
-                                    "$errorPelanggan",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@addSnapshotListener
-                            }
-                            if (valuePelanggan != null) {
-                                for (document in valuePelanggan) {
-                                    if (document.getString("id") == pesanan.idPelanggan) {
-                                        pelanggan = document.toObject(Pelanggan::class.java)
-                                        tvNama.text = pelanggan.namaLengkap
-                                        tvEmail.text = pelanggan.email
+                        penggunaListener = db.collection("pengguna")
+                            .addSnapshotListener { valuePelanggan, errorPelanggan ->
+                                if (errorPelanggan != null) {
+                                    Toast.makeText(
+                                        requireContext(),
+                                        "$errorPelanggan",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    progressDialog.dismiss()
+                                    return@addSnapshotListener
+                                }
+                                if (valuePelanggan != null) {
+                                    for (document in valuePelanggan) {
+                                        if (document.getString("id") == pesanan.idPelanggan) {
+                                            pelanggan = document.toObject(Pelanggan::class.java)
+                                            tvNama.text = pelanggan.namaLengkap
+                                            tvEmail.text = pelanggan.email
+                                        }
                                     }
                                 }
                             }
+
+                        tvTglPengiriman.text = sdf.format(pesanan.tglPengiriman ?: Date())
+                        tvTglPengambilan.text = sdf.format(pesanan.tglPengambilan ?: Date())
+                        tvHari.text = masaSewa.toString()
+                        tvAlamat.text = pesanan.alamat
+
+                        if (isAdded) {
+                            Glide.with(requireContext())
+                                .load(pesanan.buktiBayar)
+                                .apply(RequestOptions())
+                                .into(ivBukti)
                         }
 
-                    tvTglPengiriman.text = sdf.format(pesanan.tglPengiriman ?: Date())
-                    tvTglPengambilan.text = sdf.format(pesanan.tglPengambilan ?: Date())
-                    tvHari.text = masaSewa.toString()
-                    tvAlamat.text = pesanan.alamat
+                        keranjangListener =
+                            db.collection("pesanan").document(pesananId).collection("keranjang")
+                                .addSnapshotListener { valueKeranjang, errorKeranjang ->
+                                    var total = 0
+                                    listKeranjang.clear()
+                                    if (valueKeranjang != null) {
+                                        for (document in valueKeranjang) {
+                                            val barang = document.toObject(Barang::class.java)
+                                            val jumlah = document.get("jumlah").toString().toInt()
+                                            total += (barang.biayaSewa * jumlah)
 
-                    if (isAdded) {
-                        Glide.with(requireContext())
-                            .load(pesanan.buktiBayar)
-                            .apply(RequestOptions())
-                            .into(ivBukti)
-                    }
+                                            val keranjang = Keranjang(barang, jumlah)
+                                            keranjang.barang = document.toObject(Barang::class.java)
+                                            keranjang.jumlah = jumlah
 
-                    db.collection("pesanan").document(pesananId).collection("keranjang")
-                        .addSnapshotListener { valueKeranjang, errorKeranjang ->
-                            var total = 0
-                            listKeranjang.clear()
-                            if (valueKeranjang != null) {
-                                for (document in valueKeranjang) {
-                                    val barang = document.toObject(Barang::class.java)
-                                    val jumlah = document.get("jumlah").toString().toInt()
-                                    total += (barang.biayaSewa * jumlah)
-
-                                    val keranjang = Keranjang(barang, jumlah)
-                                    keranjang.barang = document.toObject(Barang::class.java)
-                                    keranjang.jumlah = jumlah
-
-                                    listKeranjang.add(keranjang)
+                                            listKeranjang.add(keranjang)
+                                        }
+                                    } else if (errorKeranjang != null) {
+                                        Toast.makeText(
+                                            requireContext(),
+                                            "$errorKeranjang",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                    listKeranjangAdapter.setData(listKeranjang)
+                                    tvTotal.text =
+                                        currencyFormat.format(total * masaSewa)
                                 }
-                            } else if (errorKeranjang != null) {
-                                Toast.makeText(
-                                    requireContext(),
-                                    "$errorKeranjang",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                            listKeranjangAdapter.setData(listKeranjang)
-                            tvTotal.text =
-                                currencyFormat.format(total * masaSewa)
-                        }
-                } else {
-                    Toast.makeText(requireContext(), "Data Kosong.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(requireContext(), "Data Kosong.", Toast.LENGTH_SHORT).show()
+                    }
+                    progressDialog.dismiss()
                 }
-                progressDialog.dismiss()
-            }
 
             tvAlamat.setOnClickListener {
                 val uri =
@@ -380,15 +388,11 @@ class DetailPesananFragment : Fragment() {
         rvKeranjang.adapter = listKeranjangAdapter
     }
 
-    override fun onResume() {
-        super.onResume()
-
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                parentFragmentManager.popBackStack()
-            }
-        }
-
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+    override fun onDestroyView() {
+        super.onDestroyView()
+        pesananListener?.remove()
+        penggunaListener?.remove()
+        keranjangListener?.remove()
+        listKeranjangAdapter.stopListening()
     }
 }

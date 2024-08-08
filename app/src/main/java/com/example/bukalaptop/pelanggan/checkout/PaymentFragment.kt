@@ -33,6 +33,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Keranjang
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -119,8 +120,9 @@ class PaymentFragment : Fragment() {
         builder = AlertDialog.Builder(requireContext())
         val inflater = layoutInflater
         val dialogView = inflater.inflate(R.layout.progress_layout, null)
-        builder.setView(dialogView)
-        builder.setCancelable(false)
+        builder = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setCancelable(false)
         progressDialog = builder.create()
 
         tvProgress = dialogView.findViewById(R.id.tv_progress)
@@ -157,7 +159,6 @@ class PaymentFragment : Fragment() {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
-        val pelangganId: String
         val db = Firebase.firestore
         storageRef = FirebaseStorage.getInstance().reference
 
@@ -169,27 +170,30 @@ class PaymentFragment : Fragment() {
         updateButtonLabel(0)
 
         if (arguments != null) {
-            pelangganId = arguments?.getString(EXTRA_PELANGGANID).toString()
+            val pelangganId = arguments?.getString(EXTRA_PELANGGANID).toString()
             val total = arguments?.getInt(EXTRA_TOTAL)
             val listKeranjang = arguments?.getParcelableArrayList<Keranjang>(EXTRA_KERANJANG)
             val address = arguments?.getString(EXTRA_ADDRESS).toString()
 
-            db.collection("pengguna").addSnapshotListener { value, error ->
-                tvProgress.text = "Memuat data..."
-                progressDialog.show()
-                if (error != null) {
-                    Toast.makeText(requireContext(), "$error", Toast.LENGTH_SHORT).show()
-                    return@addSnapshotListener
-                }
-                if (value != null) {
-                    for (doc in value) {
-                        if (doc.getString("id") == pelangganId) {
-                            tvNamaLengkap.text = doc.getString("namaLengkap")
-                            tvEmail.text = doc.getString("email")
+            tvProgress.text = "Memuat data..."
+            progressDialog.show()
+
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    val snapshot = db.collection("pengguna").get().await()
+                    if (snapshot != null) {
+                        for (doc in snapshot) {
+                            if (doc.getString("id") == pelangganId) {
+                                tvNamaLengkap.text = doc.getString("namaLengkap")
+                                tvEmail.text = doc.getString("email")
+                            }
                         }
                     }
+                } catch (e: Exception) {
+                    Toast.makeText(requireContext(), "$e", Toast.LENGTH_SHORT).show()
+                }finally {
+                    progressDialog.dismiss()
                 }
-                progressDialog.dismiss()
             }
 
             btnPengiriman.setOnClickListener {
@@ -242,104 +246,107 @@ class PaymentFragment : Fragment() {
             }
 
             btnSewa.setOnClickListener {
-                tvProgress.text = "Sedang menyewa..."
-                progressDialog.show()
-                if (mSelisihHari?.toInt() == 0) {
-                    Toast.makeText(requireContext(), "Tanggal belum dipilih", Toast.LENGTH_SHORT)
-                        .show()
-                    progressDialog.dismiss()
-                } else if (tvAlamat.text.toString() == "Alamat akan ditampilkan disini") {
-                    Toast.makeText(
-                        requireContext(),
-                        "Alamat belum dicantumkan",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    progressDialog.dismiss()
-                } else if (imageUri == null) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Bukti pembayaran belum dicantumkan",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    progressDialog.dismiss()
-                } else {
-                    val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-                    val formattedTglPengiriman = dateFormat.parse(pengirimanDateString)
-                    val formattedTglPengambilan = dateFormat.parse(pengambilanDateString)
-                    val currentTimeMillis = System.currentTimeMillis()
+                viewLifecycleOwner.lifecycleScope.launch {
+                    handleSewaButtonClick(pelangganId, listKeranjang)
+                }
+            }
+        }
+    }
 
-                    val pesanan = hashMapOf(
-                        "idPelanggan" to pelangganId,
-                        "tglPengiriman" to formattedTglPengiriman?.let { tgl -> Timestamp(tgl) },
-                        "tglPengambilan" to formattedTglPengambilan?.let { tgl -> Timestamp(tgl) },
-                        "alamat" to tvAlamat.text.toString(),
-                        "latitude" to lat,
-                        "longitude" to lng,
-                        "status" to "netral",
-                        "timestamp" to currentTimeMillis
-                    )
+    private suspend fun handleSewaButtonClick(
+        pelangganId: String,
+        listKeranjang: ArrayList<Keranjang>?
+    ) {
+        tvProgress.text = "Sedang menyewa..."
+        progressDialog.show()
 
-                    CoroutineScope(Dispatchers.Main).launch {
-                        try {
-                            val doc = db.collection("pesanan").add(pesanan).await()
+        if (mSelisihHari?.toInt() == 0) {
+            Toast.makeText(requireContext(), "Tanggal belum dipilih", Toast.LENGTH_SHORT).show()
+            progressDialog.dismiss()
+            return
+        }
+        if (tvAlamat.text.toString() == "Alamat akan ditampilkan disini") {
+            Toast.makeText(requireContext(), "Alamat belum dicantumkan", Toast.LENGTH_SHORT).show()
+            progressDialog.dismiss()
+            return
+        }
+        if (imageUri == null) {
+            Toast.makeText(
+                requireContext(),
+                "Bukti pembayaran belum dicantumkan",
+                Toast.LENGTH_SHORT
+            ).show()
+            progressDialog.dismiss()
+            return
+        }
 
-                            val imageRef = storageRef.child("bukti/${doc.id}.jpg")
-                            imageRef.putFile(imageUri!!).await()
-                            val imageUrl = imageRef.downloadUrl.await().toString()
-                            db.collection("pesanan").document(doc.id)
-                                .update("buktiBayar", imageUrl).await()
+        try {
+            val db = Firebase.firestore
+            val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+            val formattedTglPengiriman = dateFormat.parse(pengirimanDateString)
+            val formattedTglPengambilan = dateFormat.parse(pengambilanDateString)
+            val currentTimeMillis = System.currentTimeMillis()
 
-                            listKeranjang?.forEach {
-                                val keranjang = hashMapOf(
-                                    "aksesoris" to it.barang.aksesoris,
-                                    "biayaSewa" to it.barang.biayaSewa,
-                                    "fotoBarang" to it.barang.fotoBarang,
-                                    "jumlah" to it.jumlah,
-                                    "kartuGrafis" to it.barang.kartuGrafis,
-                                    "kondisi" to it.barang.kondisi,
-                                    "merek" to it.barang.merek,
-                                    "model" to it.barang.model,
-                                    "penyimpanan" to it.barang.penyimpanan,
-                                    "perangkatLunak" to it.barang.perangkatLunak,
-                                    "prosesor" to it.barang.prosesor,
-                                    "ram" to it.barang.ram,
-                                    "sistemOperasi" to it.barang.sistemOperasi,
-                                    "stok" to (it.barang.stok - it.jumlah),
-                                    "ukuranLayar" to it.barang.ukuranLayar
-                                )
+            val pesanan = hashMapOf(
+                "idPelanggan" to pelangganId,
+                "tglPengiriman" to formattedTglPengiriman?.let { tgl -> Timestamp(tgl) },
+                "tglPengambilan" to formattedTglPengambilan?.let { tgl -> Timestamp(tgl) },
+                "alamat" to tvAlamat.text.toString(),
+                "latitude" to lat,
+                "longitude" to lng,
+                "status" to "netral",
+                "timestamp" to currentTimeMillis
+            )
 
-                                db.collection("pesanan").document(doc.id).collection("keranjang")
-                                    .document(it.barang.barangId).set(keranjang).await()
-                                db.collection("barang").document(it.barang.barangId)
-                                    .update("stok", it.barang.stok - it.jumlah).await()
-                            }
+            val doc = db.collection("pesanan").add(pesanan).await()
 
-                            val pengguna = db.collection("pengguna").get().await()
-                            for (mPengguna in pengguna) {
-                                if (mPengguna.getString("id") == pelangganId) {
-                                    val dataKeranjang =
-                                        mPengguna.reference.collection("keranjang").get().await()
-                                    dataKeranjang.forEach {
-                                        it.reference.delete().await()
-                                    }
-                                }
-                            }
+            val imageRef = storageRef.child("bukti/${doc.id}.jpg")
+            imageRef.putFile(imageUri!!).await()
+            val imageUrl = imageRef.downloadUrl.await().toString()
+            db.collection("pesanan").document(doc.id)
+                .update("buktiBayar", imageUrl).await()
 
-                            Toast.makeText(
-                                requireContext(),
-                                "Pesanan sudah dikirim",
-                                Toast.LENGTH_SHORT
-                            ).show()
+            listKeranjang?.forEach {
+                val keranjang = hashMapOf(
+                    "aksesoris" to it.barang.aksesoris,
+                    "biayaSewa" to it.barang.biayaSewa,
+                    "fotoBarang" to it.barang.fotoBarang,
+                    "jumlah" to it.jumlah,
+                    "kartuGrafis" to it.barang.kartuGrafis,
+                    "kondisi" to it.barang.kondisi,
+                    "merek" to it.barang.merek,
+                    "model" to it.barang.model,
+                    "penyimpanan" to it.barang.penyimpanan,
+                    "perangkatLunak" to it.barang.perangkatLunak,
+                    "prosesor" to it.barang.prosesor,
+                    "ram" to it.barang.ram,
+                    "sistemOperasi" to it.barang.sistemOperasi,
+                    "stok" to (it.barang.stok - it.jumlah),
+                    "ukuranLayar" to it.barang.ukuranLayar
+                )
 
-                            parentFragmentManager.popBackStack()
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
-                        } finally {
-                            progressDialog.dismiss()
-                        }
+                db.collection("pesanan").document(doc.id).collection("keranjang")
+                    .document(it.barang.barangId).set(keranjang).await()
+                db.collection("barang").document(it.barang.barangId)
+                    .update("stok", it.barang.stok - it.jumlah).await()
+            }
+
+            val pengguna = db.collection("pengguna").get().await()
+            for (mPengguna in pengguna) {
+                if (mPengguna.getString("id") == pelangganId) {
+                    val dataKeranjang = mPengguna.reference.collection("keranjang").get().await()
+                    dataKeranjang.forEach {
+                        it.reference.delete().await()
                     }
                 }
             }
+
+            Toast.makeText(requireContext(), "Pesanan sudah dikirim", Toast.LENGTH_SHORT).show()
+            parentFragmentManager.popBackStack()
+        } catch (e: Exception) {
+            Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
+        } finally {
+            progressDialog.dismiss()
         }
     }
 

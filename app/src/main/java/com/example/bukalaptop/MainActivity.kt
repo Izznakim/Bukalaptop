@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.example.bukalaptop.pegawai.SignInPegawaiActivity
-import com.example.bukalaptop.pelanggan.PelangganActivity
 import com.example.bukalaptop.pelanggan.SignInPelangganActivity
 
 class MainActivity : AppCompatActivity() {

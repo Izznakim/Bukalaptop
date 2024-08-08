@@ -11,14 +11,18 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
-import com.example.bukalaptop.pegawai.pesanan.DetailPesananFragment
 import com.example.bukalaptop.model.Pelanggan
 import com.example.bukalaptop.model.Pesanan
+import com.example.bukalaptop.pegawai.pesanan.DetailPesananFragment
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
     RecyclerView.Adapter<ListPesananAdapter.ListViewHolder>() {
+
+    private var listenerRegistration: ListenerRegistration? = null
+
     fun setData(data: List<Pesanan>) {
         listPesanan.clear()
         listPesanan.addAll(data)
@@ -46,7 +50,7 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
         val idPelanggan = pesanan.idPelanggan
         holder.apply {
             val db = Firebase.firestore
-            db.collection("pengguna").addSnapshotListener { valuePelanggan, errorPelanggan ->
+            listenerRegistration = db.collection("pengguna").addSnapshotListener { valuePelanggan, errorPelanggan ->
                 if (errorPelanggan != null) {
                     Toast.makeText(holder.itemView.context, "$errorPelanggan", Toast.LENGTH_SHORT)
                         .show()
@@ -101,4 +105,8 @@ class ListPesananAdapter(private val listPesanan: ArrayList<Pesanan>) :
     }
 
     override fun getItemCount(): Int = listPesanan.size
+
+    fun stopListening() {
+        listenerRegistration?.remove()
+    }
 }

@@ -18,6 +18,7 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.pegawai.barang.DetailBarangFragment
 import com.example.bukalaptop.pelanggan.barang.DetailBarangPelangganFragment
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
@@ -34,6 +35,9 @@ class ListKeranjangAdapter(
     private val vsblHapus: Boolean
 ) :
     RecyclerView.Adapter<ListKeranjangAdapter.ListViewHolder>() {
+
+    private var listenerRegistration: ListenerRegistration? = null
+
     fun setData(data: List<Keranjang>) {
         listKeranjang.clear()
         listKeranjang.addAll(data)
@@ -100,7 +104,7 @@ class ListKeranjangAdapter(
                         notifyItemChanged(position)
                     }
                     barang.let { mBarang ->
-                        db.collection("pengguna").addSnapshotListener { value, error ->
+                        listenerRegistration = db.collection("pengguna").addSnapshotListener { value, error ->
                             if (error != null) {
                                 Toast.makeText(
                                     holder.itemView.context,
@@ -178,4 +182,8 @@ class ListKeranjangAdapter(
     }
 
     override fun getItemCount(): Int = listKeranjang.size
+
+    fun stopListening() {
+        listenerRegistration?.remove()
+    }
 }

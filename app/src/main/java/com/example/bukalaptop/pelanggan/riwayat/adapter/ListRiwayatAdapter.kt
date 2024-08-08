@@ -12,11 +12,15 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Pelanggan
 import com.example.bukalaptop.model.Pesanan
 import com.example.bukalaptop.pelanggan.riwayat.DetailRiwayatFragment
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 class ListRiwayatAdapter(private val listRiwayat: ArrayList<Pesanan>) :
     RecyclerView.Adapter<ListRiwayatAdapter.ListViewHolder>() {
+
+    private var listenerRegistration: ListenerRegistration? = null
+
     fun setData(data: List<Pesanan>) {
         listRiwayat.clear()
         listRiwayat.addAll(data)
@@ -24,8 +28,8 @@ class ListRiwayatAdapter(private val listRiwayat: ArrayList<Pesanan>) :
     }
 
     class ListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvNama: TextView =itemView.findViewById(R.id.et_nama_lengkap)
-        val tvTelepon:TextView=itemView.findViewById(R.id.tv_nomor_telepon)
+        val tvNama: TextView = itemView.findViewById(R.id.et_nama_lengkap)
+        val tvTelepon: TextView = itemView.findViewById(R.id.tv_nomor_telepon)
     }
 
     override fun onCreateViewHolder(
@@ -38,10 +42,11 @@ class ListRiwayatAdapter(private val listRiwayat: ArrayList<Pesanan>) :
     }
 
     override fun onBindViewHolder(holder: ListViewHolder, position: Int) {
-        val (pesananId,idPelanggan) = listRiwayat[position]
+        val (pesananId, idPelanggan) = listRiwayat[position]
+        val context = holder.itemView.context
         holder.apply {
             val db = Firebase.firestore
-            db.collection("pengguna").addSnapshotListener{valuePelanggan,errorPelanggan->
+            listenerRegistration = db.collection("pengguna").addSnapshotListener { valuePelanggan, errorPelanggan ->
                 if (errorPelanggan != null) {
                     Toast.makeText(holder.itemView.context, "$errorPelanggan", Toast.LENGTH_SHORT)
                         .show()
@@ -50,7 +55,7 @@ class ListRiwayatAdapter(private val listRiwayat: ArrayList<Pesanan>) :
                 if (valuePelanggan != null) {
                     for (document in valuePelanggan) {
                         if (document.getString("id") == idPelanggan) {
-                            val pelanggan=document.toObject(Pelanggan::class.java)
+                            val pelanggan = document.toObject(Pelanggan::class.java)
                             tvNama.text = pelanggan.namaLengkap
                             tvTelepon.text = pelanggan.nomorHp
                         }
@@ -58,16 +63,19 @@ class ListRiwayatAdapter(private val listRiwayat: ArrayList<Pesanan>) :
                 }
             }
             itemView.setOnClickListener {
+                val activity = context as? AppCompatActivity
                 val detailRiwayatFragment = DetailRiwayatFragment()
-                val mFragmentManager =
-                    (holder.itemView.context as AppCompatActivity).supportFragmentManager
                 val bundle = Bundle()
 
                 bundle.putString(DetailRiwayatFragment.EXTRA_IDPELANGGAN, idPelanggan)
                 bundle.putString(DetailRiwayatFragment.EXTRA_IDPESANAN, pesananId)
                 detailRiwayatFragment.arguments = bundle
-                mFragmentManager.beginTransaction().apply {
-                    replace(R.id.fragment_pelanggan_container,detailRiwayatFragment, DetailRiwayatFragment::class.java.simpleName)
+                activity?.supportFragmentManager?.beginTransaction()?.apply {
+                    replace(
+                        R.id.fragment_pelanggan_container,
+                        detailRiwayatFragment,
+                        DetailRiwayatFragment::class.java.simpleName
+                    )
                     addToBackStack(null)
                     commit()
                 }
@@ -75,5 +83,9 @@ class ListRiwayatAdapter(private val listRiwayat: ArrayList<Pesanan>) :
         }
     }
 
-    override fun getItemCount(): Int =listRiwayat.size
+    override fun getItemCount(): Int = listRiwayat.size
+
+    fun stopListening() {
+        listenerRegistration?.remove()
+    }
 }

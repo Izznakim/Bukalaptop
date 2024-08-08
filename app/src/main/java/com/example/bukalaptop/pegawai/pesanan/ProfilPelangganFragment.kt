@@ -19,6 +19,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
 import com.example.bukalaptop.ZoomImageActivity
 import com.example.bukalaptop.model.Pelanggan
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -33,6 +34,8 @@ class ProfilPelangganFragment : Fragment() {
     private lateinit var tvProgress: TextView
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
+
+    private var listener: ListenerRegistration? = null
 
     companion object {
         var EXTRA_IDPELANGGAN = "extra_idpelanggan"
@@ -57,13 +60,13 @@ class ProfilPelangganFragment : Fragment() {
         tvNomorTelpon = view.findViewById(R.id.tv_nomor_telpon)
 
         builder = AlertDialog.Builder(requireContext())
-        val inflater=layoutInflater
-        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.progress_layout, null)
         builder.setView(dialogView)
         builder.setCancelable(false)
         progressDialog = builder.create()
 
-        tvProgress=dialogView.findViewById(R.id.tv_progress)
+        tvProgress = dialogView.findViewById(R.id.tv_progress)
 
         tvNomorTelpon.paintFlags = tvNomorTelpon.paintFlags or Paint.UNDERLINE_TEXT_FLAG
 
@@ -72,12 +75,13 @@ class ProfilPelangganFragment : Fragment() {
 
         if (arguments != null) {
             val pelangganId = arguments?.getString(EXTRA_IDPELANGGAN).toString()
-            tvProgress.text="Memuat profil..."
+            tvProgress.text = "Memuat profil..."
             progressDialog.show()
 
-            db.collection("pengguna").addSnapshotListener { value, error ->
+            listener = db.collection("pengguna").addSnapshotListener { value, error ->
                 if (error != null) {
                     Toast.makeText(requireContext(), "$error", Toast.LENGTH_SHORT).show()
+                    progressDialog.dismiss()
                     return@addSnapshotListener
                 }
                 if (value != null) {
@@ -132,6 +136,12 @@ class ProfilPelangganFragment : Fragment() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        listener?.remove()
+        progressDialog.dismiss()
+    }
+
     private fun intentToWhatsApp(phone: String) {
         val packageManager = context?.packageManager
         val intent = Intent(Intent.ACTION_VIEW)
@@ -149,7 +159,7 @@ class ProfilPelangganFragment : Fragment() {
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Toast.makeText(requireContext(), "$e", Toast.LENGTH_SHORT).show()
             }
         }
     }

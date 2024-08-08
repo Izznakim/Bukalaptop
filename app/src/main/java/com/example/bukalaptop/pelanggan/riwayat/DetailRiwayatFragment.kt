@@ -31,6 +31,7 @@ import com.example.bukalaptop.model.Pesanan
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
@@ -64,6 +65,9 @@ class DetailRiwayatFragment : Fragment() {
     private lateinit var tvProgress: TextView
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
+
+    private var listenerRiwayat: ListenerRegistration? = null
+    private var listenerKeranjang: ListenerRegistration? = null
 
     companion object {
         var EXTRA_IDPELANGGAN = "extra_idpelanggan"
@@ -119,9 +123,10 @@ class DetailRiwayatFragment : Fragment() {
             tvProgress.text = "Memuat informasi riwayat..."
             progressDialog.show()
 
-            db.collection("pesanan").addSnapshotListener { valueRiwayat, errorRiwayat ->
+            listenerRiwayat = db.collection("pesanan").addSnapshotListener { valueRiwayat, errorRiwayat ->
                 if (errorRiwayat != null) {
                     Toast.makeText(requireContext(), "$errorRiwayat", Toast.LENGTH_SHORT).show()
+                    progressDialog.dismiss()
                     return@addSnapshotListener
                 }
                 if (valueRiwayat != null) {
@@ -284,7 +289,7 @@ class DetailRiwayatFragment : Fragment() {
                             }
 
                             if (pesanan.idPelanggan == pelangganId) {
-                                db.collection("pesanan").document(pesananId).collection("keranjang")
+                                listenerKeranjang = db.collection("pesanan").document(pesananId).collection("keranjang")
                                     .addSnapshotListener { valueKeranjang, errorKeranjang ->
                                         var total = 0
                                         listKeranjang.clear()
@@ -418,5 +423,13 @@ class DetailRiwayatFragment : Fragment() {
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        listenerRiwayat?.remove()
+        listenerKeranjang?.remove()
+        progressDialog.dismiss()
+        listKeranjangAdapter.stopListening()
     }
 }

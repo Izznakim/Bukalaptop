@@ -15,6 +15,7 @@ import androidx.core.widget.doOnTextChanged
 import com.example.bukalaptop.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
@@ -34,6 +35,8 @@ class SignInPegawaiActivity : AppCompatActivity() {
 
     private var isEmailValid = false
     private var isPasswordValid = false
+
+    private var snapshotListener: ListenerRegistration? = null
 
     private val onBackPressedCallback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
@@ -119,7 +122,7 @@ class SignInPegawaiActivity : AppCompatActivity() {
             progressDialog.show()
             val db = Firebase.firestore
             val penggunaRef = db.collection("pengguna").document(userId)
-            penggunaRef.addSnapshotListener { value, error ->
+            snapshotListener = penggunaRef.addSnapshotListener { value, error ->
                 if (value != null) {
                     val userType = value.getString("jenis")
                     if (userType == "pegawai") {
@@ -161,5 +164,10 @@ class SignInPegawaiActivity : AppCompatActivity() {
         super.onResume()
 
         onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
+    }
+
+    override fun onDestroy() {
+        snapshotListener?.remove()
+        super.onDestroy()
     }
 }

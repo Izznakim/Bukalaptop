@@ -14,6 +14,7 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.pegawai.barang.adapter.ListBarangAdapter
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -26,6 +27,8 @@ class BarangFragment : Fragment() {
     private lateinit var tvProgress: TextView
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
+
+    private var barangListener: ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,21 +47,21 @@ class BarangFragment : Fragment() {
         fabTambahBarang = view.findViewById(R.id.fab_tambah_barang)
 
         builder = AlertDialog.Builder(requireContext())
-        val inflater=layoutInflater
-        val dialogView=inflater.inflate(R.layout.progress_layout,null)
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.progress_layout, null)
         builder.setView(dialogView)
         builder.setCancelable(false)
         progressDialog = builder.create()
 
-        tvProgress=dialogView.findViewById(R.id.tv_progress)
+        tvProgress = dialogView.findViewById(R.id.tv_progress)
 
         initAdapter()
 
         val db = Firebase.firestore
         listBarang = arrayListOf()
-        tvProgress.text="Memuat barang..."
+        tvProgress.text = "Memuat barang..."
         progressDialog.show()
-        db.collection("barang").addSnapshotListener { value, error ->
+        barangListener = db.collection("barang").addSnapshotListener { value, error ->
             listBarang.clear()
             if (value != null) {
                 for (document in value) {
@@ -75,7 +78,11 @@ class BarangFragment : Fragment() {
 
         fabTambahBarang.setOnClickListener {
             parentFragmentManager.beginTransaction().apply {
-                replace(R.id.fragment_pegawai_container,TambahBarangFragment(), TambahBarangFragment::class.java.simpleName)
+                replace(
+                    R.id.fragment_pegawai_container,
+                    TambahBarangFragment(),
+                    TambahBarangFragment::class.java.simpleName
+                )
                 addToBackStack(null)
                 commit()
             }
@@ -86,5 +93,11 @@ class BarangFragment : Fragment() {
         rvBarang.layoutManager = LinearLayoutManager(activity)
         listBarangAdapter = ListBarangAdapter(arrayListOf())
         rvBarang.adapter = listBarangAdapter
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        barangListener?.remove()
+        progressDialog.dismiss()
     }
 }

@@ -379,7 +379,7 @@ class UpdateBarangFragment : Fragment() {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
             }
         } catch (e: IOException) {
-            e.printStackTrace()
+            Toast.makeText(requireContext(), "$e", Toast.LENGTH_SHORT).show()
         }
 
         return imageUri

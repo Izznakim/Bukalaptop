@@ -16,16 +16,17 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
 import com.example.bukalaptop.ZoomImageActivity
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.NumberFormat
@@ -56,6 +57,8 @@ class DetailBarangPelangganFragment : Fragment() {
     private lateinit var progressDialog: AlertDialog
 
     private var jumlah: Int = 0
+    private var barangListener: ListenerRegistration? = null
+    private var penggunaListener: ListenerRegistration? = null
 
     companion object {
         var EXTRA_IDBARANG = "extra_idbarang"
@@ -113,12 +116,12 @@ class DetailBarangPelangganFragment : Fragment() {
         val auth = Firebase.auth
         tvProgress.text = "Memuat informasi barang..."
         progressDialog.show()
-        db.collection("barang").addSnapshotListener { value, error ->
+        barangListener = db.collection("barang").addSnapshotListener { value, error ->
             if (value != null) {
                 for (document in value) {
                     if (document.id == barangId) {
                         barang = document.toObject(Barang::class.java)
-                        if (isAdded) {
+                        if (viewLifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                             Glide.with(requireActivity())
                                 .load(barang.fotoBarang)
                                 .apply(RequestOptions())
@@ -206,11 +209,11 @@ class DetailBarangPelangganFragment : Fragment() {
                     "jumlah" to jumlah
                 )
 
-                db.collection("pengguna").addSnapshotListener { value, error ->
+                penggunaListener = db.collection("pengguna").addSnapshotListener { value, error ->
                     if (value != null) {
                         for (document in value) {
                             if (document.getString("id") == auth.currentUser?.uid) {
-                                CoroutineScope(Dispatchers.Main).launch {
+                                viewLifecycleOwner.lifecycleScope.launch {
                                     try {
                                         document.reference.collection("keranjang")
                                             .document(barangId)
@@ -258,5 +261,11 @@ class DetailBarangPelangganFragment : Fragment() {
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        barangListener?.remove()
+        penggunaListener?.remove()
     }
 }

@@ -33,7 +33,8 @@ class CheckoutFragment : Fragment() {
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
 
-    private var listenerRegistration: ListenerRegistration? = null
+    private var penggunaListener: ListenerRegistration? = null
+    private var barangListener: ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -71,7 +72,7 @@ class CheckoutFragment : Fragment() {
         listKeranjang = arrayListOf()
         tvProgress.text = "Memuat keranjang..."
         progressDialog.show()
-        db.collection("pengguna").addSnapshotListener { pengguna, _ ->
+        penggunaListener = db.collection("pengguna").addSnapshotListener { pengguna, _ ->
             if (pengguna != null) {
                 for (peng in pengguna) {
                     if (peng.getString("id") == pelangganId) {
@@ -93,7 +94,7 @@ class CheckoutFragment : Fragment() {
                                     currencyFormat.currency = Currency.getInstance("IDR")
 
                                     for (krnjng in keranjang) {
-                                        listenerRegistration = db.collection("barang")
+                                        barangListener = db.collection("barang")
                                             .addSnapshotListener { barang, error1 ->
                                                 if (barang != null) {
                                                     for (brng in barang) {
@@ -174,5 +175,13 @@ class CheckoutFragment : Fragment() {
         rvKeranjang.layoutManager = LinearLayoutManager(activity)
         listKeranjangAdapter = ListKeranjangAdapter(arrayListOf(), false, pelangganId, true)
         rvKeranjang.adapter = listKeranjangAdapter
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        penggunaListener?.remove()
+        barangListener?.remove()
+        progressDialog.dismiss()
+        listKeranjangAdapter.stopListening()
     }
 }

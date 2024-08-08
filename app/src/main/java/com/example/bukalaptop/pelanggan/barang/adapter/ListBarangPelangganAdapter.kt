@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
-import com.example.bukalaptop.pegawai.barang.DetailBarangFragment
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pelanggan.barang.DetailBarangPelangganFragment
 import java.text.NumberFormat
