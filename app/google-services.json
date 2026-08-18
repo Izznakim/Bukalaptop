@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "298262140856",
+    "firebase_url": "https://bukalaptop-92a86-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "bukalaptop-92a86",
+    "storage_bucket": "bukalaptop-92a86.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:298262140856:android:93094d65865efa0f93e14d",
+        "android_client_info": {
+          "package_name": "com.example.bukalaptop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0cbPdFWN-bEGnfu4F9z5EPX1LmG2PHuc"
+        },
+        {
+          "current_key": "AIzaSyDFf65ySHzw1kdYTvbRTylTgaeIR5gtx2A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:298262140856:android:6b760d296729c8b893e14d",
+        "android_client_info": {
+          "package_name": "com.example.bukalaptoppel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0cbPdFWN-bEGnfu4F9z5EPX1LmG2PHuc"
+        },
+        {
+          "current_key": "AIzaSyDFf65ySHzw1kdYTvbRTylTgaeIR5gtx2A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
