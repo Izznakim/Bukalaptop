@@ -15,8 +15,8 @@ import com.example.bukalaptop.model.Pesanan
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListPesananAdapter
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
+import com.google.firebase.Firebase
 
 class PesananFragment : Fragment() {
 

@@ -16,8 +16,8 @@ import com.example.bukalaptop.MainActivity
 import com.example.bukalaptop.R
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.Firebase
 
 class PelangganActivity : AppCompatActivity() {
 

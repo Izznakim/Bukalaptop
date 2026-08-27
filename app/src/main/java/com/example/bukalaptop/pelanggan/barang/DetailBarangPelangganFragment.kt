@@ -23,10 +23,10 @@ import com.bumptech.glide.request.RequestOptions
 import com.example.bukalaptop.R
 import com.example.bukalaptop.ZoomImageActivity
 import com.example.bukalaptop.pegawai.barang.model.Barang
-import com.google.firebase.auth.ktx.auth
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
+import com.google.firebase.Firebase
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.NumberFormat
