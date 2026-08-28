@@ -32,8 +32,8 @@ import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
+import com.google.firebase.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.CoroutineScope

@@ -13,8 +13,8 @@ import com.example.bukalaptop.model.Pelanggan
 import com.example.bukalaptop.model.Pesanan
 import com.example.bukalaptop.pelanggan.riwayat.DetailRiwayatFragment
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
+import com.google.firebase.Firebase
 
 class ListRiwayatAdapter(private val listRiwayat: ArrayList<Pesanan>) :
     RecyclerView.Adapter<ListRiwayatAdapter.ListViewHolder>() {

@@ -15,8 +15,8 @@ import com.example.bukalaptop.pegawai.barang.adapter.ListBarangAdapter
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
+import com.google.firebase.Firebase
 
 class BarangFragment : Fragment() {
 

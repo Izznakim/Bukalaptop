@@ -20,8 +20,8 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.ZoomImageActivity
 import com.example.bukalaptop.model.Pelanggan
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
+import com.google.firebase.Firebase
 
 class ProfilPelangganFragment : Fragment() {
 

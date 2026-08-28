@@ -13,11 +13,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Pesanan
 import com.example.bukalaptop.pelanggan.riwayat.adapter.ListRiwayatAdapter
-import com.google.firebase.auth.ktx.auth
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
+import com.google.firebase.Firebase
 
 class RiwayatFragment : Fragment() {
 

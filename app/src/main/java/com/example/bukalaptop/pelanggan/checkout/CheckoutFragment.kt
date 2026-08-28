@@ -15,10 +15,10 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.model.Keranjang
 import com.example.bukalaptop.pegawai.barang.model.Barang
 import com.example.bukalaptop.pegawai.pesanan.adapter.ListKeranjangAdapter
-import com.google.firebase.auth.ktx.auth
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
+import com.google.firebase.Firebase
 import java.text.NumberFormat
 import java.util.Currency
 

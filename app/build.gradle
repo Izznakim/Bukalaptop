@@ -1,20 +1,21 @@
 plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
-    id 'com.google.gms.google-services'
+    alias libs.plugins.android.application
+    alias libs.plugins.jetbrains.kotlin.android
+    alias libs.plugins.google.gms.google.services
     id 'kotlin-parcelize'
-    id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
-    id ("androidx.navigation.safeargs")
+    alias libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin
+    alias libs.plugins.navigation.safeargs
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 android {
     namespace 'com.example.bukalaptop'
-    compileSdk 34
+    compileSdk 37
 
     defaultConfig {
         applicationId "com.example.bukalaptop"
-        minSdk 21
-        targetSdk 33
+        minSdk 23
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
@@ -40,40 +41,56 @@ android {
     }
     buildFeatures {
         viewBinding true
+        compose true
     }
 }
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.13.1'
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'com.google.android.material:material:1.12.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'com.google.android.gms:play-services-maps:18.2.0'
-    implementation 'com.google.firebase:firebase-storage-ktx:21.0.0'
-    implementation 'com.google.firebase:firebase-firestore:25.0.0'
-    implementation 'com.google.firebase:firebase-storage:21.0.0'
-    implementation 'com.google.android.gms:play-services-location:21.3.0'
-    implementation 'androidx.activity:activity-ktx:1.9.0'
-    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
-    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.5.2"
+    def composeBom = platform('androidx.compose:compose-bom:2026.08.00')
+    implementation composeBom
+    androidTestImplementation composeBom
+
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.appcompat
+    implementation libs.material
+    implementation libs.androidx.constraintlayout
+    implementation libs.play.services.maps
+    implementation libs.firebase.firestore
+    implementation libs.firebase.storage
+    implementation libs.play.services.location
+    implementation libs.androidx.activity.ktx
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.junit
+    androidTestImplementation libs.androidx.espresso.core
+    implementation libs.kotlinx.coroutines.core
+    implementation libs.kotlinx.coroutines.android
+    implementation libs.kotlinx.coroutines.play.services
 
 
 //    Image
-    implementation 'com.github.bumptech.glide:glide:4.14.2'
+    implementation libs.glide
 
 //    firebase
-    implementation 'com.google.firebase:firebase-firestore-ktx:25.0.0'
     // Import the BoM for the Firebase platform
-    implementation(platform('com.google.firebase:firebase-bom:32.8.1'))
+    implementation(libs.firebase.bom)
 
     // Add the dependency for the Firebase Authentication library
-    // When using the BoM, you don't specify versions in Firebase library dependencies
-    implementation("com.google.firebase:firebase-auth")
+    implementation libs.firebase.auth
+
+    // Material Design 3
+    implementation libs.compose.material3
+    // Android Studio Preview support
+    implementation libs.compose.ui.tooling.preview
+    debugImplementation libs.compose.ui.tooling
+    // UI Tests
+    androidTestImplementation libs.compose.ui.test.junit4
+    debugImplementation libs.compose.ui.test.manifest
+
+    // Optional - Integration with activities
+    implementation libs.androidx.activity.compose
+    // Optional - Integration with ViewModels
+    implementation libs.androidx.lifecycle.viewmodel.compose
 }
