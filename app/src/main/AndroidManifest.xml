@@ -41,7 +41,7 @@
             android:exported="false"
             android:theme="@style/Theme.Bukalaptop" />
         <activity
-            android:name=".pegawai.SignInPegawaiActivity"
+            android:name=".pegawai.auth.presentation.SignInPegawaiActivity"
             android:exported="false"
             android:theme="@style/Theme.Bukalaptop" />
         <activity

@@ -1,4 +1,4 @@
-package com.example.bukalaptop.pegawai
+package com.example.bukalaptop.pegawai.auth.presentation
 
 import android.content.Intent
 import android.graphics.Color
@@ -17,11 +17,18 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.bukalaptop.R
 import com.example.bukalaptop.databinding.ActivitySignInPegawaiBinding
+import com.example.bukalaptop.pegawai.PegawaiActivity
+import com.example.bukalaptop.pegawai.SignInState
+import com.example.bukalaptop.pegawai.auth.data.AuthRepositoryImpl
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 
 class SignInPegawaiActivity : AppCompatActivity() {
 
-    private val viewModel: SignInPegawaiViewModel by viewModels()
+    private val viewModel: SignInPegawaiViewModel by viewModels {
+        SignInPegawaiViewModelFactory(AuthRepositoryImpl(Firebase.auth))
+    }
 
     private lateinit var binding: ActivitySignInPegawaiBinding
     private lateinit var tvProgress: TextView
@@ -55,7 +62,9 @@ class SignInPegawaiActivity : AppCompatActivity() {
 
             binding.etEmail.error = when {
                 text.isNullOrBlank() -> getString(R.string.email_harus_diisi)
-                !Patterns.EMAIL_ADDRESS.matcher(text).matches() -> getString(R.string.email_tidak_valid)
+                !Patterns.EMAIL_ADDRESS.matcher(text)
+                    .matches() -> getString(R.string.email_tidak_valid)
+
                 else -> null
             }
             updateSigninButtonState()
@@ -82,7 +91,7 @@ class SignInPegawaiActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.signInState.collect { state ->
-                    when(state){
+                    when (state) {
                         SignInState.Loading -> {
                             tvProgress.text = getString(R.string.signing_in)
                             progressDialog.show()
@@ -91,14 +100,23 @@ class SignInPegawaiActivity : AppCompatActivity() {
                         SignInState.Success -> {
                             progressDialog.dismiss()
 
-                            startActivity(Intent(this@SignInPegawaiActivity, PegawaiActivity::class.java))
+                            startActivity(
+                                Intent(
+                                    this@SignInPegawaiActivity,
+                                    PegawaiActivity::class.java
+                                )
+                            )
                             finish()
                         }
 
                         is SignInState.Error -> {
                             progressDialog.dismiss()
 
-                            Toast.makeText(this@SignInPegawaiActivity, state.message, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this@SignInPegawaiActivity,
+                                state.message,
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
 
                         SignInState.NotPegawai -> {
@@ -111,9 +129,7 @@ class SignInPegawaiActivity : AppCompatActivity() {
                             ).show()
                         }
 
-                        SignInState.Idle -> {
-                            progressDialog.dismiss()
-                        }
+                        SignInState.Idle -> Unit
                     }
                 }
             }
@@ -123,7 +139,7 @@ class SignInPegawaiActivity : AppCompatActivity() {
     private fun updateSigninButtonState() {
         binding.btnSignIn.isEnabled = viewModel.canSignIn
         if (viewModel.canSignIn) {
-            binding.btnSignIn.setBackgroundColor(ContextCompat.getColor(this,R.color.red))
+            binding.btnSignIn.setBackgroundColor(ContextCompat.getColor(this, R.color.red))
         } else {
             binding.btnSignIn.setBackgroundColor(Color.GRAY)
         }

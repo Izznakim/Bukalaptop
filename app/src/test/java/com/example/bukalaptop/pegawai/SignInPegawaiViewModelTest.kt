@@ -1,16 +1,21 @@
 package com.example.bukalaptop.pegawai
 
+import com.example.bukalaptop.pegawai.auth.domain.AuthRepository
+import com.example.bukalaptop.pegawai.auth.presentation.SignInPegawaiViewModel
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.mock
 
 class SignInPegawaiViewModelTest {
 
     private lateinit var viewModel: SignInPegawaiViewModel
+    private lateinit var repository: AuthRepository
 
     @Before
     fun setup() {
-        viewModel = SignInPegawaiViewModel()
+        repository = mock(AuthRepository::class.java)
+        viewModel = SignInPegawaiViewModel(repository)
     }
 
     @Test

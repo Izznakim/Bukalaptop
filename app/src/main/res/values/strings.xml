@@ -3,4 +3,15 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_maps">MapsActivity</string>
     <string name="title_activity_maps_pelanggan">MapsPelangganActivity</string>
+    <string name="signing_in">Signing in…</string>
+    <string name="email_harus_diisi">Email harus diisi</string>
+    <string name="email_tidak_valid">Email tidak valid</string>
+    <string name="password_harus_diisi">Password harus diisi</string>
+    <string name="password_minimal_harus_6_karakter">Password minimal harus 6 karakter</string>
+    <string name="anda_belum_mempunyai_akun_sebagai_pegawai">Anda belum mempunyai akun sebagai pegawai.</string>
+    <string name="pegawai">Pegawai</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="sign_in">Sign In</string>
+    <string name="logo_bukalaptop">Logo Bukalaptop</string>
 </resources>

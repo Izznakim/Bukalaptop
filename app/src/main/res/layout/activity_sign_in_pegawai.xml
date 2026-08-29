@@ -5,11 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    tools:context=".pegawai.SignInPegawaiActivity">
+    tools:context=".pegawai.auth.presentation.SignInPegawaiActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appBarLayout"
@@ -24,6 +24,7 @@
                 android:id="@+id/imageView"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
+                android:contentDescription="@string/logo_bukalaptop"
                 android:src="@drawable/logs" />
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -46,7 +47,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Pegawai"
+                android:text="@string/pegawai"
                 android:textSize="34sp" />
 
             <com.google.android.material.textfield.TextInputLayout
@@ -59,7 +60,7 @@
                     android:id="@+id/et_email"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Email"
+                    android:hint="@string/email"
                     android:inputType="textEmailAddress" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -73,7 +74,7 @@
                     android:id="@+id/et_password"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Password"
+                    android:hint="@string/password"
                     android:inputType="text|textPassword" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -82,7 +83,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="Sign In" />
+                android:text="@string/sign_in" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
