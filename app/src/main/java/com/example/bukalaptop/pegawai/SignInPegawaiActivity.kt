@@ -4,39 +4,29 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Patterns
-import android.widget.Button
-import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.bukalaptop.R
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.firestore
-import com.google.firebase.Firebase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.example.bukalaptop.databinding.ActivitySignInPegawaiBinding
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class SignInPegawaiActivity : AppCompatActivity() {
 
-    private lateinit var auth: FirebaseAuth
-    private lateinit var etEmail: EditText
-    private lateinit var etPassword: EditText
-    private lateinit var btnSignIn: Button
+    private val viewModel: SignInPegawaiViewModel by viewModels()
+
+    private lateinit var binding: ActivitySignInPegawaiBinding
     private lateinit var tvProgress: TextView
     private lateinit var builder: AlertDialog.Builder
     private lateinit var progressDialog: AlertDialog
-
-    private var isEmailValid = false
-    private var isPasswordValid = false
-
-    private var snapshotListener: ListenerRegistration? = null
 
     private val onBackPressedCallback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
@@ -47,13 +37,8 @@ class SignInPegawaiActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_sign_in_pegawai)
-
-        auth = Firebase.auth
-
-        etEmail = findViewById(R.id.et_email)
-        etPassword = findViewById(R.id.et_password)
-        btnSignIn = findViewById(R.id.btn_signIn)
+        binding = ActivitySignInPegawaiBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         builder = AlertDialog.Builder(this)
         val inflater = layoutInflater
@@ -63,101 +48,91 @@ class SignInPegawaiActivity : AppCompatActivity() {
         progressDialog = builder.create()
 
         tvProgress = dialogView.findViewById(R.id.tv_progress)
+        binding.btnSignIn.isEnabled = false
 
-        btnSignIn.isEnabled = false
+        binding.etEmail.doOnTextChanged { text, _, _, _ ->
+            viewModel.validateEmail(text?.toString().orEmpty())
 
-        etEmail.doOnTextChanged { text, _, _, _ ->
-            if (text != null) {
-                if (text.isBlank()) {
-                    etEmail.error = "Email harus diisi"
-                    isEmailValid = false
-                } else if (!Patterns.EMAIL_ADDRESS.matcher(text).matches()) {
-                    etEmail.error = "Email tidak valid"
-                    isEmailValid = false
-                } else {
-                    etEmail.error = null
-                    isEmailValid = true
-                }
+            binding.etEmail.error = when {
+                text.isNullOrBlank() -> getString(R.string.email_harus_diisi)
+                !Patterns.EMAIL_ADDRESS.matcher(text).matches() -> getString(R.string.email_tidak_valid)
+                else -> null
             }
             updateSigninButtonState()
         }
 
-        etPassword.doOnTextChanged { text, _, _, _ ->
-            if (text != null) {
-                if (text.isBlank() || text.length < 6) {
-                    etPassword.error = "Password minimal harus 6 karakter"
-                    isPasswordValid = false
-                } else {
-                    etPassword.error = null
-                    isPasswordValid = true
-                }
+        binding.etPassword.doOnTextChanged { text, _, _, _ ->
+            viewModel.validatePassword(text?.toString().orEmpty())
+
+            binding.etPassword.error = when {
+                text.isNullOrBlank() -> getString(R.string.password_harus_diisi)
+                text.length < 6 -> getString(R.string.password_minimal_harus_6_karakter)
+                else -> null
             }
             updateSigninButtonState()
         }
 
-        btnSignIn.setOnClickListener {
-            tvProgress.text = "Signing in..."
-            progressDialog.show()
-            CoroutineScope(Dispatchers.Main).launch {
-                try {
-                    val task = auth.signInWithEmailAndPassword(etEmail.text.toString(), etPassword.text.toString()).await()
-                    val user = task.user?.uid
-                    jenisPengguna(user)
-                }catch (e: Exception){
-                    Toast.makeText(
-                        baseContext,
-                        "Sign In gagal: $e",
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }finally {
-                    progressDialog.dismiss()
-                }
-            }
+        binding.btnSignIn.setOnClickListener {
+            viewModel.signIn(
+                binding.etEmail.text.toString(),
+                binding.etPassword.text.toString()
+            )
         }
-    }
 
-    private fun jenisPengguna(userId: String?) {
-        if (userId != null) {
-            tvProgress.text = "Signing in..."
-            progressDialog.show()
-            val db = Firebase.firestore
-            val penggunaRef = db.collection("pengguna").document(userId)
-            snapshotListener = penggunaRef.addSnapshotListener { value, error ->
-                if (value != null) {
-                    val userType = value.getString("jenis")
-                    if (userType == "pegawai") {
-                        startActivity(Intent(this, PegawaiActivity::class.java))
-                        finish()
-                    } else {
-                        Toast.makeText(
-                            this,
-                            "Anda belum mempunyai akun sebagai pegawai.",
-                            Toast.LENGTH_SHORT
-                        ).show()
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.signInState.collect { state ->
+                    when(state){
+                        SignInState.Loading -> {
+                            tvProgress.text = getString(R.string.signing_in)
+                            progressDialog.show()
+                        }
+
+                        SignInState.Success -> {
+                            progressDialog.dismiss()
+
+                            startActivity(Intent(this@SignInPegawaiActivity, PegawaiActivity::class.java))
+                            finish()
+                        }
+
+                        is SignInState.Error -> {
+                            progressDialog.dismiss()
+
+                            Toast.makeText(this@SignInPegawaiActivity, state.message, Toast.LENGTH_SHORT).show()
+                        }
+
+                        SignInState.NotPegawai -> {
+                            progressDialog.dismiss()
+
+                            Toast.makeText(
+                                this@SignInPegawaiActivity,
+                                getString(R.string.anda_belum_mempunyai_akun_sebagai_pegawai),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                        SignInState.Idle -> {
+                            progressDialog.dismiss()
+                        }
                     }
-                    progressDialog.dismiss()
-                } else if (error != null) {
-                    Toast.makeText(this, "$error", Toast.LENGTH_SHORT).show()
-                    progressDialog.dismiss()
                 }
             }
         }
     }
 
     private fun updateSigninButtonState() {
-        btnSignIn.isEnabled = isEmailValid && isPasswordValid
-        if (btnSignIn.isEnabled) {
-            btnSignIn.setBackgroundColor(resources.getColor(R.color.red))
+        binding.btnSignIn.isEnabled = viewModel.canSignIn
+        if (viewModel.canSignIn) {
+            binding.btnSignIn.setBackgroundColor(ContextCompat.getColor(this,R.color.red))
         } else {
-            btnSignIn.setBackgroundColor(Color.GRAY)
+            binding.btnSignIn.setBackgroundColor(Color.GRAY)
         }
     }
 
     public override fun onStart() {
         super.onStart()
 
-        val currentUser = auth.currentUser
-        jenisPengguna(currentUser?.uid)
+        viewModel.checkCurrentUser()
     }
 
     override fun onResume() {
@@ -167,7 +142,6 @@ class SignInPegawaiActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        snapshotListener?.remove()
         super.onDestroy()
     }
 }
