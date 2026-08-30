@@ -4,11 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bukalaptop.pegawai.SignInState
 import com.example.bukalaptop.pegawai.auth.domain.AuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class SignInPegawaiViewModel(private val repository: AuthRepository) : ViewModel() {
+@HiltViewModel
+class SignInPegawaiViewModel @Inject constructor(private val repository: AuthRepository) :
+    ViewModel() {
 
     private val emailPattern = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
 

@@ -19,16 +19,13 @@ import com.example.bukalaptop.R
 import com.example.bukalaptop.databinding.ActivitySignInPegawaiBinding
 import com.example.bukalaptop.pegawai.PegawaiActivity
 import com.example.bukalaptop.pegawai.SignInState
-import com.example.bukalaptop.pegawai.auth.data.AuthRepositoryImpl
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class SignInPegawaiActivity : AppCompatActivity() {
 
-    private val viewModel: SignInPegawaiViewModel by viewModels {
-        SignInPegawaiViewModelFactory(AuthRepositoryImpl(Firebase.auth))
-    }
+    private val viewModel: SignInPegawaiViewModel by viewModels()
 
     private lateinit var binding: ActivitySignInPegawaiBinding
     private lateinit var tvProgress: TextView
