@@ -1,6 +1,6 @@
 package com.example.bukalaptop.pegawai
 
-import com.example.bukalaptop.pegawai.auth.domain.AuthRepository
+import com.example.bukalaptop.pegawai.auth.domain.repository.AuthRepository
 import com.example.bukalaptop.pegawai.auth.presentation.SignInPegawaiViewModel
 import org.junit.Assert.*
 import org.junit.Before
@@ -14,7 +14,7 @@ class SignInPegawaiViewModelTest {
 
     @Before
     fun setup() {
-        repository = mock(AuthRepository::class.java)
+        repository = mock()
         viewModel = SignInPegawaiViewModel(repository)
     }
 

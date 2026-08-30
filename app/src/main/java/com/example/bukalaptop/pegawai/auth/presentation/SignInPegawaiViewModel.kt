@@ -2,8 +2,8 @@ package com.example.bukalaptop.pegawai.auth.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.bukalaptop.pegawai.SignInState
-import com.example.bukalaptop.pegawai.auth.domain.AuthRepository
+import com.example.bukalaptop.pegawai.auth.domain.model.SignInResult
+import com.example.bukalaptop.pegawai.auth.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,7 +40,7 @@ class SignInPegawaiViewModel @Inject constructor(private val repository: AuthRep
         viewModelScope.launch {
             _signInState.value = SignInState.Loading
             val result = repository.signIn(email, password)
-            _signInState.value = result
+            _signInState.value = result.toSignInState()
         }
     }
 
@@ -48,8 +48,16 @@ class SignInPegawaiViewModel @Inject constructor(private val repository: AuthRep
         viewModelScope.launch {
             _signInState.value = SignInState.Loading
             val result = repository.getCurrentUser()
-            _signInState.value = result
+            _signInState.value = result.toSignInState()
         }
     }
 
+    private fun SignInResult.toSignInState(): SignInState {
+        return when (this) {
+            SignInResult.Success -> SignInState.Success
+            SignInResult.NotPegawai -> SignInState.NotPegawai
+            SignInResult.NoUser -> SignInState.Idle
+            is SignInResult.Error -> SignInState.Error(message)
+        }
+    }
 }

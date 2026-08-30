@@ -1,4 +1,4 @@
-package com.example.bukalaptop.pegawai
+package com.example.bukalaptop.pegawai.auth.presentation
 
 sealed interface SignInState {
     data object Idle : SignInState

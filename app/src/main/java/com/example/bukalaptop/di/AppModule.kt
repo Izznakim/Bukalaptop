@@ -1,7 +1,7 @@
 package com.example.bukalaptop.di
 
 import com.example.bukalaptop.pegawai.auth.data.AuthRepositoryImpl
-import com.example.bukalaptop.pegawai.auth.domain.AuthRepository
+import com.example.bukalaptop.pegawai.auth.domain.repository.AuthRepository
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth

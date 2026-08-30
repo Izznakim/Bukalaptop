@@ -18,7 +18,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.example.bukalaptop.R
 import com.example.bukalaptop.databinding.ActivitySignInPegawaiBinding
 import com.example.bukalaptop.pegawai.PegawaiActivity
-import com.example.bukalaptop.pegawai.SignInState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
