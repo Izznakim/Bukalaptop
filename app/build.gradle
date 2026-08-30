@@ -1,11 +1,12 @@
 plugins {
     alias libs.plugins.android.application
-    alias libs.plugins.jetbrains.kotlin.android
+    alias libs.plugins.kotlin.parcelize
+    alias libs.plugins.kotlin.compose
     alias libs.plugins.google.gms.google.services
-    id 'kotlin-parcelize'
     alias libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin
     alias libs.plugins.navigation.safeargs
-    id 'org.jetbrains.kotlin.plugin.compose'
+    alias libs.plugins.ksp
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -14,7 +15,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.bukalaptop"
-        minSdk 23
+        minSdk 24
         targetSdk 35
         versionCode 1
         versionName "1.0"
@@ -36,13 +37,14 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = '17'
-    }
     buildFeatures {
         viewBinding true
         compose true
     }
+}
+
+configurations {
+    mockitoAgent
 }
 
 dependencies {
@@ -75,7 +77,7 @@ dependencies {
 
 //    firebase
     // Import the BoM for the Firebase platform
-    implementation(libs.firebase.bom)
+    implementation(platform(libs.firebase.bom))
 
     // Add the dependency for the Firebase Authentication library
     implementation libs.firebase.auth
@@ -93,4 +95,17 @@ dependencies {
     implementation libs.androidx.activity.compose
     // Optional - Integration with ViewModels
     implementation libs.androidx.lifecycle.viewmodel.compose
+
+    implementation("com.google.dagger:hilt-android:2.60.1")
+    ksp("com.google.dagger:hilt-android-compiler:2.60.1")
+
+    testImplementation(libs.mockito.core)
+    mockitoAgent(libs.mockito.core) {
+        transitive = false
+    }
+    testImplementation(libs.mockito.mockito.inline)
+}
+
+tasks.withType(Test).configureEach {
+    jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
 }
