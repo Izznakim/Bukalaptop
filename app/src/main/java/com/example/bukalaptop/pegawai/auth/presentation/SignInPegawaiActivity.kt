@@ -125,7 +125,9 @@ class SignInPegawaiActivity : AppCompatActivity() {
                             ).show()
                         }
 
-                        SignInState.Idle -> Unit
+                        SignInState.Idle -> {
+                            progressDialog.dismiss()
+                        }
                     }
                 }
             }

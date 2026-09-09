@@ -48,7 +48,13 @@ class SignInPegawaiViewModel @Inject constructor(private val repository: AuthRep
         viewModelScope.launch {
             _signInState.value = SignInState.Loading
             val result = repository.getCurrentUser()
-            _signInState.value = result.toSignInState()
+
+            _signInState.value = when (result) {
+                SignInResult.Success -> SignInState.Success
+                SignInResult.NotPegawai -> SignInState.Idle
+                SignInResult.NoUser -> SignInState.Idle
+                is SignInResult.Error -> SignInState.Error(result.message)
+            }
         }
     }
 
