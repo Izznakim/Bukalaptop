@@ -1,5 +1,8 @@
 package com.example.bukalaptop.pegawai.auth.presentation
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bukalaptop.pegawai.auth.domain.model.SignInResult
@@ -16,6 +19,12 @@ class SignInPegawaiViewModel @Inject constructor(private val repository: AuthRep
 
     private val emailPattern = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
 
+    var email by mutableStateOf("")
+        private set
+
+    var password by mutableStateOf("")
+        private set
+
     var isEmailValid = false
         private set
 
@@ -27,6 +36,16 @@ class SignInPegawaiViewModel @Inject constructor(private val repository: AuthRep
 
     private val _signInState = MutableStateFlow<SignInState>(SignInState.Idle)
     val signInState = _signInState.asStateFlow()
+
+    fun onEmailChange(newEmail: String) {
+        email = newEmail
+        validateEmail(newEmail)
+    }
+
+    fun onPasswordChange(newPassword: String) {
+        password = newPassword
+        validatePassword(newPassword)
+    }
 
     fun validateEmail(email: String) {
         isEmailValid = email.isNotBlank() && emailPattern.matches(email)
@@ -48,7 +67,13 @@ class SignInPegawaiViewModel @Inject constructor(private val repository: AuthRep
         viewModelScope.launch {
             _signInState.value = SignInState.Loading
             val result = repository.getCurrentUser()
-            _signInState.value = result.toSignInState()
+
+            _signInState.value = when(result){
+                SignInResult.Success -> SignInState.Success
+                SignInResult.NotPegawai -> SignInState.Idle
+                SignInResult.NoUser -> SignInState.Idle
+                is SignInResult.Error -> SignInState.Error(result.message)
+            }
         }
     }
 
