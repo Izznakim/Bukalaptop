@@ -2,7 +2,6 @@ package com.example.bukalaptop.pegawai
 
 import android.content.Intent
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
@@ -10,13 +9,16 @@ import android.text.style.ForegroundColorSpan
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import androidx.viewpager2.widget.ViewPager2
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import com.example.bukalaptop.MainActivity
 import com.example.bukalaptop.R
-import com.google.android.material.tabs.TabLayout
+import com.example.bukalaptop.databinding.ActivityPegawaiBinding
 import com.google.android.material.tabs.TabLayoutMediator
-import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 
 class PegawaiActivity : AppCompatActivity() {
@@ -25,19 +27,30 @@ class PegawaiActivity : AppCompatActivity() {
         private val TAB_TITLES = arrayListOf("Pesanan", "Barang")
     }
 
+    private lateinit var binding: ActivityPegawaiBinding
     private var sectionPagerPegawaiAdapter: SectionPagerPegawaiAdapter? = null
-    private var viewPager: ViewPager2? = null
     private var tabLayoutMediator: TabLayoutMediator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_pegawai)
+        binding = ActivityPegawaiBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+            val topInset = insets.getInsets(
+                WindowInsetsCompat.Type.statusBars()
+            ).top
+
+            view.updatePadding(
+                top = topInset
+            )
+
+            insets
+        }
 
         sectionPagerPegawaiAdapter = SectionPagerPegawaiAdapter(this)
-        viewPager = findViewById(R.id.view_pager)
-        viewPager?.adapter = sectionPagerPegawaiAdapter
-        val tabs: TabLayout = findViewById(R.id.tabs)
-        tabLayoutMediator = TabLayoutMediator(tabs, viewPager!!) { tab, position ->
+        binding.viewPager.adapter = sectionPagerPegawaiAdapter
+        tabLayoutMediator = TabLayoutMediator(binding.tabs, binding.viewPager) { tab, position ->
             tab.text = TAB_TITLES[position]
         }
         tabLayoutMediator?.attach()
@@ -51,14 +64,13 @@ class PegawaiActivity : AppCompatActivity() {
         )
         supportActionBar?.title = text
         supportActionBar?.elevation = 0f
-        supportActionBar?.setBackgroundDrawable(ColorDrawable(Color.BLACK))
+        supportActionBar?.setBackgroundDrawable(Color.BLACK.toDrawable())
     }
 
     override fun onDestroy() {
-        viewPager?.adapter = null
+        binding.viewPager.adapter = null
         tabLayoutMediator?.detach()
         sectionPagerPegawaiAdapter = null
-        viewPager = null
         tabLayoutMediator = null
         super.onDestroy()
     }
