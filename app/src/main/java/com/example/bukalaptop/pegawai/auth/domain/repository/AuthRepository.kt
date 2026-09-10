@@ -9,4 +9,5 @@ interface AuthRepository {
     suspend fun checkUserType(userId: String): SignInResult
 
     suspend fun getCurrentUser(): SignInResult
+    fun signOut()
 }

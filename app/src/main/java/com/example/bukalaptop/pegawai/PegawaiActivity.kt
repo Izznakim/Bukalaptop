@@ -8,6 +8,7 @@ import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import android.view.Menu
 import android.view.MenuItem
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.ViewCompat
@@ -17,16 +18,17 @@ import com.example.bukalaptop.MainActivity
 import com.example.bukalaptop.R
 import com.example.bukalaptop.databinding.ActivityPegawaiBinding
 import com.google.android.material.tabs.TabLayoutMediator
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
+import dagger.hilt.android.AndroidEntryPoint
+import kotlin.getValue
 
-
+@AndroidEntryPoint
 class PegawaiActivity : AppCompatActivity() {
 
     companion object {
         private val TAB_TITLES = arrayListOf("Pesanan", "Barang")
     }
 
+    private val viewModel: PegawaiViewModel by viewModels()
     private lateinit var binding: ActivityPegawaiBinding
     private var sectionPagerPegawaiAdapter: SectionPagerPegawaiAdapter? = null
     private var tabLayoutMediator: TabLayoutMediator? = null
@@ -83,7 +85,7 @@ class PegawaiActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.act_signOut -> {
-                Firebase.auth.signOut()
+                viewModel.signOut()
                 Intent(this, MainActivity::class.java).also { intent ->
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)

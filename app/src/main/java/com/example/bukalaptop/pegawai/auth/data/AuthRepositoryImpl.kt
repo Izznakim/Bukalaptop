@@ -40,7 +40,12 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun getCurrentUser(): SignInResult {
-        val userId = auth.currentUser?.uid ?: return SignInResult.NoUser
+        val user = auth.currentUser
+        val userId = user?.uid ?: return SignInResult.NoUser
         return checkUserType(userId)
+    }
+
+    override fun signOut() {
+        auth.signOut()
     }
 }
